@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 export default function Home() {
-  const [cart, setCart] = useState<any>({});
+  const [cart, setCart] = useState<Record<number, number>>({});
 
   const products = [
     { id: 1, name: "Coca Cola 1.5L", price: 3250, category: "🥤 Ichimliklar" },
@@ -40,52 +40,67 @@ export default function Home() {
     0
   );
 
+  const categories = [
+    "🥤 Ichimliklar",
+    "🥩 Go'sht mahsulotlari",
+    "🥛 Sut mahsulotlari",
+    "🍰 Shirinliklar",
+  ];
+
   return (
-    <main className="min-h-screen bg-green-50 p-8">
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
 
-        <h1 className="text-5xl font-bold text-green-700 text-center">
+        <h1 className="text-4xl md:text-6xl font-extrabold text-green-800 text-center">
           Mega Halal Supermarket
         </h1>
 
-        <p className="text-center text-gray-600 mt-4 text-xl">
+        <p className="text-center text-gray-600 mt-4 text-lg md:text-xl">
           Koreya bo'ylab Halal mahsulotlar yetkazib berish
         </p>
 
         <div className="grid md:grid-cols-2 gap-6 mt-10">
-
-          {["🥤 Ichimliklar","🥩 Go'sht mahsulotlari","🥛 Sut mahsulotlari","🍰 Shirinliklar"].map((cat) => (
+          {categories.map((cat) => (
             <div
               key={cat}
-              className="bg-white p-6 rounded-2xl shadow"
+              className="bg-white border border-green-100 rounded-3xl shadow-lg p-6"
             >
-              <h2 className="text-2xl font-bold mb-4">{cat}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                {cat}
+              </h2>
 
               {products
                 .filter((p) => p.category === cat)
                 .map((item) => (
                   <div
                     key={item.id}
-                    className="flex justify-between items-center border-b py-3"
+                    className="flex justify-between items-center border-b py-4"
                   >
                     <div>
-                      <p className="font-semibold">{item.name}</p>
-                      <p>{item.price.toLocaleString()}₩</p>
+                      <p className="font-semibold text-gray-800">
+                        {item.name}
+                      </p>
+
+                      <p className="text-green-700 font-bold">
+                        {item.price.toLocaleString()}₩
+                      </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="bg-red-500 text-white px-3 rounded"
+                        className="bg-red-500 hover:bg-red-600 text-white w-10 h-10 rounded-lg"
                       >
                         -
                       </button>
 
-                      <span>{cart[item.id] || 0}</span>
+                      <span className="text-lg font-bold min-w-[20px] text-center">
+                        {cart[item.id] || 0}
+                      </span>
 
                       <button
                         onClick={() => addToCart(item.id)}
-                        className="bg-green-600 text-white px-3 rounded"
+                        className="bg-green-600 hover:bg-green-700 text-white w-10 h-10 rounded-lg"
                       >
                         +
                       </button>
@@ -94,24 +109,22 @@ export default function Home() {
                 ))}
             </div>
           ))}
-
         </div>
 
-        <div className="bg-white mt-10 p-6 rounded-2xl shadow">
-          <h2 className="text-2xl font-bold">
-            Savatcha
+        <div className="bg-white border border-green-100 rounded-3xl shadow-xl p-6 mt-10">
+          <h2 className="text-3xl font-bold text-gray-900">
+            🛒 Savatcha
           </h2>
 
-          <p className="mt-3 text-xl">
+          <p className="mt-4 text-3xl font-extrabold text-green-700">
             Jami: {total.toLocaleString()}₩
           </p>
 
-          <button className="mt-4 bg-green-600 text-white px-8 py-3 rounded-xl">
+          <button className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold">
             Buyurtma berish
           </button>
         </div>
-
-      </div>
+        </div>
     </main>
   );
 }
