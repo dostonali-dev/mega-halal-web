@@ -94,7 +94,7 @@ export default function Home() {
                         -
                       </button>
 
-                      <span className="text-lg font-bold min-w-[20px] text-center">
+                      <span className="text-lg font-bold min-w-[20px] text-center text-black">
                         {cart[item.id] || 0}
                       </span>
 
@@ -120,10 +120,12 @@ export default function Home() {
             Jami: {total.toLocaleString()}₩
           </p>
 
-          <button className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold">
-            Buyurtma berish
-          </button>
-        </div>
+          <button
+  onClick={() => alert("Buyurtma qabul qilindi")}
+  className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold"
+>
+  Buyurtma berish
+</button>
         </div>
     </main>
   );
