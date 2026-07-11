@@ -15,7 +15,7 @@ ${body.order}
 `;
 
 await fetch(
-  'https://api.telegram.org/bot${BOT_TOKEN}/sendMessage'
+  `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
   {
     method: "POST",
     headers: {
