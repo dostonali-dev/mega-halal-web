@@ -2,11 +2,18 @@
 
 import { useState } from "react";
 
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+};
+
 export default function Home() {
   const [cart, setCart] = useState<Record<number, number>>({});
   const [openCategory, setOpenCategory] = useState<string | null>(null);
 
-  const products = [
+  const products: Product[] = [
     { id: 1, name: "Coca Cola 1.5L", price: 3250, category: "🥤 Ichimliklar" },
     { id: 2, name: "Fanta 1.5L", price: 2150, category: "🥤 Ichimliklar" },
 
@@ -28,19 +35,17 @@ export default function Home() {
   ];
 
   const addToCart = (id: number) => {
-    setCart({
-      ...cart,
-      [id]: (cart[id] || 0) + 1,
-    });
+    setCart((prev) => ({
+      ...prev,
+      [id]: (prev[id] || 0) + 1,
+    }));
   };
 
   const removeFromCart = (id: number) => {
-    if (!cart[id]) return;
-
-    setCart({
-      ...cart,
-      [id]: Math.max((cart[id] || 0) - 1, 0),
-    });
+    setCart((prev) => ({
+      ...prev,
+      [id]: Math.max((prev[id] || 0) - 1, 0),
+    }));
   };
 
   const total = products.reduce(
@@ -51,7 +56,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
-
         <h1 className="text-4xl md:text-6xl font-extrabold text-green-800 text-center">
           Mega Halal Supermarket
         </h1>
@@ -61,7 +65,6 @@ export default function Home() {
         </p>
 
         <div className="mt-10 space-y-4">
-
           {categories.map((cat) => (
             <div
               key={cat}
@@ -71,7 +74,7 @@ export default function Home() {
                 onClick={() =>
                   setOpenCategory(openCategory === cat ? null : cat)
                 }
-                className="w-full p-5 flex justify-between items-center text-left"
+                className="w-full p-5 flex justify-between items-center"
               >
                 <span className="text-xl font-bold text-black">
                   {cat}
@@ -84,7 +87,6 @@ export default function Home() {
 
               {openCategory === cat && (
                 <div className="px-5 pb-5">
-
                   {products
                     .filter((p) => p.category === cat)
                     .map((item) => (
@@ -123,12 +125,10 @@ export default function Home() {
                         </div>
                       </div>
                     ))}
-
                 </div>
               )}
             </div>
           ))}
-
         </div>
 
         <div className="bg-white border border-green-100 rounded-3xl shadow-xl p-6 mt-10">
@@ -147,7 +147,6 @@ export default function Home() {
             Buyurtma berish
           </button>
         </div>
-
       </div>
     </main>
   );
