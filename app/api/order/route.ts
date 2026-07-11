@@ -14,19 +14,19 @@ ${body.order}
 💰 Jami: ${body.total}₩
 `;
 
-  await fetch(
-    https://api.telegram.org/bot${BOT_TOKEN}/sendMessage,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text,
-      }),
-    }
-  );
+await fetch(
+  https://api.telegram.org/bot${BOT_TOKEN}/sendMessage,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      text,
+    }),
+  }
+);
 
   return NextResponse.json({ success: true });
 }
