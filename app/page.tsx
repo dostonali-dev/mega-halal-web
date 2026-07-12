@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Product = {
   id: number;
   name: string;
   price: number;
   category: string;
+  image?: string;
 };
 
 export default function Home() {
@@ -17,26 +19,25 @@ const [phone, setPhone] = useState("");
 const [address, setAddress] = useState("");
 const [note, setNote] = useState("");
 
-  const products: Product[] = [
-    { id: 1, name: "Coca Cola 1.5L", price: 3250, category: "🥤 Ichimliklar" },
-    { id: 2, name: "Fanta 1.5L", price: 2150, category: "🥤 Ichimliklar" },
+const [products, setProducts] = useState<Product[]>([]);
+useEffect(() => {
+  const loadProducts = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*");
 
-    { id: 3, name: "Mol oldi son 1kg", price: 15600, category: "🥩 Go'sht mahsulotlari" },
-    { id: 4, name: "Mol ichki son 1kg", price: 15300, category: "🥩 Go'sht mahsulotlari" },
+    if (error) {
+      console.error(error);
+      return;
+    }
+console.log("DATA:", data);
+console.log("ERROR:", error);
+    setProducts(data || []);
+  };
 
-    { id: 5, name: "Milkovita sut 1L", price: 1990, category: "🥛 Sut mahsulotlari" },
-    { id: 6, name: "Ayron 500ml", price: 2500, category: "🥛 Sut mahsulotlari" },
-
-    { id: 7, name: "Cake Medovik", price: 5000, category: "🍰 Shirinliklar" },
-    { id: 8, name: "Cake Snickers", price: 5000, category: "🍰 Shirinliklar" },
-  ];
-
-  const categories = [
-    "🥤 Ichimliklar",
-    "🥩 Go'sht mahsulotlari",
-    "🥛 Sut mahsulotlari",
-    "🍰 Shirinliklar",
-  ];
+  loadProducts();
+}, []);
+ const categories = [...new Set(products.map((p) => p.category))];
 
   const addToCart = (id: number) => {
     setCart((prev) => ({
@@ -175,9 +176,30 @@ const [note, setNote] = useState("");
 </div>
             Jami: {total.toLocaleString()}₩
           </p>
+<div className="mt-4 space-y-2">
+  {products
+    .filter((p) => (cart[p.id] || 0) > 0)
+    .map((p) => (
+      <div
+        key={p.id}
+        className="flex justify-between border-b pb-2 text-black"
+      >
+        <span>
+          {p.name} x {cart[p.id]}
+        </span>
 
+        <span>
+          {(p.price * (cart[p.id] || 0)).toLocaleString()}₩
+        </span>
+      </div>
+    ))}
+</div>
          <button
   onClick={async () => {
+    if (total === 0) {
+  alert("Savatcha bo'sh!");
+  return;
+}
     const orderText = products
       .filter((p) => (cart[p.id] || 0) > 0)
       .map(
@@ -204,7 +226,11 @@ const [note, setNote] = useState("");
     });
 
     console.log(await res.text());
-
+setCart({});
+setCustomerName("");
+setPhone("");
+setAddress("");
+setNote("");
     alert("Buyurtma Telegramga yuborildi!");
   }}
   className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold"
