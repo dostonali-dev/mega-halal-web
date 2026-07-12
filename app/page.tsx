@@ -12,6 +12,10 @@ type Product = {
 export default function Home() {
   const [cart, setCart] = useState<Record<number, number>>({});
   const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState("");
+const [phone, setPhone] = useState("");
+const [address, setAddress] = useState("");
+const [note, setNote] = useState("");
 
   const products: Product[] = [
     { id: 1, name: "Coca Cola 1.5L", price: 3250, category: "🥤 Ichimliklar" },
@@ -137,15 +141,76 @@ export default function Home() {
           </h2>
 
           <p className="mt-4 text-3xl font-extrabold text-green-700">
+          <div className="mt-6 space-y-3">
+  <input
+    type="text"
+    placeholder="Ism"
+    value={customerName}
+    onChange={(e) => setCustomerName(e.target.value)}
+    className="w-full border rounded-xl p-3 text-black"
+  />
+
+  <input
+    type="text"
+    placeholder="Telefon raqami"
+    value={phone}
+    onChange={(e) => setPhone(e.target.value)}
+    className="w-full border rounded-xl p-3 text-black"
+  />
+
+  <input
+    type="text"
+    placeholder="Manzil"
+    value={address}
+    onChange={(e) => setAddress(e.target.value)}
+    className="w-full border rounded-xl p-3 text-black"
+  />
+
+  <textarea
+    placeholder="Izoh"
+    value={note}
+    onChange={(e) => setNote(e.target.value)}
+    className="w-full border rounded-xl p-3 text-black"
+  />
+</div>
             Jami: {total.toLocaleString()}₩
           </p>
 
-          <button
-            onClick={() => alert("Buyurtma qabul qilindi")}
-            className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold"
-          >
-            Buyurtma berish
-          </button>
+         <button
+  onClick={async () => {
+    const orderText = products
+      .filter((p) => (cart[p.id] || 0) > 0)
+      .map(
+        (p) =>
+          `${p.name} x ${cart[p.id]} = ${
+            p.price * (cart[p.id] || 0)
+          }₩`
+      )
+      .join("\n");
+
+    const res = await fetch("/api/order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+     body: JSON.stringify({
+  order: orderText,
+  total,
+  customerName,
+  phone,
+  address,
+  note,
+}),
+    });
+
+    console.log(await res.text());
+
+    alert("Buyurtma Telegramga yuborildi!");
+  }}
+  className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold"
+>
+  Buyurtma berish
+</button>
         </div>
       </div>
     </main>
