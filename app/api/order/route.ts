@@ -11,6 +11,7 @@ export async function POST(req: Request) {
   note,
   orderNumber,
 } = body;
+console.log("NOTE:", note);
 
   const BOT_TOKEN = "8798311944:AAHUBgMJ4OrKiy8qMUwx9bQFSNRJ-dRBCjg";
   const CHAT_ID = "90771259";
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
 👤 Ism: ${customerName}
 📞 Telefon: ${phone}
 📍 Manzil: ${address}
+
+📝 Izoh: ${note || "Yo'q"}
 
 ${order}
 
