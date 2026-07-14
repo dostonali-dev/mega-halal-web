@@ -20,6 +20,8 @@ const [address, setAddress] = useState("");
 const [note, setNote] = useState("");
 
 const [products, setProducts] = useState<Product[]>([]);
+const [showSuccess, setShowSuccess] = useState(false);
+const [orderNumber, setOrderNumber] = useState("");
 useEffect(() => {
   const loadProducts = async () => {
     const { data, error } = await supabase
@@ -196,11 +198,27 @@ console.log("ERROR:", error);
 </div>
          <button
   onClick={async () => {
-    if (total === 0) {
-  alert("Savatcha bo'sh!");
-  return;
-}
-    const orderText = products
+  if (total === 0) {
+    alert("Savatcha bo'sh!");
+    return;
+  }
+
+  if (!customerName.trim()) {
+    alert("Ismingizni kiriting!");
+    return;
+  }
+
+  if (!phone.trim()) {
+    alert("Telefon raqamingizni kiriting!");
+    return;
+  }
+
+  if (!address.trim()) {
+    alert("Manzilni kiriting!");
+    return;
+  }
+
+  const orderText = products
       .filter((p) => (cart[p.id] || 0) > 0)
       .map(
         (p) =>
@@ -210,6 +228,28 @@ console.log("ERROR:", error);
       )
       .join("\n");
 
+      const { data: orderData, error: orderError } =
+  await supabase
+    .from("orders")
+    .insert([
+      {
+        customer_name: customerName,
+        phone,
+        address,
+        note,
+        order_text: orderText,
+        total,
+      },
+    ])
+    .select()
+    .single();
+
+if (orderError) {
+  alert("Buyurtma saqlanmadi!");
+  return;
+}
+
+setOrderNumber(orderData.id);
     const res = await fetch("/api/order", {
       method: "POST",
       headers: {
@@ -222,6 +262,7 @@ console.log("ERROR:", error);
   phone,
   address,
   note,
+  orderNumber,
 }),
     });
 
@@ -231,7 +272,8 @@ setCustomerName("");
 setPhone("");
 setAddress("");
 setNote("");
-    alert("Buyurtma Telegramga yuborildi!");
+
+    setShowSuccess(true);
   }}
   className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold"
 >
@@ -239,6 +281,64 @@ setNote("");
 </button>
         </div>
       </div>
+      {showSuccess && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-3xl p-6 w-[90%] max-w-md">
+
+      <h2 className="text-2xl font-bold text-green-600">
+        ✅ Buyurtma qabul qilindi
+      </h2>
+      <p className="mt-3 text-lg font-bold text-black">
+  Buyurtma № {orderNumber}
+</p>
+      <p className="mt-4 text-black">
+  Buyurtmangiz muvaffaqiyatli qabul qilindi.
+</p>
+
+<div className="mt-3 p-3 bg-yellow-100 rounded-xl">
+  <p className="text-yellow-800 font-medium">
+    ⚠️ To'lov tasdiqlangach buyurtmangiz jo'natiladi.
+  </p>
+</div>
+
+      
+
+      <div className="mt-6 p-4 bg-gray-100 rounded-xl">
+        <p className="font-bold text-black">
+          농협은행
+        </p>
+
+        <p className="text-lg text-black">
+          352-1676-1060-43
+        </p>
+
+        <p className="text-black">
+          MUKHTAROV
+        </p>
+      </div>
+
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(
+            "123-456-789012"
+          );
+
+          alert("Hisob raqami nusxalandi");
+        }}
+        className="mt-4 w-full bg-blue-600 text-white py-3 rounded-xl"
+      >
+        📋 Hisob raqamini nusxalash
+      </button>
+
+      <button
+        onClick={() => setShowSuccess(false)}
+        className="mt-3 w-full bg-green-600 text-white py-3 rounded-xl"
+      >
+        Yopish
+      </button>
+    </div>
+  </div>
+)}
     </main>
   );
 }
