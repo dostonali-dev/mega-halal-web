@@ -26,7 +26,7 @@ export default function AdminPage() {
             placeholder="Login"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full border p-3 rounded-xl mb-4 text-black"
+            className="w-full border border-gray-300 bg-gray-50 text-black p-3 rounded-xl mb-4"
           />
 
           <input
@@ -34,7 +34,7 @@ export default function AdminPage() {
             placeholder="Parol"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border p-3 rounded-xl mb-4 text-black"
+            className="w-full border border-gray-300 bg-gray-50 text-black p-3 rounded-xl mb-4"
           />
 
           <button
