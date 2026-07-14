@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function OrdersPage() {
@@ -25,10 +26,30 @@ export default function OrdersPage() {
   };
 
   return (
-    <main className="p-8">
-      <h1 className="text-4xl font-bold mb-8">
+  <main className="p-8">
+    <div className="flex gap-3 mb-8">
+
+      <Link
+        href="/admin"
+        className="bg-green-600 text-white px-4 py-3 rounded-xl"
+      >
+        ⬅️ Mahsulotlar
+      </Link>
+
+      <Link
+        href="/admin/orders"
+        className="bg-blue-600 text-white px-4 py-3 rounded-xl"
+      >
         📦 Buyurtmalar
-      </h1>
+      </Link>
+
+    </div>
+
+    <h1 className="text-4xl font-bold mb-8">
+      📦 Buyurtmalar
+    </h1>
+
+    ...
 
       <div className="space-y-4">
         {orders.map((order) => (
@@ -43,6 +64,20 @@ export default function OrdersPage() {
             <p>👤 {order.customer_name}</p>
             <p>📞 {order.phone}</p>
             <p>📍 {order.address}</p>
+            {order.note && (
+  <p className="mt-2 text-gray-700">
+    📝 {order.note}
+  </p>
+)}
+            <div className="mt-3 p-3 bg-gray-100 rounded-xl">
+  <p className="font-semibold text-black mb-2">
+    🛒 Buyurtma:
+  </p>
+
+  <pre className="whitespace-pre-wrap text-sm text-black">
+    {order.order_text}
+  </pre>
+</div>
 
             <p className="font-bold text-green-700 mt-2">
               💰 {order.total?.toLocaleString()}₩
@@ -81,6 +116,21 @@ export default function OrdersPage() {
   >
     📦 Jo'natildi
   </button>
+  <button
+  onClick={async () => {
+    await supabase
+      .from("orders")
+      .update({
+        status: "❌ Bekor qilindi",
+      })
+      .eq("id", order.id);
+
+    loadOrders();
+  }}
+  className="bg-red-600 text-white px-4 py-2 rounded-xl"
+>
+  ❌ Bekor qilindi
+</button>
 </div>
           </div>
         ))}

@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function AdminPage() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+  const isLoggedIn = localStorage.getItem("adminLoggedIn");
+
+  if (isLoggedIn === "true") {
+    setLoggedIn(true);
+  }
+}, []);
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -45,6 +54,7 @@ export default function AdminPage() {
               ) {
                 setLoggedIn(true);
                 localStorage.setItem("adminLoggedIn", "true");
+                localStorage.setItem("adminLoggedIn", "true");
                 useEffect(() => {
   const isLoggedIn = localStorage.getItem("adminLoggedIn");
 
@@ -76,12 +86,37 @@ export default function AdminPage() {
   return (
     <main className="p-10">
       <h1 className="text-4xl font-bold">
-        Mega Halal Admin Panel
-      </h1>
+  Mega Halal Admin Panel
+</h1>
 
-      <p className="mt-4 text-green-600">
-        Muvaffaqiyatli kirdingiz ✅
-      </p>
+<p className="mt-4 text-green-600">
+  Muvaffaqiyatli kirdingiz ✅
+</p>
+
+<div className="flex gap-3 mt-4 mb-6">
+  <Link
+    href="/admin"
+    className="flex-1 bg-green-600 text-white text-center py-3 rounded-xl"
+  >
+    ➕ Mahsulotlar
+  </Link>
+
+  <Link
+    href="/admin/orders"
+    className="flex-1 bg-blue-600 text-white text-center py-3 rounded-xl"
+  >
+    📦 Buyurtmalar
+  </Link>
+  <button
+    onClick={() => {
+      localStorage.removeItem("adminLoggedIn");
+      setLoggedIn(false);
+    }}
+    className="bg-red-600 text-white px-4 py-3 rounded-xl"
+  >
+    🚪 Chiqish
+  </button>
+</div>
 
       <div className="mt-8 max-w-md space-y-4">
         <input
