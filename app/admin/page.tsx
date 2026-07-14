@@ -124,7 +124,7 @@ export default function AdminPage() {
           placeholder="Mahsulot nomi"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border p-3 rounded-xl text-black"
+          className="w-full border p-3 rounded-xl bg-white text-black"
         />
 
         <input
@@ -132,7 +132,7 @@ export default function AdminPage() {
           placeholder="Narxi"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="w-full border p-3 rounded-xl text-black"
+          className="w-full border p-3 rounded-xl bg-white text-black"
         />
 
         <input
@@ -140,7 +140,7 @@ export default function AdminPage() {
           placeholder="Kategoriya"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full border p-3 rounded-xl text-black"
+          className="w-full border p-3 rounded-xl bg-white text-black"
         />
 
         <input
@@ -148,7 +148,7 @@ export default function AdminPage() {
           placeholder="Rasm nomi"
           value={image}
           onChange={(e) => setImage(e.target.value)}
-          className="w-full border p-3 rounded-xl text-black"
+          className="w-full border p-3 rounded-xl bg-white text-black"
         />
 
         <button

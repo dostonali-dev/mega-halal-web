@@ -57,13 +57,21 @@ export default function OrdersPage() {
             key={order.id}
             className="bg-white rounded-2xl shadow p-5 border"
           >
-            <h2 className="text-xl font-bold">
-              № {order.id + 100}
-            </h2>
+            <h2 className="text-2xl font-bold text-black">
+  № {order.id}
+</h2>
 
-            <p>👤 {order.customer_name}</p>
-            <p>📞 {order.phone}</p>
-            <p>📍 {order.address}</p>
+            <p className="text-black font-semibold">
+  👤 {order.customer_name}
+</p>
+
+<p className="text-black">
+  📞 {order.phone}
+</p>
+
+<p className="text-black">
+  📍 {order.address}
+</p>
             {order.note && (
   <p className="mt-2 text-gray-700">
     📝 {order.note}
@@ -84,7 +92,12 @@ export default function OrdersPage() {
             </p>
             <p className="mt-2 font-bold">
   {order.status}
-</p><div className="flex gap-2 mt-4">
+</p>
+
+{order.status !== "📦 Jo'natildi" &&
+ order.status !== "❌ Bekor qilindi" && (
+
+<div className="flex gap-2 mt-4">
   <button
     onClick={async () => {
       await supabase
@@ -132,6 +145,8 @@ export default function OrdersPage() {
   ❌ Bekor qilindi
 </button>
 </div>
+
+)}
           </div>
         ))}
       </div>
