@@ -90,7 +90,7 @@ export default function OrdersPage() {
             <p className="font-bold text-green-700 mt-2">
               💰 {order.total?.toLocaleString()}₩
             </p>
-            <p
+   <p
   className={`mt-2 font-bold ${
     order.status === "❌ Bekor qilindi"
       ? "text-red-600"
@@ -101,9 +101,6 @@ export default function OrdersPage() {
       : "text-yellow-600"
   }`}
 >
-  {order.status}
-</p>
-<p className="mt-2 font-bold">
   {order.status}
 </p>
 
