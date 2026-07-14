@@ -17,9 +17,9 @@ export default function AdminPage() {
     return (
       <main className="min-h-screen flex items-center justify-center bg-green-50">
         <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md">
-          <h1 className="text-3xl font-bold mb-6 text-center">
-            Admin Login
-          </h1>
+      <h1 className="text-3xl font-bold text-green-700 mb-6 text-center">
+  Mega Halal Admin
+</h1>
 
           <input
             type="text"
@@ -44,6 +44,22 @@ export default function AdminPage() {
                 password === "123456"
               ) {
                 setLoggedIn(true);
+                localStorage.setItem("adminLoggedIn", "true");
+                useEffect(() => {
+  const isLoggedIn = localStorage.getItem("adminLoggedIn");
+
+  if (isLoggedIn === "true") {
+    setLoggedIn(true);
+  }
+}, []);
+<button
+  onClick={() => {
+    localStorage.removeItem("adminLoggedIn");
+    setLoggedIn(false);
+  }}
+>
+  Chiqish
+</button>
               } else {
                 alert("Login yoki parol noto'g'ri");
               }
