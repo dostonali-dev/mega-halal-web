@@ -72,6 +72,25 @@ export default function OrdersPage() {
 <p className="text-black">
   📍 {order.address}
 </p>
+{order.receipt_image && (
+  <div className="mt-3">
+    <p className="font-semibold text-black mb-2">
+      📷 To'lov cheki
+    </p>
+
+    <a
+      href={order.receipt_image}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <img
+        src={order.receipt_image}
+        alt="receipt"
+        className="max-w-xs rounded-xl border"
+      />
+    </a>
+  </div>
+)}
             {order.note && (
   <p className="mt-2 text-gray-700">
     📝 {order.note}

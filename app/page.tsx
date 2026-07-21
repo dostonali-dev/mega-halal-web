@@ -17,8 +17,17 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
 const [phone, setPhone] = useState("");
 const [address, setAddress] = useState("");
+const [addressDetail, setAddressDetail] = useState("");
+const openAddressSearch = () => {
+  new (window as any).daum.Postcode({
+    oncomplete: function (data: any) {
+      setAddress(data.address);
+    },
+  }).open();
+};
 const [note, setNote] = useState("");
-
+const [receiptFile, setReceiptFile] = useState<File | null>(null);
+const [receiptPreview, setReceiptPreview] = useState("");
 const [products, setProducts] = useState<Product[]>([]);
 const [showSuccess, setShowSuccess] = useState(false);
 const [orderNumber, setOrderNumber] = useState("");
@@ -161,13 +170,30 @@ console.log("ERROR:", error);
     className="w-full border rounded-xl p-3 text-black"
   />
 
+<div className="flex gap-2">
   <input
     type="text"
     placeholder="Manzil"
     value={address}
-    onChange={(e) => setAddress(e.target.value)}
-    className="w-full border rounded-xl p-3 text-black"
+    readOnly
+    className="flex-1 border rounded-xl p-3 text-black"
   />
+
+  <button
+    type="button"
+    onClick={openAddressSearch}
+    className="bg-blue-600 text-white px-4 rounded-xl"
+  >
+    🔍 Qidirish
+  </button>
+</div>
+<input
+  type="text"
+  placeholder="Uy raqami, xonadon, qavat (101동 1203호)"
+  value={addressDetail}
+  onChange={(e) => setAddressDetail(e.target.value)}
+  className="w-full border rounded-xl p-3 text-black mt-2"
+/>
 
   <textarea
     placeholder="Izoh"
@@ -249,24 +275,11 @@ if (orderError) {
   return;
 }
 
-setOrderNumber(orderData.id);
-    const res = await fetch("/api/order", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-     body: JSON.stringify({
-  order: orderText,
-  total,
-  customerName,
-  phone,
-  address,
-  note,
-  orderNumber,
-}),
-    });
+const orderId = orderData.id;
 
-    console.log(await res.text());
+setOrderNumber(orderId);
+
+
 setCart({});
 setCustomerName("");
 setPhone("");
@@ -316,7 +329,46 @@ setNote("");
           MUKHTAROV
         </p>
       </div>
+<div className="mt-4">
+  <p className="font-medium text-black mb-2">
+    📷 To'lov chekini yuklang
+  </p>
 
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+
+      if (!file) return;
+
+      setReceiptFile(file);
+      setReceiptPreview(URL.createObjectURL(file));
+    }}
+    className="w-full border rounded-xl p-2 bg-white text-black"
+  />
+
+  {receiptPreview && (
+    <div className="mt-3 relative">
+      <img
+        src={receiptPreview}
+        alt="receipt"
+        className="w-full rounded-xl border"
+      />
+
+      <button
+        type="button"
+        onClick={() => {
+          setReceiptFile(null);
+          setReceiptPreview("");
+        }}
+        className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full"
+      >
+        ✕
+      </button>
+    </div>
+  )}
+</div>
       <button
         onClick={() => {
           navigator.clipboard.writeText(
@@ -327,9 +379,88 @@ setNote("");
         }}
         className="mt-4 w-full bg-blue-600 text-white py-3 rounded-xl"
       >
+ 
         📋 Hisob raqamini nusxalash
       </button>
+<button
+  onClick={async () => {
+    if (!receiptFile) {
+      alert("Avval chek rasmini tanlang");
+      return;
+    }
 
+    const fileName = `${orderNumber}-${Date.now()}.jpg`;
+
+    const { error: uploadError } =
+      await supabase.storage
+        .from("receipts")
+        .upload(fileName, receiptFile);
+
+   if (uploadError) {
+  console.error(uploadError);
+
+  alert(
+    "Rasm yuklanmadi:\n" +
+    JSON.stringify(uploadError)
+  );
+
+  return;
+}
+
+    const { data } = supabase.storage
+      .from("receipts")
+      .getPublicUrl(fileName);
+
+    await supabase
+      .from("orders")
+      .update({
+        receipt_image: data.publicUrl,
+      })
+      .eq("id", orderNumber);
+const { data: orderData } = await supabase
+  .from("orders")
+  .select("*")
+  .eq("id", orderNumber)
+  .single();
+
+await fetch("/api/order", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    order: orderData.order_text,
+    total: orderData.total,
+    customerName: orderData.customer_name,
+    phone: orderData.phone,
+    address: orderData.address,
+    note: orderData.note,
+    orderNumber: orderData.id,
+  }),
+});
+const tgResponse = await fetch("/api/order", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    order: orderData.order_text,
+    total: orderData.total,
+    customerName: orderData.customer_name,
+    phone: orderData.phone,
+    address: orderData.address,
+    note: orderData.note,
+    orderNumber: orderData.id,
+  }),
+});
+
+console.log(await tgResponse.text());
+    alert("✅ Chek muvaffaqiyatli yuklandi");
+  }}
+  className="mt-3 w-full bg-purple-600 text-white py-3 rounded-xl"
+>
+  📤 Chekni yuklash
+</button>
       <button
         onClick={() => setShowSuccess(false)}
         className="mt-3 w-full bg-green-600 text-white py-3 rounded-xl"
