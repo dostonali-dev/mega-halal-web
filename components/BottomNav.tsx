@@ -6,6 +6,7 @@ import { useCart } from "@/lib/CartContext";
 
 const tabs = [
   { href: "/", label: "Bosh sahifa", icon: "🏠" },
+  { href: "/favorites", label: "Sevimli", icon: "❤️" },
   { href: "/cart", label: "Savatcha", icon: "🛒" },
   { href: "/profile", label: "Profil", icon: "👤" },
   { href: "/categories", label: "Kategoriya", icon: "📂" },
@@ -23,7 +24,7 @@ export default function BottomNav() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={`flex flex-col items-center px-3 py-1 relative ${
+            className={`flex flex-col items-center px-2 py-1 relative ${
               active ? "text-green-700" : "text-gray-400"
             }`}
           >
@@ -35,7 +36,7 @@ export default function BottomNav() {
                 </span>
               )}
             </span>
-            <span className="text-[11px] font-semibold mt-0.5">{tab.label}</span>
+            <span className="text-[10px] font-semibold mt-0.5">{tab.label}</span>
           </Link>
         );
       })}

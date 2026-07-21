@@ -6,6 +6,9 @@ import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, setDefaultAddress, deleteAddress, type Address } from "@/lib/addresses";
 import BottomNav from "@/components/BottomNav";
 
+const STORE_PHONE = "010-3943-2233";
+const STORE_TELEGRAM = "https://t.me/megahalalsuppermarket";
+
 type Order = {
   id: number;
   order_text: string;
@@ -264,6 +267,16 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+        </div>
+
+        <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
+          <h2 className="font-bold text-black mb-3">📞 Biz bilan bog'lanish</h2>
+          <a href={`tel:${STORE_PHONE}`} className="block bg-gray-100 rounded-xl p-3 text-black font-semibold mb-2">
+            📱 {STORE_PHONE}
+          </a>
+          <a href={STORE_TELEGRAM} target="_blank" rel="noreferrer" className="block bg-blue-500 text-white rounded-xl p-3 text-center font-semibold">
+            ✈️ Telegram kanalimiz
+          </a>
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">

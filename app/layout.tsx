@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/CartContext";
 import { AuthProvider } from "@/lib/AuthContext";
+import { FavoritesProvider } from "@/lib/FavoritesContext";
 import AuthGate from "@/components/AuthGate";
 
 const geistSans = Geist({
@@ -37,7 +38,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <CartProvider>
-            <AuthGate>{children}</AuthGate>
+            <FavoritesProvider>
+              <AuthGate>{children}</AuthGate>
+            </FavoritesProvider>
           </CartProvider>
         </AuthProvider>
       </body>

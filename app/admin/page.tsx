@@ -20,11 +20,13 @@ export default function AdminPage() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
+  const [categoryMode, setCategoryMode] = useState<"select" | "new">("select");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [adminSearch, setAdminSearch] = useState("");
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -42,6 +44,8 @@ export default function AdminPage() {
   useEffect(() => {
     if (loggedIn) loadProducts();
   }, [loggedIn]);
+
+  const existingCategories = [...new Set(products.map((p) => p.category))];
 
   const handleLogin = () => {
     if (username === "admin" && password === "123456") {
@@ -61,6 +65,7 @@ export default function AdminPage() {
     setName("");
     setPrice("");
     setCategory("");
+    setCategoryMode("select");
     setImageFile(null);
     setImagePreview("");
   };
@@ -121,6 +126,10 @@ export default function AdminPage() {
     await supabase.from("products").delete().eq("id", id);
     loadProducts();
   };
+
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(adminSearch.toLowerCase())
+  );
 
   if (!loggedIn) {
     return (
@@ -190,13 +199,44 @@ export default function AdminPage() {
           className="w-full border p-3 rounded-xl bg-white text-black"
         />
 
-        <input
-          type="text"
-          placeholder="Kategoriya"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full border p-3 rounded-xl bg-white text-black"
-        />
+        {categoryMode === "select" ? (
+          <div className="flex gap-2">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="flex-1 border p-3 rounded-xl bg-white text-black"
+            >
+              <option value="">Kategoriyani tanlang</option>
+              {existingCategories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => { setCategoryMode("new"); setCategory(""); }}
+              className="bg-gray-200 text-black px-4 rounded-xl text-sm font-bold whitespace-nowrap"
+            >
+              + Yangi
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Yangi kategoriya nomi"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="flex-1 border p-3 rounded-xl bg-white text-black"
+            />
+            <button
+              type="button"
+              onClick={() => { setCategoryMode("select"); setCategory(""); }}
+              className="bg-gray-200 text-black px-4 rounded-xl text-sm font-bold whitespace-nowrap"
+            >
+              Ro'yxatdan
+            </button>
+          </div>
+        )}
 
         <div className="border-2 border-dashed rounded-xl p-4 text-center bg-gray-50">
           <p className="text-sm text-gray-600 mb-2">📷 Mahsulot rasmi</p>
@@ -226,9 +266,18 @@ export default function AdminPage() {
       </div>
 
       <div className="mt-10 max-w-2xl">
-        <h2 className="text-xl font-bold text-black mb-4">Mahsulotlar ro'yxati ({products.length})</h2>
+        <h2 className="text-xl font-bold text-black mb-4">Mahsulotlar ro'yxati ({filteredProducts.length})</h2>
+
+        <input
+          type="text"
+          placeholder="🔎 Mahsulot qidirish..."
+          value={adminSearch}
+          onChange={(e) => setAdminSearch(e.target.value)}
+          className="w-full border p-3 rounded-xl bg-white text-black mb-4"
+        />
+
         <div className="space-y-3">
-          {products.map((p) => (
+          {filteredProducts.map((p) => (
             <div key={p.id} className="bg-white border rounded-xl p-3 flex items-center gap-3">
               {p.image ? (
                 <img src={p.image} alt={p.name} className="w-14 h-14 object-cover rounded-lg border" />
