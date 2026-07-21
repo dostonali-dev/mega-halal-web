@@ -20,6 +20,7 @@ export default function AdminPage() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
   const [categoryMode, setCategoryMode] = useState<"select" | "new">("select");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -66,6 +67,7 @@ export default function AdminPage() {
     setPrice("");
     setCategory("");
     setCategoryMode("select");
+    setDescription("");
     setImageFile(null);
     setImagePreview("");
   };
@@ -102,6 +104,7 @@ export default function AdminPage() {
           price: Number(price),
           category,
           image: imageUrl || null,
+          description: description || null,
         },
       ]);
 
@@ -237,7 +240,13 @@ export default function AdminPage() {
             </button>
           </div>
         )}
-
+<textarea
+          placeholder="Mahsulot tavsifi (ixtiyoriy)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full border p-3 rounded-xl bg-white text-black"
+          rows={3}
+        />
         <div className="border-2 border-dashed rounded-xl p-4 text-center bg-gray-50">
           <p className="text-sm text-gray-600 mb-2">📷 Mahsulot rasmi</p>
           <input

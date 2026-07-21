@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
@@ -25,7 +26,7 @@ export default function CategoryDetailPage() {
         <div className="space-y-3">
           {items.map((item) => (
             <div key={item.id} className="bg-white border border-green-100 rounded-2xl p-4 flex justify-between items-center">
-              <div className="flex items-center gap-3">
+              <Link href={`/products/${item.id}`} className="flex items-center gap-3">
                 {item.image ? (
                   <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" />
                 ) : (
@@ -35,7 +36,7 @@ export default function CategoryDetailPage() {
                   <p className="font-semibold text-black">{item.name}</p>
                   <p className="text-green-700 font-bold">{item.price.toLocaleString()}₩</p>
                 </div>
-              </div>
+              </Link>
               <div className="flex items-center gap-2">
                 <button onClick={() => toggleFavorite(item.id)} className="text-xl">
                   {favoriteIds.has(item.id) ? "❤️" : "🤍"}
