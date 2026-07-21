@@ -58,6 +58,43 @@ export default function CheckoutPage() {
     }).open();
   };
 
+  const decrementStock = async () => {
+    for (const item of items) {
+      const qty = cart[item.id] || 0;
+      if (qty <= 0) continue;
+
+      const { data: current } = await supabase
+        .from("products")
+        .select("stock")
+        .eq("id", item.id)
+        .single();
+
+      const currentStock = current?.stock ?? 0;
+      const newStock = Math.max(0, currentStock - qty);
+
+      await supabase.from("products").update({ stock: newStock }).eq("id", item.id);
+    }
+  };
+
+ const validateStock = async (): Promise<string | null> => {
+    const ids = items.map((i) => i.id);
+    const { data, error } = await supabase.from("products").select("id, name, stock, in_stock").in("id", ids);
+    if (error || !data) return "Ombordagi holatni tekshirib bo'lmadi, qayta urinib ko'ring.";
+
+    for (const item of items) {
+      const dbItem = data.find((d) => d.id === item.id);
+      const qty = cart[item.id] || 0;
+      if (!dbItem) continue;
+      if (dbItem.in_stock === false) {
+        return `"${dbItem.name}" hozircha sotuvda yo'q. Iltimos, uni savatchadan olib tashlang.`;
+      }
+      if (dbItem.stock != null && dbItem.stock < qty) {
+        return `"${dbItem.name}" uchun omborda yetarli miqdor yo'q (mavjud: ${dbItem.stock} ta, siz: ${qty} ta). Iltimos, miqdorni kamaytiring.`;
+      }
+    }
+    return null;
+  };
+
   const handleSubmit = async () => {
     if (items.length === 0) { alert("Savatcha bo'sh!"); return; }
     if (!customerName.trim()) { alert("Ismingizni kiriting!"); return; }
@@ -67,6 +104,13 @@ export default function CheckoutPage() {
     if (!receiptFile) { alert("To'lov chekini yuklang!"); return; }
 
     setSubmitting(true);
+
+    const stockError = await validateStock();
+    if (stockError) {
+      alert(stockError);
+      setSubmitting(false);
+      return;
+    }
     try {
       const orderText = items
         .map((p) => `${p.name} x ${cart[p.id]} = ${p.price * (cart[p.id] || 0)}₩`)
@@ -136,6 +180,10 @@ export default function CheckoutPage() {
       }
 
       const orderId = orderData.id;
+
+      // Buyurtma qabul qilingach, ombordagi mahsulot sonini kamaytiramiz
+      await decrementStock();
+
       const receiptFileName = `${orderId}-${Date.now()}.jpg`;
 
       const { error: uploadError } = await supabase.storage.from("receipts").upload(receiptFileName, receiptFile);

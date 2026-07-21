@@ -8,14 +8,15 @@ import { useFavorites } from "@/lib/FavoritesContext";
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { products, cart, setQty } = useCart();
+  const { products, cart, setQty, getMaxQty } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
 
   const productId = Number(params.id);
   const product = products.find((p) => p.id === productId);
 
   const currentInCart = cart[productId] || 0;
-  const [localQty, setLocalQty] = useState(currentInCart > 0 ? currentInCart : 1);
+  const [localQty, setLocalQty] = useState(1);
+  const [justAdded, setJustAdded] = useState(false);
 
   if (!product) {
     return (
@@ -25,11 +26,20 @@ export default function ProductDetailPage() {
     );
   }
 
-  const outOfStock = product.in_stock === false;
+  const maxQty = getMaxQty(product.id);
+  const remaining = Math.max(0, maxQty - currentInCart);
+  const outOfStock = product.in_stock === false || maxQty <= 0;
+
+  const clampLocalQty = (val: number) => {
+    const min1 = Math.max(1, val);
+    return remaining > 0 ? Math.min(min1, remaining) : min1;
+  };
 
   const handleConfirm = () => {
-    setQty(product.id, localQty);
-    router.push("/cart");
+    setQty(product.id, currentInCart + localQty);
+    setJustAdded(true);
+    setLocalQty(1);
+    setTimeout(() => setJustAdded(false), 2000);
   };
 
   return (
@@ -77,17 +87,27 @@ export default function ProductDetailPage() {
             </p>
           )}
 
+          {!outOfStock && maxQty !== Infinity && (
+            <p className="mt-1 text-xs text-gray-500">
+              Omborda mavjud: {maxQty} ta {remaining === 0 && "(barchasi savatda)"}
+            </p>
+          )}
+
           <div className="mt-4">
             {outOfStock ? (
               <div className="w-full bg-gray-200 text-gray-500 py-4 rounded-2xl font-bold text-lg text-center">
                 Hozircha sotuvda yo'q
+              </div>
+            ) : remaining <= 0 ? (
+              <div className="w-full bg-yellow-100 text-yellow-700 py-4 rounded-2xl font-bold text-center">
+                Maksimal miqdor allaqachon savatda
               </div>
             ) : (
               <>
                 <p className="text-sm font-bold text-black mb-2">Miqdorni tanlang</p>
                 <div className="flex items-center gap-3 bg-gray-100 rounded-2xl px-4 py-3 mb-4">
                   <button
-                    onClick={() => setLocalQty((q) => Math.max(1, q - 1))}
+                    onClick={() => setLocalQty((q) => clampLocalQty(q - 1))}
                     className="bg-white border-2 border-green-600 text-green-700 text-2xl font-bold w-10 h-10 rounded-xl"
                   >
                     −
@@ -95,13 +115,15 @@ export default function ProductDetailPage() {
                   <input
                     type="number"
                     min={1}
+                    max={remaining}
                     value={localQty}
-                    onChange={(e) => setLocalQty(Math.max(1, Number(e.target.value) || 1))}
+                    onChange={(e) => setLocalQty(clampLocalQty(Number(e.target.value) || 1))}
                     className="flex-1 text-center border-2 border-green-600 rounded-xl text-black font-bold py-2 bg-white text-lg"
                   />
                   <button
-                    onClick={() => setLocalQty((q) => q + 1)}
-                    className="bg-white border-2 border-green-600 text-green-700 text-2xl font-bold w-10 h-10 rounded-xl"
+                    onClick={() => setLocalQty((q) => clampLocalQty(q + 1))}
+                    disabled={localQty >= remaining}
+                    className="bg-white border-2 border-green-600 text-green-700 text-2xl font-bold w-10 h-10 rounded-xl disabled:opacity-40"
                   >
                     +
                   </button>
@@ -109,9 +131,9 @@ export default function ProductDetailPage() {
 
                 <button
                   onClick={handleConfirm}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold text-lg"
+                  className={`w-full py-4 rounded-2xl font-bold text-lg text-white ${justAdded ? "bg-green-800" : "bg-green-600 hover:bg-green-700"}`}
                 >
-                  {currentInCart > 0 ? "Savatni yangilash" : "Savatchaga qo'shish"}
+                  {justAdded ? "✅ Qo'shildi" : "Savatchaga qo'shish"}
                 </button>
               </>
             )}

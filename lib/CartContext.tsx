@@ -11,6 +11,7 @@ export type Product = {
   image?: string;
   description?: string;
   in_stock?: boolean;
+  stock?: number;
 };
 
 type CartContextType = {
@@ -22,6 +23,7 @@ type CartContextType = {
   clearCart: () => void;
   total: number;
   itemCount: number;
+  getMaxQty: (id: number) => number;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -55,8 +57,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loadProducts();
   }, []);
 
+  const getMaxQty = (id: number) => {
+    const product = products.find((p) => p.id === id);
+    if (!product || product.stock == null) return Infinity;
+    return Math.max(0, product.stock);
+  };
+
   const addToCart = (id: number) => {
-    setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+    setCart((prev) => {
+      const max = getMaxQty(id);
+      const current = prev[id] || 0;
+      if (current >= max) return prev;
+      return { ...prev, [id]: current + 1 };
+    });
   };
 
   const removeFromCart = (id: number) => {
@@ -65,11 +78,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const setQty = (id: number, qty: number) => {
     setCart((prev) => {
+      const max = getMaxQty(id);
+      const clamped = Math.min(Math.max(0, qty), max);
       const next = { ...prev };
-      if (qty <= 0) {
+      if (clamped <= 0) {
         delete next[id];
       } else {
-        next[id] = qty;
+        next[id] = clamped;
       }
       return next;
     });
@@ -85,7 +100,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ products, cart, addToCart, removeFromCart, setQty, clearCart, total, itemCount }}
+      value={{ products, cart, addToCart, removeFromCart, setQty, clearCart, total, itemCount, getMaxQty }}
     >
       {children}
     </CartContext.Provider>
