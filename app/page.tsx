@@ -1,104 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-
-type Product = {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  image?: string;
-};
+import { useState } from "react";
+import { useCart } from "@/lib/CartContext";
+import BottomNav from "@/components/BottomNav";
 
 export default function Home() {
-  const [cart, setCart] = useState<Record<number, number>>({});
+  const { products, cart, addToCart, removeFromCart } = useCart();
   const [openCategory, setOpenCategory] = useState<string | null>(null);
-  const [customerName, setCustomerName] = useState("");
-const [phone, setPhone] = useState("");
-const [address, setAddress] = useState("");
-const [addressDetail, setAddressDetail] = useState("");
-const openAddressSearch = () => {
-  new (window as any).daum.Postcode({
-    oncomplete: function (data: any) {
-      setAddress(data.address);
-    },
-  }).open();
-};
-const [note, setNote] = useState("");
-const [receiptFile, setReceiptFile] = useState<File | null>(null);
-const [receiptPreview, setReceiptPreview] = useState("");
-const [products, setProducts] = useState<Product[]>([]);
-const [showSuccess, setShowSuccess] = useState(false);
-const [orderNumber, setOrderNumber] = useState("");
-useEffect(() => {
-  const loadProducts = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*");
 
-    if (error) {
-      console.error(error);
-      return;
-    }
-console.log("DATA:", data);
-console.log("ERROR:", error);
-    setProducts(data || []);
-  };
-
-  loadProducts();
-}, []);
- const categories = [...new Set(products.map((p) => p.category))];
-
-  const addToCart = (id: number) => {
-    setCart((prev) => ({
-      ...prev,
-      [id]: (prev[id] || 0) + 1,
-    }));
-  };
-
-  const removeFromCart = (id: number) => {
-    setCart((prev) => ({
-      ...prev,
-      [id]: Math.max((prev[id] || 0) - 1, 0),
-    }));
-  };
-
-  const total = products.reduce(
-    (sum, item) => sum + item.price * (cart[item.id] || 0),
-    0
-  );
+  const categories = [...new Set(products.map((p) => p.category))];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8">
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-4xl md:text-6xl font-extrabold text-green-800 text-center">
           Mega Halal Supermarket
         </h1>
-
         <p className="text-center text-gray-600 mt-4 text-lg">
           Koreya bo'ylab Halal mahsulotlar yetkazib berish
         </p>
 
         <div className="mt-10 space-y-4">
           {categories.map((cat) => (
-            <div
-              key={cat}
-              className="bg-white border border-green-100 rounded-3xl shadow-lg overflow-hidden"
-            >
+            <div key={cat} className="bg-white border border-green-100 rounded-3xl shadow-lg overflow-hidden">
               <button
-                onClick={() =>
-                  setOpenCategory(openCategory === cat ? null : cat)
-                }
+                onClick={() => setOpenCategory(openCategory === cat ? null : cat)}
                 className="w-full p-5 flex justify-between items-center"
               >
-                <span className="text-xl font-bold text-black">
-                  {cat}
-                </span>
-
-                <span className="text-2xl text-green-700">
-                  {openCategory === cat ? "−" : "+"}
-                </span>
+                <span className="text-xl font-bold text-black">{cat}</span>
+                <span className="text-2xl text-green-700">{openCategory === cat ? "−" : "+"}</span>
               </button>
 
               {openCategory === cat && (
@@ -106,38 +36,15 @@ console.log("ERROR:", error);
                   {products
                     .filter((p) => p.category === cat)
                     .map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex justify-between items-center border-t py-4"
-                      >
+                      <div key={item.id} className="flex justify-between items-center border-t py-4">
                         <div>
-                          <p className="font-semibold text-black">
-                            {item.name}
-                          </p>
-
-                          <p className="text-green-700 font-bold">
-                            {item.price.toLocaleString()}₩
-                          </p>
+                          <p className="font-semibold text-black">{item.name}</p>
+                          <p className="text-green-700 font-bold">{item.price.toLocaleString()}₩</p>
                         </div>
-
                         <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="bg-red-500 text-white w-10 h-10 rounded-lg"
-                          >
-                            -
-                          </button>
-
-                          <span className="text-lg font-bold text-black min-w-[25px] text-center">
-                            {cart[item.id] || 0}
-                          </span>
-
-                          <button
-                            onClick={() => addToCart(item.id)}
-                            className="bg-green-600 text-white w-10 h-10 rounded-lg"
-                          >
-                            +
-                          </button>
+                          <button onClick={() => removeFromCart(item.id)} className="bg-red-500 text-white w-10 h-10 rounded-lg">-</button>
+                          <span className="text-lg font-bold text-black min-w-[25px] text-center">{cart[item.id] || 0}</span>
+                          <button onClick={() => addToCart(item.id)} className="bg-green-600 text-white w-10 h-10 rounded-lg">+</button>
                         </div>
                       </div>
                     ))}
@@ -146,330 +53,8 @@ console.log("ERROR:", error);
             </div>
           ))}
         </div>
-
-        <div className="bg-white border border-green-100 rounded-3xl shadow-xl p-6 mt-10">
-          <h2 className="text-3xl font-bold text-black">
-            🛒 Savatcha
-          </h2>
-
-          <p className="mt-4 text-3xl font-extrabold text-green-700">
-          <div className="mt-6 space-y-3">
-  <input
-    type="text"
-    placeholder="Ism"
-    value={customerName}
-    onChange={(e) => setCustomerName(e.target.value)}
-    className="w-full border rounded-xl p-3 text-black"
-  />
-
-  <input
-    type="text"
-    placeholder="Telefon raqami"
-    value={phone}
-    onChange={(e) => setPhone(e.target.value)}
-    className="w-full border rounded-xl p-3 text-black"
-  />
-
-<div className="flex gap-2">
-  <input
-    type="text"
-    placeholder="Manzil"
-    value={address}
-    readOnly
-    className="flex-1 border rounded-xl p-3 text-black"
-  />
-
-  <button
-    type="button"
-    onClick={openAddressSearch}
-    className="bg-blue-600 text-white px-4 rounded-xl"
-  >
-    🔍 Qidirish
-  </button>
-</div>
-<input
-  type="text"
-  placeholder="Uy raqami, xonadon, qavat (101동 1203호)"
-  value={addressDetail}
-  onChange={(e) => setAddressDetail(e.target.value)}
-  className="w-full border rounded-xl p-3 text-black mt-2"
-/>
-
-  <textarea
-    placeholder="Izoh"
-    value={note}
-    onChange={(e) => setNote(e.target.value)}
-    className="w-full border rounded-xl p-3 text-black"
-  />
-</div>
-            Jami: {total.toLocaleString()}₩
-          </p>
-<div className="mt-4 space-y-2">
-  {products
-    .filter((p) => (cart[p.id] || 0) > 0)
-    .map((p) => (
-      <div
-        key={p.id}
-        className="flex justify-between border-b pb-2 text-black"
-      >
-        <span>
-          {p.name} x {cart[p.id]}
-        </span>
-
-        <span>
-          {(p.price * (cart[p.id] || 0)).toLocaleString()}₩
-        </span>
       </div>
-    ))}
-</div>
-         <button
-  onClick={async () => {
-  if (total === 0) {
-    alert("Savatcha bo'sh!");
-    return;
-  }
-
-  if (!customerName.trim()) {
-    alert("Ismingizni kiriting!");
-    return;
-  }
-
-  if (!phone.trim()) {
-    alert("Telefon raqamingizni kiriting!");
-    return;
-  }
-
-  if (!address.trim()) {
-    alert("Manzilni kiriting!");
-    return;
-  }
-
-  const orderText = products
-      .filter((p) => (cart[p.id] || 0) > 0)
-      .map(
-        (p) =>
-          `${p.name} x ${cart[p.id]} = ${
-            p.price * (cart[p.id] || 0)
-          }₩`
-      )
-      .join("\n");
-
-      const { data: orderData, error: orderError } =
-  await supabase
-    .from("orders")
-    .insert([
-      {
-        customer_name: customerName,
-        phone,
-        address,
-        note,
-        order_text: orderText,
-        total,
-      },
-    ])
-    .select()
-    .single();
-
-if (orderError) {
-  alert("Buyurtma saqlanmadi!");
-  return;
-}
-
-const orderId = orderData.id;
-
-setOrderNumber(orderId);
-
-
-setCart({});
-setCustomerName("");
-setPhone("");
-setAddress("");
-setNote("");
-
-    setShowSuccess(true);
-  }}
-  className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold"
->
-  Buyurtma berish
-</button>
-        </div>
-      </div>
-      {showSuccess && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-3xl p-6 w-[90%] max-w-md">
-
-      <h2 className="text-2xl font-bold text-green-600">
-        ✅ Buyurtma qabul qilindi
-      </h2>
-      <p className="mt-3 text-lg font-bold text-black">
-  Buyurtma № {orderNumber}
-</p>
-      <p className="mt-4 text-black">
-  Buyurtmangiz muvaffaqiyatli qabul qilindi.
-</p>
-
-<div className="mt-3 p-3 bg-yellow-100 rounded-xl">
-  <p className="text-yellow-800 font-medium">
-    ⚠️ To'lov tasdiqlangach buyurtmangiz jo'natiladi.
-  </p>
-</div>
-
-      
-
-      <div className="mt-6 p-4 bg-gray-100 rounded-xl">
-        <p className="font-bold text-black">
-          농협은행
-        </p>
-
-        <p className="text-lg text-black">
-          352-1676-1060-43
-        </p>
-
-        <p className="text-black">
-          MUKHTAROV
-        </p>
-      </div>
-<div className="mt-4">
-  <p className="font-medium text-black mb-2">
-    📷 To'lov chekini yuklang
-  </p>
-
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-
-      if (!file) return;
-
-      setReceiptFile(file);
-      setReceiptPreview(URL.createObjectURL(file));
-    }}
-    className="w-full border rounded-xl p-2 bg-white text-black"
-  />
-
-  {receiptPreview && (
-    <div className="mt-3 relative">
-      <img
-        src={receiptPreview}
-        alt="receipt"
-        className="w-full rounded-xl border"
-      />
-
-      <button
-        type="button"
-        onClick={() => {
-          setReceiptFile(null);
-          setReceiptPreview("");
-        }}
-        className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full"
-      >
-        ✕
-      </button>
-    </div>
-  )}
-</div>
-      <button
-        onClick={() => {
-          navigator.clipboard.writeText(
-            "123-456-789012"
-          );
-
-          alert("Hisob raqami nusxalandi");
-        }}
-        className="mt-4 w-full bg-blue-600 text-white py-3 rounded-xl"
-      >
- 
-        📋 Hisob raqamini nusxalash
-      </button>
-<button
-  onClick={async () => {
-    if (!receiptFile) {
-      alert("Avval chek rasmini tanlang");
-      return;
-    }
-
-    const fileName = `${orderNumber}-${Date.now()}.jpg`;
-
-    const { error: uploadError } =
-      await supabase.storage
-        .from("receipts")
-        .upload(fileName, receiptFile);
-
-   if (uploadError) {
-  console.error(uploadError);
-
-  alert(
-    "Rasm yuklanmadi:\n" +
-    JSON.stringify(uploadError)
-  );
-
-  return;
-}
-
-    const { data } = supabase.storage
-      .from("receipts")
-      .getPublicUrl(fileName);
-
-    await supabase
-      .from("orders")
-      .update({
-        receipt_image: data.publicUrl,
-      })
-      .eq("id", orderNumber);
-const { data: orderData } = await supabase
-  .from("orders")
-  .select("*")
-  .eq("id", orderNumber)
-  .single();
-
-await fetch("/api/order", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    order: orderData.order_text,
-    total: orderData.total,
-    customerName: orderData.customer_name,
-    phone: orderData.phone,
-    address: orderData.address,
-    note: orderData.note,
-    orderNumber: orderData.id,
-  }),
-});
-const tgResponse = await fetch("/api/order", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    order: orderData.order_text,
-    total: orderData.total,
-    customerName: orderData.customer_name,
-    phone: orderData.phone,
-    address: orderData.address,
-    note: orderData.note,
-    orderNumber: orderData.id,
-  }),
-});
-
-console.log(await tgResponse.text());
-    alert("✅ Chek muvaffaqiyatli yuklandi");
-  }}
-  className="mt-3 w-full bg-purple-600 text-white py-3 rounded-xl"
->
-  📤 Chekni yuklash
-</button>
-      <button
-        onClick={() => setShowSuccess(false)}
-        className="mt-3 w-full bg-green-600 text-white py-3 rounded-xl"
-      >
-        Yopish
-      </button>
-    </div>
-  </div>
-)}
+      <BottomNav />
     </main>
   );
 }
