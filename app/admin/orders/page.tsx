@@ -1,15 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
+  const [checkedLogin, setCheckedLogin] = useState(false);
 
   useEffect(() => {
-    loadOrders();
-  }, []);
+    const isLoggedIn = localStorage.getItem("adminLoggedIn");
+    if (isLoggedIn !== "true") {
+      router.push("/admin");
+    } else {
+      setCheckedLogin(true);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (checkedLogin) loadOrders();
+  }, [checkedLogin]);
 
   const loadOrders = async () => {
     const { data, error } = await supabase
@@ -25,6 +37,13 @@ export default function OrdersPage() {
     setOrders(data || []);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("adminLoggedIn");
+    router.push("/admin");
+  };
+
+  if (!checkedLogin) return null;
+
   return (
   <main className="p-8">
     <div className="flex gap-3 mb-8">
@@ -36,12 +55,12 @@ export default function OrdersPage() {
         ⬅️ Mahsulotlar
       </Link>
 
-      <Link
-        href="/admin/orders"
-        className="bg-blue-600 text-white px-4 py-3 rounded-xl"
+      <button
+        onClick={handleLogout}
+        className="bg-red-600 text-white px-4 py-3 rounded-xl"
       >
-        📦 Buyurtmalar
-      </Link>
+        🚪 Chiqish
+      </button>
 
     </div>
 

@@ -10,6 +10,7 @@ export type Product = {
   category: string;
   image?: string;
   description?: string;
+  in_stock?: boolean;
 };
 
 type CartContextType = {
@@ -17,6 +18,7 @@ type CartContextType = {
   cart: Record<number, number>;
   addToCart: (id: number) => void;
   removeFromCart: (id: number) => void;
+  setQty: (id: number, qty: number) => void;
   clearCart: () => void;
   total: number;
   itemCount: number;
@@ -28,7 +30,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<Record<number, number>>({});
 
-  // Load cart from browser storage so it survives page navigation
   useEffect(() => {
     const stored = localStorage.getItem("mhs_cart");
     if (stored) {
@@ -62,6 +63,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart((prev) => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
   };
 
+  const setQty = (id: number, qty: number) => {
+    setCart((prev) => {
+      const next = { ...prev };
+      if (qty <= 0) {
+        delete next[id];
+      } else {
+        next[id] = qty;
+      }
+      return next;
+    });
+  };
+
   const clearCart = () => setCart({});
 
   const total = products.reduce(
@@ -72,7 +85,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ products, cart, addToCart, removeFromCart, clearCart, total, itemCount }}
+      value={{ products, cart, addToCart, removeFromCart, setQty, clearCart, total, itemCount }}
     >
       {children}
     </CartContext.Provider>

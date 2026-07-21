@@ -6,7 +6,7 @@ import BottomNav from "@/components/BottomNav";
 
 export default function CartPage() {
   const router = useRouter();
-  const { products, cart, addToCart, removeFromCart, total, itemCount } = useCart();
+  const { products, cart, addToCart, removeFromCart, setQty, total, itemCount } = useCart();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
 
   return (
@@ -25,9 +25,15 @@ export default function CartPage() {
                 <p className="font-semibold text-black">{p.name}</p>
                 <p className="text-green-700 font-bold">{p.price.toLocaleString()}₩</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button onClick={() => removeFromCart(p.id)} className="bg-red-500 text-white w-10 h-10 rounded-lg">-</button>
-                <span className="text-lg font-bold text-black min-w-[25px] text-center">{cart[p.id]}</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={cart[p.id] || 0}
+                  onChange={(e) => setQty(p.id, Math.max(0, Number(e.target.value) || 0))}
+                  className="w-16 text-center border rounded-lg text-black font-bold py-1"
+                />
                 <button onClick={() => addToCart(p.id)} className="bg-green-600 text-white w-10 h-10 rounded-lg">+</button>
               </div>
             </div>
