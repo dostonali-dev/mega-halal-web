@@ -3,7 +3,14 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 
-type Profile = { id: string; name: string; phone: string };
+type Profile = {
+  id: string;
+  name: string;
+  phone: string;
+  address?: string | null;
+  addressDetail?: string | null;
+  addressImage?: string | null;
+};
 
 type AuthContextType = {
   user: Profile | null;
@@ -11,6 +18,7 @@ type AuthContextType = {
   signUp: (name: string, phone: string, password: string) => Promise<string | null>;
   signIn: (phone: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
+  updateAddress: (data: { address?: string | null; addressDetail?: string | null; addressImage?: string | null }) => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -26,7 +34,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    if (data) setUser({ id: data.id, name: data.name, phone: data.phone });
+    if (data) {
+      setUser({
+        id: data.id,
+        name: data.name,
+        phone: data.phone,
+        address: data.address,
+        addressDetail: data.address_detail,
+        addressImage: data.address_image,
+      });
+    }
   };
 
   useEffect(() => {
@@ -78,8 +95,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const updateAddress = async (fields: { address?: string | null; addressDetail?: string | null; addressImage?: string | null }) => {
+    if (!user) return "Avval tizimga kiring.";
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        address: fields.address ?? null,
+        address_detail: fields.addressDetail ?? null,
+        address_image: fields.addressImage ?? null,
+      })
+      .eq("id", user.id);
+    if (error) return error.message;
+    await loadProfile(user.id);
+    return null;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, updateAddress }}>
       {children}
     </AuthContext.Provider>
   );

@@ -37,9 +37,16 @@ export default function Home() {
                     .filter((p) => p.category === cat)
                     .map((item) => (
                       <div key={item.id} className="flex justify-between items-center border-t py-4">
-                        <div>
-                          <p className="font-semibold text-black">{item.name}</p>
-                          <p className="text-green-700 font-bold">{item.price.toLocaleString()}₩</p>
+                        <div className="flex items-center gap-3">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" />
+                          ) : (
+                            <div className="w-14 h-14 rounded-lg border bg-gray-100 flex-shrink-0" />
+                          )}
+                          <div>
+                            <p className="font-semibold text-black">{item.name}</p>
+                            <p className="text-green-700 font-bold">{item.price.toLocaleString()}₩</p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <button onClick={() => removeFromCart(item.id)} className="bg-red-500 text-white w-10 h-10 rounded-lg">-</button>
