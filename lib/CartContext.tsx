@@ -12,8 +12,8 @@ export type Product = {
   description?: string;
   in_stock?: boolean;
   stock?: number;
+  discount_price?: number | null;
 };
-
 type CartContextType = {
   products: Product[];
   cart: Record<number, number>;

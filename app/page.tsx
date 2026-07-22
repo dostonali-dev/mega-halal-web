@@ -1,20 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
-import { useFavorites } from "@/lib/FavoritesContext";
+import { supabase } from "@/lib/supabase";
 import BottomNav from "@/components/BottomNav";
+
+const INSTAGRAM_URL = "https://www.instagram.com/mega_supermarket_kyongsan?igsh=MXNnZmtoejllZzVqbw==";
+const TIKTOK_URL = "https://www.tiktok.com/@mega_supermarket_korea?_r=1&_t=ZS-98FdJ1ZOaf6";
+
+type Banner = { id: number; image: string; link: string | null };
+
+function BannerCarousel({ banners }: { banners: Banner[] }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % banners.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [banners.length]);
+
+  if (banners.length === 0) return null;
+
+  const current = banners[index];
+  const content = (
+    <img src={current.image} alt="banner" className="w-full h-40 md:h-56 object-cover rounded-2xl" />
+  );
+
+  return (
+    <div className="relative mb-8">
+      {current.link ? (
+        <Link href={current.link}>{content}</Link>
+      ) : (
+        content
+      )}
+      {banners.length > 1 && (
+        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+          {banners.map((b, i) => (
+            <span
+              key={b.id}
+              className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/50"}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   const { products, cart, addToCart, removeFromCart } = useCart();
-  const { favoriteIds, toggleFavorite } = useFavorites();
   const [query, setQuery] = useState("");
+  const [banners, setBanners] = useState<Banner[]>([]);
+
+  useEffect(() => {
+    const loadBanners = async () => {
+      const { data } = await supabase.from("banners").select("*").order("sort_order");
+      if (data) setBanners(data);
+    };
+    loadBanners();
+  }, []);
 
   const categories = [...new Set(products.map((p) => p.category))];
   const searchResults = query.trim()
     ? products.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()))
     : [];
+
+  const newArrivals = [...products].sort((a, b) => b.id - a.id).slice(0, 8);
+  const discounted = products.filter(
+    (p) => p.discount_price != null && p.discount_price < p.price
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
@@ -22,11 +79,89 @@ export default function Home() {
         <h1 className="text-4xl md:text-6xl font-extrabold text-green-800 text-center">
           Mega Halal Supermarket
         </h1>
-        <p className="text-center text-gray-600 mt-4 text-lg">
+        <p className="text-center text-gray-600 mt-4 text-lg mb-6">
           Koreya bo'ylab Halal mahsulotlar yetkazib berish
         </p>
 
-        <div className="mt-8 max-w-xl mx-auto">
+        <BannerCarousel banners={banners} />
+
+        {!query.trim() && discounted.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-black mb-3">🔥 Chegirmadagi mahsulotlar</h2>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {discounted.map((p) => {
+                const percent = Math.round((1 - (p.discount_price! / p.price)) * 100);
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/products/${p.id}`}
+                    className="flex-shrink-0 w-36 bg-white border border-green-100 rounded-2xl overflow-hidden relative"
+                  >
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
+                      -{percent}%
+                    </span>
+                    {p.image ? (
+                      <img src={p.image} alt={p.name} className="w-full h-28 object-cover" />
+                    ) : (
+                      <div className="w-full h-28 bg-gray-100" />
+                    )}
+                    <div className="p-2">
+                      <p className="text-xs font-semibold text-black line-clamp-2">{p.name}</p>
+                      <p className="text-gray-400 text-xs line-through">{p.price.toLocaleString()}₩</p>
+                      <p className="text-red-600 font-bold text-sm">{p.discount_price!.toLocaleString()}₩</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {!query.trim() && newArrivals.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-black mb-3">🆕 Yangi mahsulotlar</h2>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {newArrivals.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/products/${p.id}`}
+                  className="flex-shrink-0 w-36 bg-white border border-green-100 rounded-2xl overflow-hidden"
+                >
+                  {p.image ? (
+                    <img src={p.image} alt={p.name} className="w-full h-28 object-cover" />
+                  ) : (
+                    <div className="w-full h-28 bg-gray-100" />
+                  )}
+                  <div className="p-2">
+                    <p className="text-xs font-semibold text-black line-clamp-2">{p.name}</p>
+                    <p className="text-green-700 font-bold text-sm">{p.price.toLocaleString()}₩</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+       <div className="flex gap-3 mb-8">
+          <Link
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-3 rounded-xl font-bold"
+          >
+            📸 Instagram
+          </Link>
+          <Link
+            href={TIKTOK_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-1 bg-black text-white text-center py-3 rounded-xl font-bold"
+          >
+            🎵 TikTok
+          </Link>
+        </div>
+
+        <div className="max-w-xl mx-auto">
           <input
             type="text"
             placeholder="🔎 Mahsulot qidirish..."
@@ -55,9 +190,6 @@ export default function Home() {
                   </div>
                 </Link>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => toggleFavorite(item.id)} className="text-xl">
-                    {favoriteIds.has(item.id) ? "❤️" : "🤍"}
-                  </button>
                   <button onClick={() => removeFromCart(item.id)} className="bg-red-500 text-white w-9 h-9 rounded-lg">-</button>
                   <span className="text-lg font-bold text-black min-w-[22px] text-center">{cart[item.id] || 0}</span>
                   <button onClick={() => addToCart(item.id)} className="bg-green-600 text-white w-9 h-9 rounded-lg">+</button>
@@ -66,7 +198,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="mt-10 space-y-4">
+          <div className="mt-4 space-y-4">
             {categories.map((cat) => (
               <Link
                 key={cat}

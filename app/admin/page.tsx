@@ -31,6 +31,7 @@ export default function AdminPage() {
   const [description, setDescription] = useState("");
   const [supplier, setSupplier] = useState("");
   const [stock, setStock] = useState("");
+  const [discountPrice, setDiscountPrice] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [existingImage, setExistingImage] = useState("");
@@ -90,6 +91,7 @@ export default function AdminPage() {
     setDescription("");
     setSupplier("");
     setStock("");
+    setDiscountPrice("");
     setImageFile(null);
     setImagePreview("");
     setExistingImage("");
@@ -104,6 +106,7 @@ export default function AdminPage() {
     setDescription(p.description || "");
     setSupplier(p.supplier || "");
     setStock(p.stock != null ? String(p.stock) : "");
+    setDiscountPrice(p.discount_price != null ? String(p.discount_price) : "");
     setImageFile(null);
     setImagePreview("");
     setExistingImage(p.image || "");
@@ -144,6 +147,7 @@ export default function AdminPage() {
         description: description || null,
         supplier: supplier || null,
         stock: stock ? Number(stock) : 0,
+        discount_price: discountPrice ? Number(discountPrice) : null,
       };
 
       if (editingId) {
@@ -241,9 +245,12 @@ export default function AdminPage() {
       <h1 className="text-4xl font-bold">Mega Halal Admin Panel</h1>
       <p className="mt-4 text-green-600">Muvaffaqiyatli kirdingiz ✅</p>
 
-      <div className="flex gap-3 mt-4 mb-6">
+    <div className="flex gap-3 mt-4 mb-6">
         <Link href="/admin/orders" className="flex-1 bg-blue-600 text-white text-center py-3 rounded-xl">
           📦 Buyurtmalar
+        </Link>
+        <Link href="/admin/banners" className="flex-1 bg-purple-600 text-white text-center py-3 rounded-xl">
+          🖼️ Bannerlar
         </Link>
         <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-3 rounded-xl">
           🚪 Chiqish
@@ -302,6 +309,13 @@ export default function AdminPage() {
           value={stock}
           onChange={(e) => setStock(e.target.value)}
           className="w-full border p-3 rounded-xl bg-white text-black"
+        />
+        <input
+          type="number"
+          placeholder="Chegirma narxi (ixtiyoriy, asl narxdan past bo'lsin)"
+          value={discountPrice}
+          onChange={(e) => setDiscountPrice(e.target.value)}
+          className="w-full border p-3 rounded-xl bg-orange-50 text-black"
         />
 
         {categoryMode === "select" ? (
