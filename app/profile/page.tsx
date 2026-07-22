@@ -294,18 +294,11 @@ export default function ProfilePage() {
           <div className="space-y-3">
             {orders.map((o) => {
               const statusColors: Record<string, string> = {
-                "Pending": "bg-yellow-100 text-yellow-700",
-                "Preparing": "bg-blue-100 text-blue-700",
-                "Out for delivery": "bg-purple-100 text-purple-700",
-                "Delivered": "bg-green-100 text-green-700",
+                "✅ To'landi": "bg-green-100 text-green-700",
+                "📦 Jo'natildi": "bg-blue-100 text-blue-700",
+                "❌ Bekor qilindi": "bg-red-100 text-red-700",
               };
-              const statusLabels: Record<string, string> = {
-                "Pending": "⏳ Kutilmoqda",
-                "Preparing": "👨‍🍳 Tayyorlanmoqda",
-                "Out for delivery": "🚚 Yetkazilmoqda",
-                "Delivered": "✅ Yetkazildi",
-              };
-              const status = o.status || "Pending";
+              const status = o.status || "⏳ Kutilmoqda";
               return (
                 <div key={o.id} className="border rounded-xl p-3">
                   <div className="flex justify-between items-center mb-1">
@@ -314,8 +307,8 @@ export default function ProfilePage() {
                   </div>
                   <p className="text-xs text-gray-500 mb-2">{new Date(o.created_at).toLocaleString("uz-UZ")}</p>
                   <div className="flex gap-2 mb-2">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusColors[status] || "bg-gray-100 text-gray-600"}`}>
-                      {statusLabels[status] || status}
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusColors[status] || "bg-yellow-100 text-yellow-700"}`}>
+                      {status}
                     </span>
                     {o.payment_status && (
                       <span className="text-xs font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-600">

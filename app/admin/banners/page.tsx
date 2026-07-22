@@ -98,11 +98,7 @@ export default function BannersAdminPage() {
       <h1 className="text-4xl font-bold">Bannerlar</h1>
       <p className="mt-2 text-gray-500 text-sm">Bosh sahifada aylanib turadigan rasmlar</p>
 
-      <div className="flex gap-3 mt-4 mb-6">
-        <Link href="/admin" className="bg-green-600 text-white px-4 py-3 rounded-xl">⬅️ Mahsulotlar</Link>
-        <Link href="/admin/orders" className="bg-blue-600 text-white px-4 py-3 rounded-xl">📦 Buyurtmalar</Link>
-        <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-3 rounded-xl">🚪 Chiqish</button>
-      </div>
+      <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
 
       <div className="max-w-md space-y-4 bg-gray-50 border rounded-xl p-4">
         <h2 className="font-bold text-black">Yangi banner qo'shish</h2>

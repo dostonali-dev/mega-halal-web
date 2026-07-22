@@ -9,6 +9,8 @@ export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [checkedLogin, setCheckedLogin] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -37,174 +39,115 @@ export default function OrdersPage() {
     setOrders(data || []);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminLoggedIn");
-    router.push("/admin");
+  const statusColors: Record<string, string> = {
+    "❌ Bekor qilindi": "bg-red-100 text-red-600",
+    "📦 Jo'natildi": "bg-blue-100 text-blue-600",
+    "✅ To'landi": "bg-green-100 text-green-600",
   };
 
   if (!checkedLogin) return null;
 
   return (
-  <main className="p-8">
-    <div className="flex gap-3 mb-8">
+    <main className="p-6 md:p-8">
+      <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
+      <h1 className="text-3xl font-bold mt-3 mb-6">📦 Buyurtmalar</h1>
 
-      <Link
-        href="/admin"
-        className="bg-green-600 text-white px-4 py-3 rounded-xl"
-      >
-        ⬅️ Mahsulotlar
-      </Link>
+      <div className="space-y-3 max-w-3xl">
+        {orders.map((order) => {
+          const isOpen = expandedId === order.id;
+          const statusClass = statusColors[order.status] || "bg-yellow-100 text-yellow-600";
+          return (
+            <div key={order.id} className="bg-white rounded-2xl shadow border">
+              <button
+                onClick={() => setExpandedId(isOpen ? null : order.id)}
+                className="w-full p-4 flex items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {order.receipt_image && (
+                    <img src={order.receipt_image} alt="chek" className="w-10 h-10 object-cover rounded-lg border flex-shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-bold text-black truncate">№{order.id} · {order.customer_name}</p>
+                    <p className="text-xs text-gray-500 truncate">{order.phone}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="font-bold text-green-700">{order.total?.toLocaleString()}₩</span>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusClass}`}>
+                    {order.status || "⏳ Kutilmoqda"}
+                  </span>
+                  <span className="text-gray-400">{isOpen ? "▲" : "▼"}</span>
+                </div>
+              </button>
 
-      <Link
-        href="/admin/banners"
-        className="bg-purple-600 text-white px-4 py-3 rounded-xl"
-      >
-        🖼️ Bannerlar
-      </Link>
+              {isOpen && (
+                <div className="px-4 pb-4 border-t pt-3">
+                  <p className="text-black">📍 {order.address}</p>
+                  {order.note && <p className="mt-1 text-gray-700">📝 {order.note}</p>}
 
-      <button
-        onClick={handleLogout}
-        className="bg-red-600 text-white px-4 py-3 rounded-xl"
-      >
-        🚪 Chiqish
-      </button>
+                  <div className="mt-3 p-3 bg-gray-100 rounded-xl">
+                    <p className="font-semibold text-black mb-2">🛒 Buyurtma:</p>
+                    <pre className="whitespace-pre-wrap text-sm text-black">{order.order_text}</pre>
+                  </div>
 
-    </div>
+                  {order.receipt_image && (
+                    <div className="mt-3">
+                      <p className="font-semibold text-black mb-2">📷 To'lov cheki (kattalashtirish uchun bosing)</p>
+                      <img
+                        src={order.receipt_image}
+                        alt="receipt"
+                        onClick={() => setZoomedImage(order.receipt_image)}
+                        className="max-w-[160px] rounded-xl border cursor-pointer"
+                      />
+                    </div>
+                  )}
 
-    <h1 className="text-4xl font-bold mb-8">
-      📦 Buyurtmalar
-    </h1>
-
-    ...
-
-      <div className="space-y-4">
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className="bg-white rounded-2xl shadow p-5 border"
-          >
-            <h2 className="text-2xl font-bold text-black">
-  № {order.id}
-</h2>
-
-            <p className="text-black font-semibold">
-  👤 {order.customer_name}
-</p>
-
-<p className="text-black">
-  📞 {order.phone}
-</p>
-
-<p className="text-black">
-  📍 {order.address}
-</p>
-{order.receipt_image && (
-  <div className="mt-3">
-    <p className="font-semibold text-black mb-2">
-      📷 To'lov cheki
-    </p>
-
-    <a
-      href={order.receipt_image}
-      target="_blank"
-      rel="noreferrer"
-    >
-      <img
-        src={order.receipt_image}
-        alt="receipt"
-        className="max-w-xs rounded-xl border"
-      />
-    </a>
-  </div>
-)}
-            {order.note && (
-  <p className="mt-2 text-gray-700">
-    📝 {order.note}
-  </p>
-)}
-            <div className="mt-3 p-3 bg-gray-100 rounded-xl">
-  <p className="font-semibold text-black mb-2">
-    🛒 Buyurtma:
-  </p>
-
-  <pre className="whitespace-pre-wrap text-sm text-black">
-    {order.order_text}
-  </pre>
-</div>
-
-            <p className="font-bold text-green-700 mt-2">
-              💰 {order.total?.toLocaleString()}₩
-            </p>
-   <p
-  className={`mt-2 font-bold ${
-    order.status === "❌ Bekor qilindi"
-      ? "text-red-600"
-      : order.status === "📦 Jo'natildi"
-      ? "text-blue-600"
-      : order.status === "✅ To'landi"
-      ? "text-green-600"
-      : "text-yellow-600"
-  }`}
->
-  {order.status}
-</p>
-
-{order.status !== "📦 Jo'natildi" &&
- order.status !== "❌ Bekor qilindi" && (
-
-<div className="flex gap-2 mt-4">
-  <button
-    onClick={async () => {
-      await supabase
-        .from("orders")
-        .update({
-          status: "✅ To'landi",
-        })
-        .eq("id", order.id);
-
-      loadOrders();
-    }}
-    className="bg-green-600 text-white px-4 py-2 rounded-xl"
-  >
-    ✅ To'landi
-  </button>
-
-  <button
-    onClick={async () => {
-      await supabase
-        .from("orders")
-        .update({
-          status: "📦 Jo'natildi",
-        })
-        .eq("id", order.id);
-
-      loadOrders();
-    }}
-    className="bg-blue-600 text-white px-4 py-2 rounded-xl"
-  >
-    📦 Jo'natildi
-  </button>
-  <button
-  onClick={async () => {
-    await supabase
-      .from("orders")
-      .update({
-        status: "❌ Bekor qilindi",
-      })
-      .eq("id", order.id);
-
-    loadOrders();
-  }}
-  className="bg-red-600 text-white px-4 py-2 rounded-xl"
->
-  ❌ Bekor qilindi
-</button>
-</div>
-
-)}
-          </div>
-        ))}
+                  {order.status !== "📦 Jo'natildi" && order.status !== "❌ Bekor qilindi" && (
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={async () => {
+                          await supabase.from("orders").update({ status: "✅ To'landi" }).eq("id", order.id);
+                          loadOrders();
+                        }}
+                        className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm"
+                      >
+                        ✅ To'landi
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await supabase.from("orders").update({ status: "📦 Jo'natildi" }).eq("id", order.id);
+                          loadOrders();
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm"
+                      >
+                        📦 Jo'natildi
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await supabase.from("orders").update({ status: "❌ Bekor qilindi" }).eq("id", order.id);
+                          loadOrders();
+                        }}
+                        className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
+                      >
+                        ❌ Bekor qilindi
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
+
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setZoomedImage(null)}
+        >
+          <img src={zoomedImage} alt="chek katta" className="max-w-full max-h-full rounded-xl" />
+        </div>
+      )}
     </main>
   );
 }
