@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, type Address } from "@/lib/addresses";
 
@@ -15,6 +16,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { products, cart, total, clearCart } = useCart();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
 
   const [customerName, setCustomerName] = useState("");
@@ -58,50 +60,43 @@ export default function CheckoutPage() {
     }).open();
   };
 
-  const decrementStock = async () => {
-    for (const item of items) {
-      const qty = cart[item.id] || 0;
-      if (qty <= 0) continue;
-
-      const { data: current } = await supabase
-        .from("products")
-        .select("stock")
-        .eq("id", item.id)
-        .single();
-
-      const currentStock = current?.stock ?? 0;
-      const newStock = Math.max(0, currentStock - qty);
-
-      await supabase.from("products").update({ stock: newStock }).eq("id", item.id);
-    }
-  };
-
- const validateStock = async (): Promise<string | null> => {
+  const validateStock = async (): Promise<string | null> => {
     const ids = items.map((i) => i.id);
     const { data, error } = await supabase.from("products").select("id, name, stock, in_stock").in("id", ids);
-    if (error || !data) return "Ombordagi holatni tekshirib bo'lmadi, qayta urinib ko'ring.";
+    if (error || !data) return t("alert_generic_error");
 
     for (const item of items) {
       const dbItem = data.find((d) => d.id === item.id);
       const qty = cart[item.id] || 0;
       if (!dbItem) continue;
       if (dbItem.in_stock === false) {
-        return `"${dbItem.name}" hozircha sotuvda yo'q. Iltimos, uni savatchadan olib tashlang.`;
+        return `"${dbItem.name}" — ${t("out_of_stock_label")}`;
       }
       if (dbItem.stock != null && dbItem.stock < qty) {
-        return `"${dbItem.name}" uchun omborda yetarli miqdor yo'q (mavjud: ${dbItem.stock} ta, siz: ${qty} ta). Iltimos, miqdorni kamaytiring.`;
+        return `"${dbItem.name}": ${dbItem.stock} / ${qty}`;
       }
     }
     return null;
   };
 
+  const decrementStock = async () => {
+    for (const item of items) {
+      const qty = cart[item.id] || 0;
+      if (qty <= 0) continue;
+      const { data: current } = await supabase.from("products").select("stock").eq("id", item.id).single();
+      const currentStock = current?.stock ?? 0;
+      const newStock = Math.max(0, currentStock - qty);
+      await supabase.from("products").update({ stock: newStock }).eq("id", item.id);
+    }
+  };
+
   const handleSubmit = async () => {
-    if (items.length === 0) { alert("Savatcha bo'sh!"); return; }
-    if (!customerName.trim()) { alert("Ismingizni kiriting!"); return; }
-    if (!phone.trim()) { alert("Telefon raqamingizni kiriting!"); return; }
-    if (selectedId === "new" && addressMode === "form" && !address.trim()) { alert("Manzilni kiriting!"); return; }
-    if (selectedId === "new" && addressMode === "photo" && !addressImageFile) { alert("Manzil rasmini yuklang!"); return; }
-    if (!receiptFile) { alert("To'lov chekini yuklang!"); return; }
+    if (items.length === 0) { alert(t("alert_cart_empty")); return; }
+    if (!customerName.trim()) { alert(t("alert_enter_name")); return; }
+    if (!phone.trim()) { alert(t("alert_enter_phone")); return; }
+    if (selectedId === "new" && addressMode === "form" && !address.trim()) { alert(t("alert_enter_address")); return; }
+    if (selectedId === "new" && addressMode === "photo" && !addressImageFile) { alert(t("alert_enter_address_photo")); return; }
+    if (!receiptFile) { alert(t("alert_upload_receipt")); return; }
 
     setSubmitting(true);
 
@@ -111,10 +106,9 @@ export default function CheckoutPage() {
       setSubmitting(false);
       return;
     }
+
     try {
-      const orderText = items
-        .map((p) => `${p.name} x ${cart[p.id]} = ${p.price * (cart[p.id] || 0)}₩`)
-        .join("\n");
+      const orderText = items.map((p) => `${p.name} x ${cart[p.id]} = ${p.price * (cart[p.id] || 0)}₩`).join("\n");
 
       let fullAddress = "";
       let addressImageUrl: string | null = null;
@@ -124,13 +118,13 @@ export default function CheckoutPage() {
           const fileName = `address-${Date.now()}.jpg`;
           const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, addressImageFile);
           if (uploadError) {
-            alert("Manzil rasmi yuklanmadi: " + uploadError.message);
+            alert(t("alert_generic_error") + ": " + uploadError.message);
             setSubmitting(false);
             return;
           }
           const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(fileName);
           addressImageUrl = urlData.publicUrl;
-          fullAddress = "Manzil rasm orqali yuborilgan";
+          fullAddress = "Photo address";
         } else {
           fullAddress = addressDetail ? `${address}, ${addressDetail}` : address;
         }
@@ -150,7 +144,7 @@ export default function CheckoutPage() {
         const chosen = savedAddresses.find((a) => a.id === selectedId);
         if (chosen) {
           if (chosen.address_image) {
-            fullAddress = "Manzil rasm orqali yuborilgan";
+            fullAddress = "Photo address";
             addressImageUrl = chosen.address_image;
           } else {
             fullAddress = chosen.address_detail ? `${chosen.address}, ${chosen.address_detail}` : chosen.address || "";
@@ -174,21 +168,19 @@ export default function CheckoutPage() {
         .single();
 
       if (orderError || !orderData) {
-        alert("Buyurtma saqlanmadi!");
+        alert(t("alert_order_not_saved"));
         setSubmitting(false);
         return;
       }
 
       const orderId = orderData.id;
 
-      // Buyurtma qabul qilingach, ombordagi mahsulot sonini kamaytiramiz
       await decrementStock();
 
       const receiptFileName = `${orderId}-${Date.now()}.jpg`;
-
       const { error: uploadError } = await supabase.storage.from("receipts").upload(receiptFileName, receiptFile);
       if (uploadError) {
-        alert("Chek rasmi yuklanmadi:\n" + JSON.stringify(uploadError));
+        alert(t("alert_generic_error") + ": " + uploadError.message);
         setSubmitting(false);
         return;
       }
@@ -214,7 +206,7 @@ export default function CheckoutPage() {
       setOrderNumber(String(orderId));
     } catch (e) {
       console.error(e);
-      alert("Xatolik yuz berdi, qayta urinib ko'ring.");
+      alert(t("alert_generic_error"));
     }
     setSubmitting(false);
   };
@@ -223,14 +215,14 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen bg-green-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-6 w-full max-w-md text-center">
-          <h2 className="text-2xl font-bold text-green-600">✅ Buyurtma qabul qilindi</h2>
-          <p className="mt-3 text-lg font-bold text-black">Buyurtma № {orderNumber}</p>
-          <p className="mt-4 text-black">Buyurtmangiz muvaffaqiyatli qabul qilindi.</p>
+          <h2 className="text-2xl font-bold text-green-600">{t("checkout_success_title")}</h2>
+          <p className="mt-3 text-lg font-bold text-black">{t("checkout_success_order_no")} {orderNumber}</p>
+          <p className="mt-4 text-black">{t("checkout_success_message")}</p>
           <div className="mt-3 p-3 bg-yellow-100 rounded-xl">
-            <p className="text-yellow-800 font-medium">⚠️ To'lov tasdiqlangach buyurtmangiz jo'natiladi.</p>
+            <p className="text-yellow-800 font-medium">{t("checkout_success_note")}</p>
           </div>
           <button onClick={() => router.push("/")} className="mt-6 w-full bg-green-600 text-white py-3 rounded-xl font-bold">
-            Bosh sahifaga qaytish
+            {t("checkout_back_home")}
           </button>
         </div>
       </main>
@@ -240,11 +232,11 @@ export default function CheckoutPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">← Orqaga</button>
-        <h1 className="text-2xl font-bold text-black mb-4">Buyurtmani rasmiylashtirish</h1>
+        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">{t("back")}</button>
+        <h1 className="text-2xl font-bold text-black mb-4">{t("checkout_title")}</h1>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
-          <h2 className="font-bold text-black mb-2">Mahsulotlar</h2>
+          <h2 className="font-bold text-black mb-2">{t("checkout_products")}</h2>
           {items.map((p) => (
             <div key={p.id} className="flex justify-between text-black border-b py-2">
               <span>{p.name} x {cart[p.id]}</span>
@@ -252,35 +244,27 @@ export default function CheckoutPage() {
             </div>
           ))}
           <div className="flex justify-between font-bold text-green-700 mt-2 text-lg">
-            <span>Jami</span><span>{total.toLocaleString()}₩</span>
+            <span>{t("cart_total")}</span><span>{total.toLocaleString()}₩</span>
           </div>
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4 space-y-3">
-          <h2 className="font-bold text-black">Qabul qiluvchi</h2>
-          <input type="text" placeholder="Ism" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full border rounded-xl p-3 text-black" />
-          <input type="text" placeholder="Telefon raqami" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border rounded-xl p-3 text-black" />
+          <h2 className="font-bold text-black">{t("checkout_recipient")}</h2>
+          <input type="text" placeholder={t("checkout_name_placeholder")} value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full border rounded-xl p-3 text-black" />
+          <input type="text" placeholder={t("checkout_phone_placeholder")} value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border rounded-xl p-3 text-black" />
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
-          <h2 className="font-bold text-black mb-3">Yetkazib berish manzili</h2>
+          <h2 className="font-bold text-black mb-3">{t("checkout_delivery_address")}</h2>
 
           <div className="space-y-2 mb-3">
             {savedAddresses.map((a) => (
-              <label
-                key={a.id}
-                className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === a.id ? "border-green-600 bg-green-50" : "border-gray-200"}`}
-              >
-                <input
-                  type="radio"
-                  checked={selectedId === a.id}
-                  onChange={() => setSelectedId(a.id)}
-                  className="mt-1"
-                />
+              <label key={a.id} className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === a.id ? "border-green-600 bg-green-50" : "border-gray-200"}`}>
+                <input type="radio" checked={selectedId === a.id} onChange={() => setSelectedId(a.id)} className="mt-1" />
                 <div className="flex-1">
-                  {a.is_default && <span className="inline-block bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">Asosiy</span>}
+                  {a.is_default && <span className="inline-block bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">{t("checkout_default_badge")}</span>}
                   {a.address_image ? (
-                    <p className="text-sm text-black">📷 Rasm orqali yuborilgan manzil</p>
+                    <p className="text-sm text-black">📷 {t("checkout_upload_photo")}</p>
                   ) : (
                     <p className="text-sm text-black">{a.address}{a.address_detail ? `, ${a.address_detail}` : ""}</p>
                   )}
@@ -290,7 +274,7 @@ export default function CheckoutPage() {
 
             <label className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === "new" ? "border-green-600 bg-green-50" : "border-gray-200"}`}>
               <input type="radio" checked={selectedId === "new"} onChange={() => setSelectedId("new")} className="mt-1" />
-              <span className="text-sm font-bold text-black">+ Yangi manzil kiritish</span>
+              <span className="text-sm font-bold text-black">{t("checkout_new_address")}</span>
             </label>
           </div>
 
@@ -298,24 +282,23 @@ export default function CheckoutPage() {
             <div className="border-t pt-3">
               <div className="flex gap-2 mb-3">
                 <button type="button" onClick={() => setAddressMode("form")} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${addressMode === "form" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-500"}`}>
-                  Manzilni yozish
+                  {t("checkout_type_address")}
                 </button>
                 <button type="button" onClick={() => setAddressMode("photo")} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${addressMode === "photo" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-500"}`}>
-                  Rasm yuklash
+                  {t("checkout_upload_photo")}
                 </button>
               </div>
 
               {addressMode === "form" ? (
                 <>
                   <div className="flex gap-2 mb-2">
-                    <input type="text" placeholder="Manzil" value={address} readOnly className="flex-1 border rounded-xl p-3 text-black" />
-                    <button type="button" onClick={openAddressSearch} className="bg-blue-600 text-white px-4 rounded-xl">🔍 Qidirish</button>
+                    <input type="text" placeholder={t("checkout_address_placeholder")} value={address} readOnly className="flex-1 border rounded-xl p-3 text-black" />
+                    <button type="button" onClick={openAddressSearch} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
                   </div>
-                  <input type="text" placeholder="Uy raqami, xonadon, qavat (101동 1203호)" value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} className="w-full border rounded-xl p-3 text-black mb-2" />
+                  <input type="text" placeholder={t("checkout_detail_placeholder")} value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} className="w-full border rounded-xl p-3 text-black mb-2" />
                 </>
               ) : (
                 <div className="border-2 border-dashed rounded-xl p-4 text-center bg-green-50 mb-2">
-                  <p className="text-sm text-gray-600 mb-2">Manzil rasmini yuklang</p>
                   <input
                     type="file"
                     accept="image/*"
@@ -333,28 +316,28 @@ export default function CheckoutPage() {
 
               <label className="flex items-center gap-2 text-sm text-black">
                 <input type="checkbox" checked={saveNewAddress} onChange={(e) => setSaveNewAddress(e.target.checked)} />
-                Shu manzilni keyingi safar uchun ham saqlash
+                {t("checkout_save_address_checkbox")}
               </label>
             </div>
           )}
 
-          <textarea placeholder="Izoh" value={note} onChange={(e) => setNote(e.target.value)} className="w-full border rounded-xl p-3 text-black mt-3" />
+          <textarea placeholder={t("checkout_note_placeholder")} value={note} onChange={(e) => setNote(e.target.value)} className="w-full border rounded-xl p-3 text-black mt-3" />
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
-          <h2 className="font-bold text-black mb-2">To'lov uchun bank hisob raqami</h2>
+          <h2 className="font-bold text-black mb-2">{t("checkout_bank_title")}</h2>
           <div className="p-3 bg-gray-100 rounded-xl">
             <p className="font-bold text-black">{BANK_NAME}</p>
             <p className="text-lg text-black">{BANK_ACCOUNT}</p>
             <p className="text-black">{BANK_HOLDER}</p>
           </div>
-          <button onClick={() => { navigator.clipboard.writeText(BANK_ACCOUNT); alert("Hisob raqami nusxalandi"); }} className="mt-3 w-full bg-blue-600 text-white py-3 rounded-xl">
-            📋 Hisob raqamini nusxalash
+          <button onClick={() => { navigator.clipboard.writeText(BANK_ACCOUNT); alert(t("checkout_copied")); }} className="mt-3 w-full bg-blue-600 text-white py-3 rounded-xl">
+            {t("checkout_copy_account")}
           </button>
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
-          <p className="font-medium text-black mb-2">📷 To'lov chekini yuklang</p>
+          <p className="font-medium text-black mb-2">{t("checkout_receipt_title")}</p>
           <input
             type="file"
             accept="image/*"
@@ -375,7 +358,7 @@ export default function CheckoutPage() {
         </div>
 
         <button onClick={handleSubmit} disabled={submitting} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white py-4 rounded-2xl text-lg font-bold mb-10">
-          {submitting ? "Yuborilmoqda..." : "Buyurtma berish"}
+          {submitting ? t("checkout_submitting") : t("checkout_submit")}
         </button>
       </div>
     </main>

@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { products, cart, setQty, getMaxQty } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { t } = useLanguage();
 
   const productId = Number(params.id);
   const product = products.find((p) => p.id === productId);
@@ -21,7 +23,7 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
-        <p className="text-gray-400">Mahsulot topilmadi</p>
+        <p className="text-gray-400">{t("product_not_found")}</p>
       </main>
     );
   }
@@ -68,7 +70,7 @@ export default function ProductDetailPage() {
         <div className="p-5">
           {outOfStock && (
             <span className="inline-block bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full mb-2">
-              Sotuvda yo'q
+              {t("out_of_stock_label")}
             </span>
           )}
           <h1 className="text-2xl font-bold text-black">{product.name}</h1>
@@ -76,35 +78,35 @@ export default function ProductDetailPage() {
 
           {product.description && (
             <div className="mt-4">
-              <h2 className="font-bold text-black mb-1">Tavsif</h2>
+              <h2 className="font-bold text-black mb-1">{t("product_description")}</h2>
               <p className="text-gray-600 whitespace-pre-line">{product.description}</p>
             </div>
           )}
 
           {currentInCart > 0 && (
             <p className="mt-4 text-sm text-green-700 font-semibold">
-              Hozir savatda: {currentInCart} ta
+              {t("product_in_cart")} {currentInCart}
             </p>
           )}
 
           {!outOfStock && maxQty !== Infinity && (
             <p className="mt-1 text-xs text-gray-500">
-              Omborda mavjud: {maxQty} ta {remaining === 0 && "(barchasi savatda)"}
+              {t("product_stock_available")} {maxQty} {remaining === 0 && t("product_stock_all_in_cart")}
             </p>
           )}
 
           <div className="mt-4">
             {outOfStock ? (
               <div className="w-full bg-gray-200 text-gray-500 py-4 rounded-2xl font-bold text-lg text-center">
-                Hozircha sotuvda yo'q
+                {t("product_out_of_stock")}
               </div>
             ) : remaining <= 0 ? (
               <div className="w-full bg-yellow-100 text-yellow-700 py-4 rounded-2xl font-bold text-center">
-                Maksimal miqdor allaqachon savatda
+                {t("product_max_in_cart")}
               </div>
             ) : (
               <>
-                <p className="text-sm font-bold text-black mb-2">Miqdorni tanlang</p>
+                <p className="text-sm font-bold text-black mb-2">{t("product_choose_qty")}</p>
                 <div className="flex items-center gap-3 bg-gray-100 rounded-2xl px-4 py-3 mb-4">
                   <button
                     onClick={() => setLocalQty((q) => clampLocalQty(q - 1))}
@@ -133,18 +135,18 @@ export default function ProductDetailPage() {
                   onClick={handleConfirm}
                   className={`w-full py-4 rounded-2xl font-bold text-lg text-white ${justAdded ? "bg-green-800" : "bg-green-600 hover:bg-green-700"}`}
                 >
-                  {justAdded ? "✅ Qo'shildi" : "Savatchaga qo'shish"}
+                  {justAdded ? t("product_added") : t("product_add_to_cart")}
                 </button>
-
-                {currentInCart > 0 && (
-                  <button
-                    onClick={() => router.push("/cart")}
-                    className="w-full mt-3 py-4 rounded-2xl font-bold text-lg text-green-700 bg-white border-2 border-green-600"
-                  >
-                    🛒 Savatga o'tish ({currentInCart} ta)
-                  </button>
-                )}
               </>
+            )}
+
+            {currentInCart > 0 && (
+              <button
+                onClick={() => router.push("/cart")}
+                className="w-full mt-3 py-4 rounded-2xl font-bold text-lg text-green-700 bg-white border-2 border-green-600 flex items-center justify-center gap-2"
+              >
+                🛒 {t("product_go_to_cart")} ({currentInCart})
+              </button>
             )}
           </div>
         </div>

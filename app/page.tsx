@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/LanguageContext";
 import BottomNav from "@/components/BottomNav";
 
-const INSTAGRAM_URL = "https://www.instagram.com/mega_supermarket_kyongsan?igsh=MXNnZmtoejllZzVqbw==";
-const TIKTOK_URL = "https://www.tiktok.com/@mega_supermarket_korea?_r=1&_t=ZS-98FdJ1ZOaf6";
+const INSTAGRAM_URL = "https://instagram.com/megahalalsupermarket";
+const TIKTOK_URL = "https://tiktok.com/@megahalalsupermarket";
 
 type Banner = { id: number; image: string; link: string | null };
 
@@ -31,18 +32,11 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
 
   return (
     <div className="relative mb-8">
-      {current.link ? (
-        <Link href={current.link}>{content}</Link>
-      ) : (
-        content
-      )}
+      {current.link ? <Link href={current.link}>{content}</Link> : content}
       {banners.length > 1 && (
         <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
           {banners.map((b, i) => (
-            <span
-              key={b.id}
-              className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/50"}`}
-            />
+            <span key={b.id} className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/50"}`} />
           ))}
         </div>
       )}
@@ -52,6 +46,7 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
 
 export default function Home() {
   const { products, cart, addToCart, removeFromCart } = useCart();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [banners, setBanners] = useState<Banner[]>([]);
 
@@ -69,9 +64,7 @@ export default function Home() {
     : [];
 
   const newArrivals = [...products].sort((a, b) => b.id - a.id).slice(0, 8);
-  const discounted = products.filter(
-    (p) => p.discount_price != null && p.discount_price < p.price
-  );
+  const discounted = products.filter((p) => p.discount_price != null && p.discount_price < p.price);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
@@ -80,31 +73,21 @@ export default function Home() {
           Mega Halal Supermarket
         </h1>
         <p className="text-center text-gray-600 mt-4 text-lg mb-6">
-          Koreya bo'ylab Halal mahsulotlar yetkazib berish
+          {t("home_subtitle")}
         </p>
 
         <BannerCarousel banners={banners} />
 
         {!query.trim() && discounted.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-black mb-3">🔥 Chegirmadagi mahsulotlar</h2>
+            <h2 className="text-xl font-bold text-black mb-3">{t("discounted_products")}</h2>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {discounted.map((p) => {
                 const percent = Math.round((1 - (p.discount_price! / p.price)) * 100);
                 return (
-                  <Link
-                    key={p.id}
-                    href={`/products/${p.id}`}
-                    className="flex-shrink-0 w-36 bg-white border border-green-100 rounded-2xl overflow-hidden relative"
-                  >
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
-                      -{percent}%
-                    </span>
-                    {p.image ? (
-                      <img src={p.image} alt={p.name} className="w-full h-28 object-cover" />
-                    ) : (
-                      <div className="w-full h-28 bg-gray-100" />
-                    )}
+                  <Link key={p.id} href={`/products/${p.id}`} className="flex-shrink-0 w-36 bg-white border border-green-100 rounded-2xl overflow-hidden relative">
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">-{percent}%</span>
+                    {p.image ? <img src={p.image} alt={p.name} className="w-full h-28 object-cover" /> : <div className="w-full h-28 bg-gray-100" />}
                     <div className="p-2">
                       <p className="text-xs font-semibold text-black line-clamp-2">{p.name}</p>
                       <p className="text-gray-400 text-xs line-through">{p.price.toLocaleString()}₩</p>
@@ -119,19 +102,11 @@ export default function Home() {
 
         {!query.trim() && newArrivals.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-black mb-3">🆕 Yangi mahsulotlar</h2>
+            <h2 className="text-xl font-bold text-black mb-3">{t("new_products")}</h2>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {newArrivals.map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/products/${p.id}`}
-                  className="flex-shrink-0 w-36 bg-white border border-green-100 rounded-2xl overflow-hidden"
-                >
-                  {p.image ? (
-                    <img src={p.image} alt={p.name} className="w-full h-28 object-cover" />
-                  ) : (
-                    <div className="w-full h-28 bg-gray-100" />
-                  )}
+                <Link key={p.id} href={`/products/${p.id}`} className="flex-shrink-0 w-36 bg-white border border-green-100 rounded-2xl overflow-hidden">
+                  {p.image ? <img src={p.image} alt={p.name} className="w-full h-28 object-cover" /> : <div className="w-full h-28 bg-gray-100" />}
                   <div className="p-2">
                     <p className="text-xs font-semibold text-black line-clamp-2">{p.name}</p>
                     <p className="text-green-700 font-bold text-sm">{p.price.toLocaleString()}₩</p>
@@ -142,21 +117,11 @@ export default function Home() {
           </div>
         )}
 
-       <div className="flex gap-3 mb-8">
-          <Link
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-3 rounded-xl font-bold"
-          >
+        <div className="flex gap-3 mb-8">
+          <Link href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-3 rounded-xl font-bold">
             📸 Instagram
           </Link>
-          <Link
-            href={TIKTOK_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="flex-1 bg-black text-white text-center py-3 rounded-xl font-bold"
-          >
+          <Link href={TIKTOK_URL} target="_blank" rel="noreferrer" className="flex-1 bg-black text-white text-center py-3 rounded-xl font-bold">
             🎵 TikTok
           </Link>
         </div>
@@ -164,7 +129,7 @@ export default function Home() {
         <div className="max-w-xl mx-auto">
           <input
             type="text"
-            placeholder="🔎 Mahsulot qidirish..."
+            placeholder={t("search_placeholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full border rounded-2xl p-4 text-black text-lg shadow"
@@ -173,17 +138,11 @@ export default function Home() {
 
         {query.trim() ? (
           <div className="mt-8 space-y-3">
-            {searchResults.length === 0 && (
-              <p className="text-center text-gray-400">Hech narsa topilmadi</p>
-            )}
+            {searchResults.length === 0 && <p className="text-center text-gray-400">{t("no_results")}</p>}
             {searchResults.map((item) => (
               <div key={item.id} className="bg-white border border-green-100 rounded-2xl p-4 flex justify-between items-center">
                 <Link href={`/products/${item.id}`} className="flex items-center gap-3">
-                  {item.image ? (
-                    <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" />
-                  ) : (
-                    <div className="w-14 h-14 rounded-lg border bg-gray-100 flex-shrink-0" />
-                  )}
+                  {item.image ? <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" /> : <div className="w-14 h-14 rounded-lg border bg-gray-100 flex-shrink-0" />}
                   <div>
                     <p className="font-semibold text-black">{item.name}</p>
                     <p className="text-green-700 font-bold">{item.price.toLocaleString()}₩</p>
@@ -200,11 +159,7 @@ export default function Home() {
         ) : (
           <div className="mt-4 space-y-4">
             {categories.map((cat) => (
-              <Link
-                key={cat}
-                href={`/categories/${encodeURIComponent(cat)}`}
-                className="bg-white border border-green-100 rounded-3xl shadow-lg p-5 flex justify-between items-center"
-              >
+              <Link key={cat} href={`/categories/${encodeURIComponent(cat)}`} className="bg-white border border-green-100 rounded-3xl shadow-lg p-5 flex justify-between items-center">
                 <span className="text-xl font-bold text-black">{cat}</span>
                 <span className="text-2xl text-green-700">→</span>
               </Link>

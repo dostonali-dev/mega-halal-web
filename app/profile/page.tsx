@@ -4,12 +4,23 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, setDefaultAddress, deleteAddress, type Address } from "@/lib/addresses";
-import BottomNav from "@/components/BottomNav";
 import { useLanguage } from "@/lib/LanguageContext";
 import { LANGUAGES } from "@/lib/i18n";
+import BottomNav from "@/components/BottomNav";
 
-const STORE_PHONE = "010-3943-2233";
+const STORE_PHONE = "010-2132-2202";
 const STORE_TELEGRAM = "https://t.me/megahalalsuppermarket";
+
+const STATUS_KEY_MAP: Record<string, "order_status_paid" | "order_status_shipped" | "order_status_cancelled"> = {
+  "✅ To'landi": "order_status_paid",
+  "📦 Jo'natildi": "order_status_shipped",
+  "❌ Bekor qilindi": "order_status_cancelled",
+};
+const STATUS_COLOR_MAP: Record<string, string> = {
+  "✅ To'landi": "bg-green-100 text-green-700",
+  "📦 Jo'natildi": "bg-blue-100 text-blue-700",
+  "❌ Bekor qilindi": "bg-red-100 text-red-700",
+};
 
 type Order = {
   id: number;
@@ -83,8 +94,8 @@ export default function ProfilePage() {
 
   const handleAddAddress = async () => {
     if (!user) return;
-    if (addressMode === "form" && !address.trim()) { alert("Manzilni kiriting!"); return; }
-    if (addressMode === "photo" && !addressImageFile) { alert("Manzil rasmini yuklang!"); return; }
+    if (addressMode === "form" && !address.trim()) { alert(t("alert_enter_address")); return; }
+    if (addressMode === "photo" && !addressImageFile) { alert(t("alert_enter_address_photo")); return; }
 
     setSaving(true);
     try {
@@ -93,7 +104,7 @@ export default function ProfilePage() {
         const fileName = `profile-address-${user.id}-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, addressImageFile);
         if (uploadError) {
-          alert("Rasm yuklanmadi: " + uploadError.message);
+          alert(t("alert_generic_error") + ": " + uploadError.message);
           setSaving(false);
           return;
         }
@@ -114,14 +125,14 @@ export default function ProfilePage() {
       );
 
       if (error) {
-        alert("Xatolik: " + error.message);
+        alert(t("alert_generic_error") + ": " + error.message);
       } else {
         resetForm();
         await loadAddresses();
       }
     } catch (e) {
       console.error(e);
-      alert("Xatolik yuz berdi.");
+      alert(t("alert_generic_error"));
     }
     setSaving(false);
   };
@@ -133,10 +144,10 @@ export default function ProfilePage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Bu manzilni o'chirmoqchimisiz?")) return;
+    if (!confirm(t("confirm_delete_address"))) return;
     const error = await deleteAddress(id);
     if (error) {
-      alert("O'chirishda xatolik: " + error.message);
+      alert(t("alert_generic_error") + ": " + error.message);
       return;
     }
     await loadAddresses();
@@ -145,7 +156,7 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-black mb-6">👤 Profil</h1>
+        <h1 className="text-2xl font-bold text-black mb-6">👤 {t("profile_title")}</h1>
 
         <div className="bg-white border border-green-100 rounded-2xl p-6 mb-4">
           <div className="flex items-center gap-4">
@@ -158,6 +169,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
           <h2 className="font-bold text-black mb-3">🌐 {t("profile_language")}</h2>
           <div className="grid grid-cols-2 gap-2">
@@ -177,9 +189,9 @@ export default function ProfilePage() {
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
-          <h2 className="font-bold text-black mb-3">📍 Manzillarim</h2>
+          <h2 className="font-bold text-black mb-3">📍 {t("profile_addresses")}</h2>
 
-          {loadingAddresses && <p className="text-gray-400 text-sm">Yuklanmoqda...</p>}
+          {loadingAddresses && <p className="text-gray-400 text-sm">{t("orders_loading")}</p>}
 
           <div className="space-y-3 mb-3">
             {addresses.map((a) => (
@@ -189,12 +201,12 @@ export default function ProfilePage() {
               >
                 {a.is_default && (
                   <span className="inline-block bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded-full mb-2">
-                    ✅ Asosiy manzil
+                    ✅ {t("checkout_default_badge")}
                   </span>
                 )}
                 {a.address_image ? (
                   <>
-                    <p className="text-sm text-black mb-1">📷 Rasm orqali yuborilgan</p>
+                    <p className="text-sm text-black mb-1">{t("address_via_photo")}</p>
                     <img src={a.address_image} alt="manzil" className="w-full rounded-lg border mb-2" />
                   </>
                 ) : (
@@ -209,14 +221,14 @@ export default function ProfilePage() {
                       onClick={() => handleSetDefault(a.id)}
                       className="text-xs font-bold text-green-700 underline"
                     >
-                      Asosiy qilib belgilash
+                      {t("address_set_default")}
                     </button>
                   )}
                   <button
                     onClick={() => handleDelete(a.id)}
                     className="text-xs font-bold text-red-500 underline ml-auto"
                   >
-                    O'chirish
+                    {t("address_delete")}
                   </button>
                 </div>
               </div>
@@ -228,7 +240,7 @@ export default function ProfilePage() {
               onClick={() => setShowForm(true)}
               className="w-full border-2 border-dashed border-green-300 text-green-700 py-3 rounded-xl font-bold"
             >
-              + Yangi manzil qo'shish
+              {t("address_add_new")}
             </button>
           )}
 
@@ -240,26 +252,26 @@ export default function ProfilePage() {
                   onClick={() => setAddressMode("form")}
                   className={`flex-1 py-2 rounded-lg text-xs font-bold border ${addressMode === "form" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-500"}`}
                 >
-                  Manzilni yozish
+                  {t("checkout_type_address")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setAddressMode("photo")}
                   className={`flex-1 py-2 rounded-lg text-xs font-bold border ${addressMode === "photo" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-500"}`}
                 >
-                  Rasm yuklash
+                  {t("checkout_upload_photo")}
                 </button>
               </div>
 
               {addressMode === "form" ? (
                 <>
                   <div className="flex gap-2 mb-2">
-                    <input type="text" placeholder="Manzil" value={address} readOnly className="flex-1 border rounded-xl p-3 text-black" />
-                    <button type="button" onClick={openAddressSearch} className="bg-blue-600 text-white px-4 rounded-xl">🔍 Qidirish</button>
+                    <input type="text" placeholder={t("checkout_address_placeholder")} value={address} readOnly className="flex-1 border rounded-xl p-3 text-black" />
+                    <button type="button" onClick={openAddressSearch} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
                   </div>
                   <input
                     type="text"
-                    placeholder="Uy raqami, xonadon, qavat (101동 1203호)"
+                    placeholder={t("checkout_detail_placeholder")}
                     value={addressDetail}
                     onChange={(e) => setAddressDetail(e.target.value)}
                     className="w-full border rounded-xl p-3 text-black mb-2"
@@ -267,7 +279,7 @@ export default function ProfilePage() {
                 </>
               ) : (
                 <div className="border-2 border-dashed rounded-xl p-4 text-center bg-green-50 mb-2">
-                  <p className="text-sm text-gray-600 mb-2">Manzil rasmini yuklang</p>
+                  <p className="text-sm text-gray-600 mb-2">{t("address_upload_instruction")}</p>
                   <input
                     type="file"
                     accept="image/*"
@@ -285,10 +297,10 @@ export default function ProfilePage() {
 
               <div className="flex gap-2">
                 <button onClick={handleAddAddress} disabled={saving} className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white py-3 rounded-xl font-bold">
-                  {saving ? "Saqlanmoqda..." : "Saqlash"}
+                  {saving ? t("address_saving") : t("address_save")}
                 </button>
                 <button onClick={resetForm} className="px-4 bg-gray-100 text-gray-600 rounded-xl font-bold">
-                  Bekor qilish
+                  {t("address_cancel")}
                 </button>
               </div>
             </div>
@@ -296,45 +308,38 @@ export default function ProfilePage() {
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
-          <h2 className="font-bold text-black mb-3">📞 Biz bilan bog'lanish</h2>
+          <h2 className="font-bold text-black mb-3">📞 {t("profile_contact")}</h2>
           <a href={`tel:${STORE_PHONE}`} className="block bg-gray-100 rounded-xl p-3 text-black font-semibold mb-2">
             📱 {STORE_PHONE}
           </a>
           <a href={STORE_TELEGRAM} target="_blank" rel="noreferrer" className="block bg-blue-500 text-white rounded-xl p-3 text-center font-semibold">
-            ✈️ Telegram kanalimiz
+            ✈️ Telegram
           </a>
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
-          <h2 className="font-bold text-black mb-3">🧾 Buyurtmalarim</h2>
+          <h2 className="font-bold text-black mb-3">🧾 {t("profile_orders")}</h2>
 
-          {loadingOrders && <p className="text-gray-400 text-sm">Yuklanmoqda...</p>}
-          {!loadingOrders && orders.length === 0 && <p className="text-gray-400 text-sm">Hali buyurtma yo'q</p>}
+          {loadingOrders && <p className="text-gray-400 text-sm">{t("orders_loading")}</p>}
+          {!loadingOrders && orders.length === 0 && <p className="text-gray-400 text-sm">{t("orders_empty")}</p>}
 
           <div className="space-y-3">
             {orders.map((o) => {
-              const statusColors: Record<string, string> = {
-                "✅ To'landi": "bg-green-100 text-green-700",
-                "📦 Jo'natildi": "bg-blue-100 text-blue-700",
-                "❌ Bekor qilindi": "bg-red-100 text-red-700",
-              };
-              const status = o.status || "⏳ Kutilmoqda";
+              const status = o.status || "";
+              const statusKey = STATUS_KEY_MAP[status];
+              const statusLabel = statusKey ? t(statusKey) : t("order_status_pending");
+              const statusClass = STATUS_COLOR_MAP[status] || "bg-yellow-100 text-yellow-700";
               return (
                 <div key={o.id} className="border rounded-xl p-3">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-black">Buyurtma № {o.id}</span>
+                    <span className="font-bold text-black">{t("checkout_success_order_no")} {o.id}</span>
                     <span className="text-green-700 font-bold">{o.total.toLocaleString()}₩</span>
                   </div>
-                  <p className="text-xs text-gray-500 mb-2">{new Date(o.created_at).toLocaleString("uz-UZ")}</p>
+                  <p className="text-xs text-gray-500 mb-2">{new Date(o.created_at).toLocaleString()}</p>
                   <div className="flex gap-2 mb-2">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusColors[status] || "bg-yellow-100 text-yellow-700"}`}>
-                      {status}
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusClass}`}>
+                      {statusLabel}
                     </span>
-                    {o.payment_status && (
-                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                        💳 {o.payment_status}
-                      </span>
-                    )}
                   </div>
                   <p className="text-sm text-black whitespace-pre-line">{o.order_text}</p>
                 </div>
@@ -344,7 +349,7 @@ export default function ProfilePage() {
         </div>
 
         <button onClick={signOut} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-2xl font-bold">
-          Chiqish
+          {t("profile_signout")}
         </button>
       </div>
       <BottomNav />

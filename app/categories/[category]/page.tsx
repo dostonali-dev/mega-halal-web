@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import BottomNav from "@/components/BottomNav";
 
 export default function CategoryDetailPage() {
@@ -11,6 +12,7 @@ export default function CategoryDetailPage() {
   const router = useRouter();
   const { products } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { t } = useLanguage();
 
   const categoryName = decodeURIComponent(params.category as string);
   const items = products.filter((p) => p.category === categoryName);
@@ -18,10 +20,10 @@ export default function CategoryDetailPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
       <div className="max-w-5xl mx-auto">
-        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">← Orqaga</button>
+        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">{t("back")}</button>
         <h1 className="text-2xl font-bold text-black mb-6">{categoryName}</h1>
 
-        {items.length === 0 && <p className="text-gray-400 text-center mt-10">Bu kategoriyada mahsulot yo'q</p>}
+        {items.length === 0 && <p className="text-gray-400 text-center mt-10">{t("category_empty")}</p>}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {items.map((item) => {
@@ -35,15 +37,11 @@ export default function CategoryDetailPage() {
                   {favoriteIds.has(item.id) ? "❤️" : "🤍"}
                 </button>
                 <Link href={`/products/${item.id}`}>
-                  {item.image ? (
-                    <img src={item.image} alt={item.name} className="w-full h-32 object-cover" />
-                  ) : (
-                    <div className="w-full h-32 bg-gray-100" />
-                  )}
+                  {item.image ? <img src={item.image} alt={item.name} className="w-full h-32 object-cover" /> : <div className="w-full h-32 bg-gray-100" />}
                   <div className="p-3">
                     <p className="font-semibold text-black text-sm line-clamp-2">{item.name}</p>
                     <p className="text-green-700 font-bold mt-1">{item.price.toLocaleString()}₩</p>
-                    {outOfStock && <p className="text-red-500 text-xs font-bold mt-1">Sotuvda yo'q</p>}
+                    {outOfStock && <p className="text-red-500 text-xs font-bold mt-1">{t("out_of_stock_label")}</p>}
                   </div>
                 </Link>
               </div>
