@@ -5,6 +5,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, setDefaultAddress, deleteAddress, type Address } from "@/lib/addresses";
 import BottomNav from "@/components/BottomNav";
+import { useLanguage } from "@/lib/LanguageContext";
+import { LANGUAGES } from "@/lib/i18n";
 
 const STORE_PHONE = "010-3943-2233";
 const STORE_TELEGRAM = "https://t.me/megahalalsuppermarket";
@@ -20,6 +22,7 @@ type Order = {
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -153,6 +156,23 @@ export default function ProfilePage() {
               <p className="text-lg font-bold text-black">{user?.name}</p>
               <p className="text-gray-500">{user?.phone}</p>
             </div>
+          </div>
+        </div>
+        <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
+          <h2 className="font-bold text-black mb-3">🌐 {t("profile_language")}</h2>
+          <div className="grid grid-cols-2 gap-2">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={`flex items-center gap-2 justify-center py-2 rounded-xl text-sm font-bold border ${
+                  language === lang.code ? "bg-green-600 text-white border-green-600" : "bg-white text-black border-gray-200"
+                }`}
+              >
+                <span>{lang.flag}</span>
+                <span>{lang.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 

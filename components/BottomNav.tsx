@@ -3,18 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
-
-const tabs = [
-  { href: "/", label: "Bosh sahifa", icon: "🏠" },
-  { href: "/favorites", label: "Sevimli", icon: "❤️" },
-  { href: "/cart", label: "Savatcha", icon: "🛒" },
-  { href: "/profile", label: "Profil", icon: "👤" },
-  { href: "/categories", label: "Kategoriya", icon: "📂" },
-];
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { itemCount } = useCart();
+  const { t } = useLanguage();
+
+  const tabs = [
+    { href: "/", label: t("nav_home"), icon: "🏠" },
+    { href: "/favorites", label: t("nav_favorites"), icon: "❤️" },
+    { href: "/cart", label: t("nav_cart"), icon: "🛒" },
+    { href: "/profile", label: t("nav_profile"), icon: "👤" },
+    { href: "/categories", label: t("nav_categories"), icon: "📂" },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-green-100 flex justify-around py-2 z-40">
