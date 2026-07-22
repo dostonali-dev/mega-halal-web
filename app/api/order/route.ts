@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 console.log("NOTE:", note);
 
   const BOT_TOKEN = "8798311944:AAHUBgMJ4OrKiy8qMUwx9bQFSNRJ-dRBCjg";
-  const CHAT_ID = "90771259";
+  const CHAT_ID = "-5317826071";
 
   const text = `
 🛒 Yangi buyurtma
