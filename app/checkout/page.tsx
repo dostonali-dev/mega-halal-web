@@ -11,6 +11,7 @@ import { fetchAddresses, addAddress, type Address } from "@/lib/addresses";
 const BANK_NAME = "농협은행";
 const BANK_ACCOUNT = "352-1676-1060-43";
 const BANK_HOLDER = "MUKHTAROV";
+const DELIVERY_FEE = 4000;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function CheckoutPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
+  const grandTotal = total + DELIVERY_FEE;
 
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -162,7 +164,7 @@ export default function CheckoutPage() {
           address_image: addressImageUrl,
           note,
           order_text: orderText,
-          total,
+          total: grandTotal,
         }])
         .select()
         .single();
@@ -193,7 +195,9 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           order: orderText,
-          total,
+          itemsTotal: total,
+          deliveryFee: DELIVERY_FEE,
+          total: grandTotal,
           customerName,
           phone,
           address: fullAddress + (addressImageUrl ? ` (rasm: ${addressImageUrl})` : ""),
@@ -243,8 +247,14 @@ export default function CheckoutPage() {
               <span>{(p.price * cart[p.id]).toLocaleString()}₩</span>
             </div>
           ))}
-          <div className="flex justify-between font-bold text-green-700 mt-2 text-lg">
-            <span>{t("cart_total")}</span><span>{total.toLocaleString()}₩</span>
+          <div className="flex justify-between text-gray-500 text-sm mt-2">
+            <span>{t("checkout_products")}</span><span>{total.toLocaleString()}₩</span>
+          </div>
+          <div className="flex justify-between text-gray-500 text-sm mb-1">
+            <span>🚚 {t("delivery_fee")}</span><span>{DELIVERY_FEE.toLocaleString()}₩</span>
+          </div>
+          <div className="flex justify-between font-bold text-green-700 mt-2 pt-2 border-t text-lg">
+            <span>{t("cart_total")}</span><span>{grandTotal.toLocaleString()}₩</span>
           </div>
         </div>
 

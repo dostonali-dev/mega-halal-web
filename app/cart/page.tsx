@@ -5,11 +5,14 @@ import { useCart } from "@/lib/CartContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import BottomNav from "@/components/BottomNav";
 
+const DELIVERY_FEE = 4000;
+
 export default function CartPage() {
   const router = useRouter();
   const { products, cart, addToCart, removeFromCart, setQty, total, itemCount } = useCart();
   const { t } = useLanguage();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
+  const grandTotal = total + DELIVERY_FEE;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
@@ -45,8 +48,14 @@ export default function CartPage() {
             <div className="flex justify-between text-black mb-1">
               <span>{t("cart_item_count")}</span><span>{itemCount}</span>
             </div>
+            <div className="flex justify-between text-gray-500 text-sm mb-1">
+              <span>{t("checkout_products")}</span><span>{total.toLocaleString()}₩</span>
+            </div>
+            <div className="flex justify-between text-gray-500 text-sm mb-2 pb-2 border-b">
+              <span>🚚 {t("delivery_fee")}</span><span>{DELIVERY_FEE.toLocaleString()}₩</span>
+            </div>
             <div className="flex justify-between text-2xl font-extrabold text-green-700">
-              <span>{t("cart_total")}</span><span>{total.toLocaleString()}₩</span>
+              <span>{t("cart_total")}</span><span>{grandTotal.toLocaleString()}₩</span>
             </div>
             <button
               onClick={() => router.push("/checkout")}

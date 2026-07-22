@@ -3,15 +3,16 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const body = await req.json();
   const {
-  order,
-  total,
-  customerName,
-  phone,
-  address,
-  note,
-  orderNumber,
-} = body;
-console.log("NOTE:", note);
+    order,
+    itemsTotal,
+    deliveryFee,
+    total,
+    customerName,
+    phone,
+    address,
+    note,
+    orderNumber,
+  } = body;
 
   const BOT_TOKEN = "8798311944:AAHUBgMJ4OrKiy8qMUwx9bQFSNRJ-dRBCjg";
   const CHAT_ID = "-1004384813041";
@@ -29,7 +30,9 @@ console.log("NOTE:", note);
 
 ${order}
 
-💰 Jami: ${total}₩
+🧾 Mahsulotlar: ${itemsTotal != null ? itemsTotal.toLocaleString() : "-"}₩
+🚚 Yetkazib berish: ${deliveryFee != null ? deliveryFee.toLocaleString() : "-"}₩
+💰 Jami: ${total.toLocaleString()}₩
 `;
 
   const response = await fetch(

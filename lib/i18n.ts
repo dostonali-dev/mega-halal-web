@@ -41,6 +41,7 @@ export const translations = {
     cart_empty: "Savatcha bo'sh",
     cart_item_count: "Mahsulotlar soni",
     cart_total: "Jami",
+    delivery_fee: "Yetkazib berish",
     cart_place_order: "Buyurtma berish",
 
     checkout_title: "Buyurtmani rasmiylashtirish",
@@ -158,6 +159,7 @@ export const translations = {
     cart_empty: "Your cart is empty",
     cart_item_count: "Item count",
     cart_total: "Total",
+    delivery_fee: "Delivery fee",
     cart_place_order: "Place order",
 
     checkout_title: "Complete your order",
@@ -275,6 +277,7 @@ export const translations = {
     cart_empty: "Ваша корзина пуста",
     cart_item_count: "Количество товаров",
     cart_total: "Итого",
+    delivery_fee: "Доставка",
     cart_place_order: "Оформить заказ",
 
     checkout_title: "Оформление заказа",
@@ -392,6 +395,7 @@ export const translations = {
     cart_empty: "장바구니가 비어 있습니다",
     cart_item_count: "상품 수",
     cart_total: "합계",
+    delivery_fee: "배송비",
     cart_place_order: "주문하기",
 
     checkout_title: "주문 완료하기",
