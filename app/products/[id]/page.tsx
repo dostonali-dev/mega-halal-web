@@ -135,6 +135,15 @@ export default function ProductDetailPage() {
                 >
                   {justAdded ? "✅ Qo'shildi" : "Savatchaga qo'shish"}
                 </button>
+
+                {currentInCart > 0 && (
+                  <button
+                    onClick={() => router.push("/cart")}
+                    className="w-full mt-3 py-4 rounded-2xl font-bold text-lg text-green-700 bg-white border-2 border-green-600"
+                  >
+                    🛒 Savatga o'tish ({currentInCart} ta)
+                  </button>
+                )}
               </>
             )}
           </div>

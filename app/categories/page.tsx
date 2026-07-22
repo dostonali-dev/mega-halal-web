@@ -11,15 +11,15 @@ export default function CategoriesPage() {
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 pb-24">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold text-black mb-6">Kategoriyalar</h1>
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
           {categories.map((cat) => (
             <Link
               key={cat}
               href={`/categories/${encodeURIComponent(cat)}`}
-              className="bg-white border border-green-100 rounded-3xl shadow-lg p-5 flex justify-between items-center"
+              className="bg-white border border-green-100 rounded-2xl shadow p-5 flex flex-col items-center justify-center text-center gap-2 aspect-square"
             >
-              <span className="text-xl font-bold text-black">{cat}</span>
-              <span className="text-2xl text-green-700">→</span>
+              <span className="text-3xl">📦</span>
+              <span className="text-base font-bold text-black">{cat}</span>
             </Link>
           ))}
         </div>

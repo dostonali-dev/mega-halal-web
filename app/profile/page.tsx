@@ -14,6 +14,8 @@ type Order = {
   order_text: string;
   total: number;
   created_at: string;
+  status?: string | null;
+  payment_status?: string | null;
 };
 
 export default function ProfilePage() {
@@ -129,7 +131,11 @@ export default function ProfilePage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Bu manzilni o'chirmoqchimisiz?")) return;
-    await deleteAddress(id);
+    const error = await deleteAddress(id);
+    if (error) {
+      alert("O'chirishda xatolik: " + error.message);
+      return;
+    }
     await loadAddresses();
   };
 
@@ -286,16 +292,41 @@ export default function ProfilePage() {
           {!loadingOrders && orders.length === 0 && <p className="text-gray-400 text-sm">Hali buyurtma yo'q</p>}
 
           <div className="space-y-3">
-            {orders.map((o) => (
-              <div key={o.id} className="border rounded-xl p-3">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-black">Buyurtma № {o.id}</span>
-                  <span className="text-green-700 font-bold">{o.total.toLocaleString()}₩</span>
+            {orders.map((o) => {
+              const statusColors: Record<string, string> = {
+                "Pending": "bg-yellow-100 text-yellow-700",
+                "Preparing": "bg-blue-100 text-blue-700",
+                "Out for delivery": "bg-purple-100 text-purple-700",
+                "Delivered": "bg-green-100 text-green-700",
+              };
+              const statusLabels: Record<string, string> = {
+                "Pending": "⏳ Kutilmoqda",
+                "Preparing": "👨‍🍳 Tayyorlanmoqda",
+                "Out for delivery": "🚚 Yetkazilmoqda",
+                "Delivered": "✅ Yetkazildi",
+              };
+              const status = o.status || "Pending";
+              return (
+                <div key={o.id} className="border rounded-xl p-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-black">Buyurtma № {o.id}</span>
+                    <span className="text-green-700 font-bold">{o.total.toLocaleString()}₩</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-2">{new Date(o.created_at).toLocaleString("uz-UZ")}</p>
+                  <div className="flex gap-2 mb-2">
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusColors[status] || "bg-gray-100 text-gray-600"}`}>
+                      {statusLabels[status] || status}
+                    </span>
+                    {o.payment_status && (
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                        💳 {o.payment_status}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-black whitespace-pre-line">{o.order_text}</p>
                 </div>
-                <p className="text-xs text-gray-500 mb-2">{new Date(o.created_at).toLocaleString("uz-UZ")}</p>
-                <p className="text-sm text-black whitespace-pre-line">{o.order_text}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
