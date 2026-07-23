@@ -6,6 +6,7 @@ import { AuthProvider } from "@/lib/AuthContext";
 import { FavoritesProvider } from "@/lib/FavoritesContext";
 import { LanguageProvider } from "@/lib/LanguageContext";
 import AuthGate from "@/components/AuthGate";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,11 +33,15 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+     <link rel="manifest" href="/manifest.json" />
+      <meta name="theme-color" content="#2F7A52" />
+      <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       <script
         src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
         async
       ></script>
       <body className="min-h-full flex flex-col">
+        <ServiceWorkerRegister />
         <LanguageProvider>
           <AuthProvider>
             <CartProvider>

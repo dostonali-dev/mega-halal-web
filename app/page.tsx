@@ -6,6 +6,7 @@ import { useCart } from "@/lib/CartContext";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
 import BottomNav from "@/components/BottomNav";
+import InstallPrompt from "@/components/InstallPrompt";
 
 const INSTAGRAM_URL = "https://instagram.com/megahalalsupermarket";
 const TIKTOK_URL = "https://tiktok.com/@megahalalsupermarket";
@@ -75,7 +76,7 @@ export default function Home() {
         <p className="text-center text-gray-600 mt-4 text-lg mb-6">
           {t("home_subtitle")}
         </p>
-
+<InstallPrompt />
         <BannerCarousel banners={banners} />
 
         {!query.trim() && discounted.length > 0 && (
