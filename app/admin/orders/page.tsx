@@ -40,9 +40,9 @@ export default function OrdersPage() {
   };
 
   const statusColors: Record<string, string> = {
-    "❌ Bekor qilindi": "bg-red-100 text-red-600",
-    "📦 Jo'natildi": "bg-blue-100 text-blue-600",
-    "✅ To'landi": "bg-green-100 text-green-600",
+    "❌ Bekor qilindi": "status-cancelled",
+    "📦 Jo'natildi": "status-shipped",
+    "✅ To'landi": "status-paid",
   };
 
   if (!checkedLogin) return null;
@@ -55,7 +55,7 @@ export default function OrdersPage() {
       <div className="space-y-3 max-w-3xl">
         {orders.map((order) => {
           const isOpen = expandedId === order.id;
-          const statusClass = statusColors[order.status] || "bg-yellow-100 text-yellow-600";
+          const statusClass = statusColors[order.status] || "status-pending";
           return (
             <div key={order.id} className="bg-white rounded-2xl shadow border">
               <button

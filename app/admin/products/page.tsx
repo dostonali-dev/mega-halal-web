@@ -143,7 +143,11 @@ export default function AdminProductsPage() {
   };
 
   const filteredProducts = products.filter((p) => p.name.toLowerCase().includes(adminSearch.toLowerCase()));
-  const productGroups = [...new Set(products.map((p) => p.category))];
+  const knownCategoryNames = categoriesList.map((c) => c.name);
+  const orphanCategories = [...new Set(products.map((p) => p.category))].filter(
+    (name) => !knownCategoryNames.includes(name)
+  );
+  const productGroups = [...knownCategoryNames, ...orphanCategories];
 
   if (!checkedLogin) return null;
 

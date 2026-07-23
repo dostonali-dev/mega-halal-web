@@ -11,9 +11,9 @@ const STATUS_KEY_MAP: Record<string, "order_status_paid" | "order_status_shipped
   "❌ Bekor qilindi": "order_status_cancelled",
 };
 const STATUS_COLOR_MAP: Record<string, string> = {
-  "✅ To'landi": "bg-green-100 text-green-700",
-  "📦 Jo'natildi": "bg-blue-100 text-blue-700",
-  "❌ Bekor qilindi": "bg-red-100 text-red-700",
+  "✅ To'landi": "status-paid",
+  "📦 Jo'natildi": "status-shipped",
+  "❌ Bekor qilindi": "status-cancelled",
 };
 
 type Order = {
@@ -59,7 +59,7 @@ export default function OrdersHistoryPage() {
             const status = o.status || "";
             const statusKey = STATUS_KEY_MAP[status];
             const statusLabel = statusKey ? t(statusKey) : t("order_status_pending");
-            const statusClass = STATUS_COLOR_MAP[status] || "bg-yellow-100 text-yellow-700";
+            const statusClass = STATUS_COLOR_MAP[status] || "status-pending";
             return (
               <div key={o.id} className="bg-white border border-green-100 rounded-xl p-3">
                 <div className="flex justify-between items-center mb-1">
