@@ -107,6 +107,13 @@ export default function OrdersPage() {
                       <button
                         onClick={async () => {
                           await supabase.from("orders").update({ status: "✅ To'landi" }).eq("id", order.id);
+
+                          await fetch("/api/order/paid", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ orderNumber: order.id, status: "paid" }),
+                          });
+
                           loadOrders();
                         }}
                         className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm"
@@ -116,6 +123,13 @@ export default function OrdersPage() {
                       <button
                         onClick={async () => {
                           await supabase.from("orders").update({ status: "📦 Jo'natildi" }).eq("id", order.id);
+
+                          await fetch("/api/order/paid", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ orderNumber: order.id, status: "shipped" }),
+                          });
+
                           loadOrders();
                         }}
                         className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm"
@@ -125,6 +139,13 @@ export default function OrdersPage() {
                       <button
                         onClick={async () => {
                           await supabase.from("orders").update({ status: "❌ Bekor qilindi" }).eq("id", order.id);
+
+                          await fetch("/api/order/paid", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ orderNumber: order.id, status: "cancelled" }),
+                          });
+
                           loadOrders();
                         }}
                         className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
