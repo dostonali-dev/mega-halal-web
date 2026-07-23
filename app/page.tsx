@@ -60,9 +60,6 @@ export default function Home() {
     loadBanners();
   }, []);
 
-  const categoryNames = categories.map((c) => c.name);
-  const getIcon = (name: string) => categories.find((c) => c.name === name)?.icon || "📦";
-
   const searchResults = query.trim()
     ? products.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()))
     : [];
@@ -134,16 +131,18 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="mt-4 space-y-4">
-            {categoryNames.map((cat) => (
-              <Link key={cat} href={`/categories/${encodeURIComponent(cat)}`} className="bg-white border border-green-100 rounded-3xl shadow-lg p-5 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{getIcon(cat)}</span>
-                  <span className="text-xl font-bold">{cat}</span>
-                </div>
-                <span className="text-2xl text-green-400">→</span>
-              </Link>
-            ))}
+          <div className="mt-4">
+            {categories.map((cat) => {
+              const items = products.filter((p) => p.category === cat.name).slice(0, 6);
+              return (
+                <ProductRow
+                  key={cat.id}
+                  title={`${cat.icon || "📦"} ${cat.name}`}
+                  products={items}
+                  seeAllHref={`/categories/${encodeURIComponent(cat.name)}`}
+                />
+              );
+            })}
           </div>
         )}
       </div>
