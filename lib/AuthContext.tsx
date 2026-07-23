@@ -19,6 +19,9 @@ type AuthContextType = {
   signIn: (phone: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   updateAddress: (data: { address?: string | null; addressDetail?: string | null; addressImage?: string | null }) => Promise<string | null>;
+  updatePassword: (newPassword: string) => Promise<string | null>;
+  updatePhone: (newPhone: string) => Promise<string | null>;
+  deleteAccount: () => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -110,8 +113,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
+  const updatePassword = async (newPassword: string) => {
+    if (!user) return "Avval tizimga kiring.";
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return error.message;
+    return null;
+  };
+
+  const updatePhone = async (newPhone: string) => {
+    if (!user) return "Avval tizimga kiring.";
+
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("phone", newPhone)
+      .neq("id", user.id)
+      .maybeSingle();
+    if (existing) return "Bu raqam allaqachon ro'yxatdan o'tgan.";
+
+    const newEmail = phoneToEmail(newPhone);
+    const { error: authError } = await supabase.auth.updateUser({ email: newEmail });
+    if (authError) return authError.message;
+
+    const { error: profileError } = await supabase.from("profiles").update({ phone: newPhone }).eq("id", user.id);
+    if (profileError) return profileError.message;
+
+    setUser((prev) => (prev ? { ...prev, phone: newPhone } : prev));
+    return null;
+  };
+
+  const deleteAccount = async () => {
+    if (!user) return "Avval tizimga kiring.";
+    await supabase.from("addresses").delete().eq("user_id", user.id);
+    await supabase.from("favorites").delete().eq("user_id", user.id);
+    const { error } = await supabase.from("profiles").delete().eq("id", user.id);
+    if (error) return error.message;
+    await supabase.auth.signOut();
+    setUser(null);
+    return null;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, updateAddress }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, updateAddress, updatePassword, updatePhone, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );
