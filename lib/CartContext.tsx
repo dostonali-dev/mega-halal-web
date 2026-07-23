@@ -60,6 +60,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setProducts(data || []);
     };
     loadProducts();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadProducts();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+    };
   }, []);
 
   useEffect(() => {
@@ -72,6 +84,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setCategories(data || []);
     };
     loadCategories();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadCategories();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
   const getMaxQty = (id: number) => {
