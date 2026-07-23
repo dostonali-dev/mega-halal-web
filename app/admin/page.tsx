@@ -65,6 +65,7 @@ export default function AdminPage() {
     { href: "/admin/categories", icon: "🗂️", label: "Kategoriyalar", desc: "Kategoriyalarni boshqarish" },
     { href: "/admin/orders", icon: "📦", label: "Buyurtmalar", desc: "Kelgan buyurtmalarni ko'rish" },
     { href: "/admin/banners", icon: "🖼️", label: "Bannerlar", desc: "Bosh sahifa bannerlari" },
+    { href: "/admin/announcement", icon: "📢", label: "E'lon oynasi", desc: "Mijozlarga ko'rsatiladigan e'lon" },
   ];
 
   return (
