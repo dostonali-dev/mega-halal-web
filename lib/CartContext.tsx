@@ -13,9 +13,13 @@ export type Product = {
   in_stock?: boolean;
   stock?: number;
   discount_price?: number | null;
+  is_hot?: boolean | null;
 };
+export type Category = { id: number; name: string; icon: string | null };
+
 type CartContextType = {
   products: Product[];
+  categories: Category[];
   cart: Record<number, number>;
   addToCart: (id: number) => void;
   removeFromCart: (id: number) => void;
@@ -30,6 +34,7 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [cart, setCart] = useState<Record<number, number>>({});
 
   useEffect(() => {
@@ -55,6 +60,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setProducts(data || []);
     };
     loadProducts();
+  }, []);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      const { data, error } = await supabase.from("categories").select("*").order("name");
+      if (error) {
+        console.error(error);
+        return;
+      }
+      setCategories(data || []);
+    };
+    loadCategories();
   }, []);
 
   const getMaxQty = (id: number) => {
@@ -100,7 +117,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ products, cart, addToCart, removeFromCart, setQty, clearCart, total, itemCount, getMaxQty }}
+      value={{ products, categories, cart, addToCart, removeFromCart, setQty, clearCart, total, itemCount, getMaxQty }}
     >
       {children}
     </CartContext.Provider>

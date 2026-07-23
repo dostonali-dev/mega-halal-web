@@ -24,3 +24,59 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===== QORA MAVZU (dark theme) — butun sayt uchun ===== */
+body {
+  background-color: #0a0a0a !important;
+}
+
+main {
+  background: #0a0a0a !important;
+  background-image: none !important;
+}
+
+h1, h2, h3, p, span, label, li, a, td, th {
+  color: #ffffff;
+}
+
+.bg-white {
+  background-color: #171717 !important;
+  border-color: #2a2a2a !important;
+}
+
+.bg-gray-50, .bg-gray-100, .bg-green-50, .bg-green-100 {
+  background-color: #1a1a1a !important;
+}
+
+.border-green-100, .border-gray-200, .border {
+  border-color: #2a2a2a !important;
+}
+
+.text-black {
+  color: #ffffff !important;
+}
+
+.text-gray-400, .text-gray-500, .text-gray-600, .text-gray-700 {
+  color: #a3a3a3 !important;
+}
+
+input, textarea, select {
+  background-color: #171717 !important;
+  color: #ffffff !important;
+  border-color: #2a2a2a !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #737373 !important;
+}
+
+/* Sarlavha (Mega Halal Supermarket) — och yashil */
+h1.site-title {
+  color: #86efac !important;
+}
+
+/* Pastki menyu (BottomNav) fonini ham moslashtiramiz */
+nav {
+  background-color: #171717 !important;
+  border-color: #2a2a2a !important;
+}

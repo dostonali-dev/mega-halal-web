@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
 import BottomNav from "@/components/BottomNav";
 import InstallPrompt from "@/components/InstallPrompt";
+import ProductRow from "@/components/ProductRow";
 
 const INSTAGRAM_URL = "https://instagram.com/megahalalsupermarket";
 const TIKTOK_URL = "https://tiktok.com/@megahalalsupermarket";
@@ -46,7 +47,7 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
 }
 
 export default function Home() {
-  const { products, cart, addToCart, removeFromCart } = useCart();
+  const { products, categories, cart, addToCart, removeFromCart } = useCart();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -59,70 +60,45 @@ export default function Home() {
     loadBanners();
   }, []);
 
-  const categories = [...new Set(products.map((p) => p.category))];
+  const categoryNames = categories.map((c) => c.name);
+  const getIcon = (name: string) => categories.find((c) => c.name === name)?.icon || "📦";
+
   const searchResults = query.trim()
     ? products.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()))
     : [];
 
   const newArrivals = [...products].sort((a, b) => b.id - a.id).slice(0, 8);
+  const hotProducts = products.filter((p) => (p as any).is_hot === true);
+  const meatProducts = products.filter((p) => p.category === "Go'sht mahsulotlari");
   const discounted = products.filter((p) => p.discount_price != null && p.discount_price < p.price);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
+    <main className="min-h-screen p-4 md:p-8 pb-24">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl md:text-6xl font-extrabold text-green-800 text-center">
+        <h1 className="site-title text-4xl md:text-6xl font-extrabold text-center">
           Mega Halal Supermarket
         </h1>
-        <p className="text-center text-gray-600 mt-4 text-lg mb-6">
+        <p className="text-center mt-4 text-lg mb-6">
           {t("home_subtitle")}
         </p>
-<InstallPrompt />
+
+        <InstallPrompt />
         <BannerCarousel banners={banners} />
 
-        {!query.trim() && discounted.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-black mb-3">{t("discounted_products")}</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {discounted.map((p) => {
-                const percent = Math.round((1 - (p.discount_price! / p.price)) * 100);
-                return (
-                  <Link key={p.id} href={`/products/${p.id}`} className="flex-shrink-0 w-36 bg-white border border-green-100 rounded-2xl overflow-hidden relative">
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">-{percent}%</span>
-                    {p.image ? <img src={p.image} alt={p.name} className="w-full h-28 object-cover" /> : <div className="w-full h-28 bg-gray-100" />}
-                    <div className="p-2">
-                      <p className="text-xs font-semibold text-black line-clamp-2">{p.name}</p>
-                      <p className="text-gray-400 text-xs line-through">{p.price.toLocaleString()}₩</p>
-                      <p className="text-red-600 font-bold text-sm">{p.discount_price!.toLocaleString()}₩</p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {!query.trim() && newArrivals.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-black mb-3">{t("new_products")}</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {newArrivals.map((p) => (
-                <Link key={p.id} href={`/products/${p.id}`} className="flex-shrink-0 w-36 bg-white border border-green-100 rounded-2xl overflow-hidden">
-                  {p.image ? <img src={p.image} alt={p.name} className="w-full h-28 object-cover" /> : <div className="w-full h-28 bg-gray-100" />}
-                  <div className="p-2">
-                    <p className="text-xs font-semibold text-black line-clamp-2">{p.name}</p>
-                    <p className="text-green-700 font-bold text-sm">{p.price.toLocaleString()}₩</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+        {!query.trim() && (
+          <>
+            <ProductRow title={t("new_products")} products={newArrivals} />
+            <ProductRow title="🔥 O'zbekiston HOT" products={hotProducts} />
+            <ProductRow title="🥩 Go'sht mahsulotlari" products={meatProducts} seeAllHref={`/categories/${encodeURIComponent("Go'sht mahsulotlari")}`} />
+            <ProductRow title="🔥 Qaynoq chegirmalar" products={discounted} />
+          </>
         )}
 
         <div className="flex gap-3 mb-8">
           <Link href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-3 rounded-xl font-bold">
             📸 Instagram
           </Link>
-          <Link href={TIKTOK_URL} target="_blank" rel="noreferrer" className="flex-1 bg-black text-white text-center py-3 rounded-xl font-bold">
+          <Link href={TIKTOK_URL} target="_blank" rel="noreferrer" className="flex-1 bg-black text-white text-center py-3 rounded-xl font-bold border border-neutral-700">
             🎵 TikTok
           </Link>
         </div>
@@ -133,25 +109,25 @@ export default function Home() {
             placeholder={t("search_placeholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full border rounded-2xl p-4 text-black text-lg shadow"
+            className="w-full border rounded-2xl p-4 text-lg shadow"
           />
         </div>
 
         {query.trim() ? (
           <div className="mt-8 space-y-3">
-            {searchResults.length === 0 && <p className="text-center text-gray-400">{t("no_results")}</p>}
+            {searchResults.length === 0 && <p className="text-center">{t("no_results")}</p>}
             {searchResults.map((item) => (
               <div key={item.id} className="bg-white border border-green-100 rounded-2xl p-4 flex justify-between items-center">
                 <Link href={`/products/${item.id}`} className="flex items-center gap-3">
                   {item.image ? <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" /> : <div className="w-14 h-14 rounded-lg border bg-gray-100 flex-shrink-0" />}
                   <div>
-                    <p className="font-semibold text-black">{item.name}</p>
-                    <p className="text-green-700 font-bold">{item.price.toLocaleString()}₩</p>
+                    <p className="font-semibold">{item.name}</p>
+                    <p className="text-green-400 font-bold">{item.price.toLocaleString()}₩</p>
                   </div>
                 </Link>
                 <div className="flex items-center gap-2">
                   <button onClick={() => removeFromCart(item.id)} className="bg-red-500 text-white w-9 h-9 rounded-lg">-</button>
-                  <span className="text-lg font-bold text-black min-w-[22px] text-center">{cart[item.id] || 0}</span>
+                  <span className="font-bold min-w-[22px] text-center">{cart[item.id] || 0}</span>
                   <button onClick={() => addToCart(item.id)} className="bg-green-600 text-white w-9 h-9 rounded-lg">+</button>
                 </div>
               </div>
@@ -159,10 +135,13 @@ export default function Home() {
           </div>
         ) : (
           <div className="mt-4 space-y-4">
-            {categories.map((cat) => (
+            {categoryNames.map((cat) => (
               <Link key={cat} href={`/categories/${encodeURIComponent(cat)}`} className="bg-white border border-green-100 rounded-3xl shadow-lg p-5 flex justify-between items-center">
-                <span className="text-xl font-bold text-black">{cat}</span>
-                <span className="text-2xl text-green-700">→</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{getIcon(cat)}</span>
+                  <span className="text-xl font-bold">{cat}</span>
+                </div>
+                <span className="text-2xl text-green-400">→</span>
               </Link>
             ))}
           </div>

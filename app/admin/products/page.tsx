@@ -16,9 +16,10 @@ type Product = {
   in_stock?: boolean | null;
   supplier?: string | null;
   discount_price?: number | null;
+  is_hot?: boolean | null;
 };
 
-type Category = { id: number; name: string };
+type Category = { id: number; name: string; icon: string | null };
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -134,6 +135,13 @@ export default function AdminProductsPage() {
     loadProducts();
   };
 
+  const toggleHot = async (p: Product) => {
+    const newValue = !p.is_hot;
+    const { error } = await supabase.from("products").update({ is_hot: newValue }).eq("id", p.id);
+    if (error) { alert("Xatolik: " + error.message); return; }
+    loadProducts();
+  };
+
   const filteredProducts = products.filter((p) => p.name.toLowerCase().includes(adminSearch.toLowerCase()));
   const productGroups = [...new Set(products.map((p) => p.category))];
 
@@ -195,7 +203,7 @@ export default function AdminProductsPage() {
         {adminSearch.trim() ? (
           <div className="space-y-3">
             {filteredProducts.map((p) => (
-              <ProductRow key={p.id} p={p} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} />
+              <ProductRow key={p.id} p={p} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} onToggleHot={toggleHot} />
             ))}
           </div>
         ) : (
@@ -209,7 +217,7 @@ export default function AdminProductsPage() {
                 {openGroup === groupName && (
                   <div className="px-4 pb-4 space-y-3 border-t pt-3">
                     {products.filter((p) => p.category === groupName).map((p) => (
-                      <ProductRow key={p.id} p={p} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} />
+                      <ProductRow key={p.id} p={p} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} onToggleHot={toggleHot} />
                     ))}
                   </div>
                 )}
@@ -222,8 +230,12 @@ export default function AdminProductsPage() {
   );
 }
 
-function ProductRow({ p, onEdit, onDelete, onToggleStock }: {
-  p: Product; onEdit: (p: Product) => void; onDelete: (id: number) => void; onToggleStock: (p: Product) => void;
+function ProductRow({ p, onEdit, onDelete, onToggleStock, onToggleHot }: {
+  p: Product;
+  onEdit: (p: Product) => void;
+  onDelete: (id: number) => void;
+  onToggleStock: (p: Product) => void;
+  onToggleHot: (p: Product) => void;
 }) {
   return (
     <div className="border rounded-xl p-3 flex items-center gap-3">
@@ -241,6 +253,12 @@ function ProductRow({ p, onEdit, onDelete, onToggleStock }: {
       <div className="flex flex-col items-end gap-2">
         <button onClick={() => onToggleStock(p)} className={`text-xs font-bold px-3 py-1 rounded-full ${p.in_stock === false ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"}`}>
           {p.in_stock === false ? "Sotuvda yo'q" : "Sotuvda bor"}
+        </button>
+        <button
+          onClick={() => onToggleHot(p)}
+          className={`text-xs font-bold px-3 py-1 rounded-full ${p.is_hot ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"}`}
+        >
+          {p.is_hot ? "🔥 HOT" : "HOT belgilash"}
         </button>
         <div className="flex gap-2">
           <button onClick={() => onEdit(p)} className="text-blue-600 text-xs font-bold underline">Tahrirlash</button>

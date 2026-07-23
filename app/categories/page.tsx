@@ -5,9 +5,8 @@ import { useLanguage } from "@/lib/LanguageContext";
 import BottomNav from "@/components/BottomNav";
 
 export default function CategoriesPage() {
-  const { products } = useCart();
+  const { categories } = useCart();
   const { t } = useLanguage();
-  const categories = [...new Set(products.map((p) => p.category))];
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 pb-24">
@@ -16,12 +15,12 @@ export default function CategoriesPage() {
         <div className="grid grid-cols-2 gap-4">
           {categories.map((cat) => (
             <Link
-              key={cat}
-              href={`/categories/${encodeURIComponent(cat)}`}
+              key={cat.id}
+              href={`/categories/${encodeURIComponent(cat.name)}`}
               className="bg-white border border-green-100 rounded-2xl shadow p-5 flex flex-col items-center justify-center text-center gap-2 aspect-square"
             >
-              <span className="text-3xl">📦</span>
-              <span className="text-base font-bold text-black">{cat}</span>
+              <span className="text-3xl">{cat.icon || "📦"}</span>
+              <span className="text-base font-bold text-black">{cat.name}</span>
             </Link>
           ))}
         </div>

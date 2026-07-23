@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-type Category = { id: number; name: string };
+type Category = { id: number; name: string; icon: string | null };
 
 export default function NewProductPage() {
   const router = useRouter();
