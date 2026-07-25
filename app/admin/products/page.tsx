@@ -17,7 +17,10 @@ type Product = {
   supplier?: string | null;
   discount_price?: number | null;
   is_hot?: boolean | null;
+  hidden?: boolean | null;
 };
+
+type BulkAction = "" | "move" | "delete" | "in_stock" | "out_of_stock" | "hide" | "show";
 
 type Category = { id: number; name: string; icon: string | null };
 
@@ -42,6 +45,11 @@ export default function AdminProductsPage() {
   const [imagePreview, setImagePreview] = useState("");
   const [existingImage, setExistingImage] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkAction, setBulkAction] = useState<BulkAction>("");
+  const [bulkTargetCategory, setBulkTargetCategory] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -142,6 +150,75 @@ export default function AdminProductsPage() {
     loadProducts();
   };
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectGroup = (groupProducts: Product[]) => {
+    const ids = groupProducts.map((p) => p.id);
+    const allSelected = ids.every((id) => selectedIds.has(id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allSelected) {
+        ids.forEach((id) => next.delete(id));
+      } else {
+        ids.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setBulkAction("");
+    setBulkTargetCategory("");
+  };
+
+  const applyBulkAction = async () => {
+    if (selectedIds.size === 0) { alert("Avval kamida bitta mahsulotni belgilang."); return; }
+    if (!bulkAction) { alert("Amal turini tanlang."); return; }
+    const ids = Array.from(selectedIds);
+
+    if (bulkAction === "move") {
+      if (!bulkTargetCategory) { alert("Qaysi kategoriyaga o'tkazishni tanlang."); return; }
+      if (!confirm(`${ids.length} ta mahsulotni "${bulkTargetCategory}" kategoriyasiga o'tkazmoqchimisiz?`)) return;
+      setBulkBusy(true);
+      const { error } = await supabase.from("products").update({ category: bulkTargetCategory }).in("id", ids);
+      setBulkBusy(false);
+      if (error) { alert("Xatolik: " + error.message); return; }
+    } else if (bulkAction === "delete") {
+      if (!confirm(`${ids.length} ta mahsulotni butunlay o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi!`)) return;
+      setBulkBusy(true);
+      const { error } = await supabase.from("products").delete().in("id", ids);
+      setBulkBusy(false);
+      if (error) { alert("Xatolik: " + error.message); return; }
+    } else if (bulkAction === "in_stock" || bulkAction === "out_of_stock") {
+      setBulkBusy(true);
+      const { error } = await supabase.from("products").update({ in_stock: bulkAction === "in_stock" }).in("id", ids);
+      setBulkBusy(false);
+      if (error) { alert("Xatolik: " + error.message); return; }
+    } else if (bulkAction === "hide" || bulkAction === "show") {
+      setBulkBusy(true);
+      const { error } = await supabase.from("products").update({ hidden: bulkAction === "hide" }).in("id", ids);
+      setBulkBusy(false);
+      if (error) {
+        alert(
+          "Xatolik: " + error.message +
+          "\n\nEslatma: bazangizda \"hidden\" ustuni bo'lmasa, avval Supabase SQL Editor'da quyidagini ishga tushiring:\nALTER TABLE products ADD COLUMN IF NOT EXISTS hidden boolean DEFAULT false;"
+        );
+        return;
+      }
+    }
+
+    clearSelection();
+    await loadProducts();
+  };
+
   const filteredProducts = products.filter((p) => p.name.toLowerCase().includes(adminSearch.toLowerCase()));
   const knownCategoryNames = categoriesList.map((c) => c.name);
   const orphanCategories = [...new Set(products.map((p) => p.category))].filter(
@@ -204,29 +281,93 @@ export default function AdminProductsPage() {
           className="w-full border p-3 rounded-xl bg-white text-black mb-4"
         />
 
+        <div className="bg-gray-50 border rounded-xl p-4 mb-4 space-y-3">
+          <p className="text-sm font-bold text-black">
+            📋 Ommaviy amal {selectedIds.size > 0 ? `— ${selectedIds.size} ta mahsulot belgilangan` : "(pastdan mahsulot(lar)ni belgilang)"}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <select
+              value={bulkAction}
+              onChange={(e) => setBulkAction(e.target.value as BulkAction)}
+              className="flex-1 border p-2.5 rounded-xl bg-white text-black text-sm"
+            >
+              <option value="">Amal turini tanlang...</option>
+              <option value="move">📂 Boshqa kategoriyaga o'tkazish</option>
+              <option value="in_stock">✅ Sotuvda bor qilish</option>
+              <option value="out_of_stock">🚫 Sotuvda yo'q qilish</option>
+              <option value="hide">🙈 Berkitish (mijozlarga ko'rinmasin)</option>
+              <option value="show">👁️ Ochish (mijozlarga ko'rinsin)</option>
+              <option value="delete">🗑️ O'chirish</option>
+            </select>
+            {bulkAction === "move" && (
+              <select
+                value={bulkTargetCategory}
+                onChange={(e) => setBulkTargetCategory(e.target.value)}
+                className="flex-1 border p-2.5 rounded-xl bg-white text-black text-sm"
+              >
+                <option value="">Qaysi kategoriyaga?</option>
+                {categoriesList.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={applyBulkAction}
+              disabled={bulkBusy || selectedIds.size === 0 || !bulkAction}
+              className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white text-sm font-bold py-2.5 rounded-xl"
+            >
+              {bulkBusy ? "Bajarilmoqda..." : "✅ Bajarish"}
+            </button>
+            {selectedIds.size > 0 && (
+              <button onClick={clearSelection} className="px-4 bg-gray-200 text-black text-sm font-bold rounded-xl">
+                Bekor qilish
+              </button>
+            )}
+          </div>
+        </div>
+
         {adminSearch.trim() ? (
           <div className="space-y-3">
+            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 px-1">
+              <input
+                type="checkbox"
+                checked={filteredProducts.length > 0 && filteredProducts.every((p) => selectedIds.has(p.id))}
+                onChange={() => toggleSelectGroup(filteredProducts)}
+              />
+              Qidiruv natijalarining barchasini belgilash
+            </label>
             {filteredProducts.map((p) => (
-              <ProductRow key={p.id} p={p} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} onToggleHot={toggleHot} />
+              <ProductRow key={p.id} p={p} selected={selectedIds.has(p.id)} onToggleSelect={toggleSelect} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} onToggleHot={toggleHot} />
             ))}
           </div>
         ) : (
           <div className="space-y-3">
-            {productGroups.map((groupName) => (
-              <div key={groupName} className="bg-white border rounded-xl overflow-hidden">
-                <button onClick={() => setOpenGroup(openGroup === groupName ? null : groupName)} className="w-full p-4 flex justify-between items-center">
-                  <span className="font-bold text-black">{groupName}</span>
-                  <span className="text-green-700 text-xl">{openGroup === groupName ? "−" : "+"}</span>
-                </button>
-                {openGroup === groupName && (
-                  <div className="px-4 pb-4 space-y-3 border-t pt-3">
-                    {products.filter((p) => p.category === groupName).map((p) => (
-                      <ProductRow key={p.id} p={p} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} onToggleHot={toggleHot} />
-                    ))}
+            {productGroups.map((groupName) => {
+              const groupProducts = products.filter((p) => p.category === groupName);
+              return (
+                <div key={groupName} className="bg-white border rounded-xl overflow-hidden">
+                  <div className="w-full p-4 flex justify-between items-center gap-2">
+                    <button onClick={() => setOpenGroup(openGroup === groupName ? null : groupName)} className="flex-1 flex justify-between items-center text-left">
+                      <span className="font-bold text-black">{groupName}</span>
+                      <span className="text-green-700 text-xl mr-2">{openGroup === groupName ? "−" : "+"}</span>
+                    </button>
+                    <input
+                      type="checkbox"
+                      title="Shu kategoriyadagi barchasini belgilash"
+                      checked={groupProducts.length > 0 && groupProducts.every((p) => selectedIds.has(p.id))}
+                      onChange={() => toggleSelectGroup(groupProducts)}
+                    />
                   </div>
-                )}
-              </div>
-            ))}
+                  {openGroup === groupName && (
+                    <div className="px-4 pb-4 space-y-3 border-t pt-3">
+                      {groupProducts.map((p) => (
+                        <ProductRow key={p.id} p={p} selected={selectedIds.has(p.id)} onToggleSelect={toggleSelect} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} onToggleHot={toggleHot} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -234,22 +375,32 @@ export default function AdminProductsPage() {
   );
 }
 
-function ProductRow({ p, onEdit, onDelete, onToggleStock, onToggleHot }: {
+function ProductRow({ p, selected, onToggleSelect, onEdit, onDelete, onToggleStock, onToggleHot }: {
   p: Product;
+  selected: boolean;
+  onToggleSelect: (id: number) => void;
   onEdit: (p: Product) => void;
   onDelete: (id: number) => void;
   onToggleStock: (p: Product) => void;
   onToggleHot: (p: Product) => void;
 }) {
   return (
-    <div className="border rounded-xl p-3 flex items-center gap-3">
+    <div className={`border rounded-xl p-3 flex items-center gap-3 ${selected ? "ring-2 ring-green-500 bg-green-50" : ""}`}>
+      <input
+        type="checkbox"
+        checked={selected}
+        onChange={() => onToggleSelect(p.id)}
+        className="flex-shrink-0 w-4 h-4"
+      />
       {p.image ? (
         <img src={p.image} alt={p.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" />
       ) : (
         <div className="w-14 h-14 rounded-lg border bg-gray-100 flex items-center justify-center text-gray-400 text-xs flex-shrink-0">Rasm yo'q</div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-black truncate">{p.name}</p>
+        <p className="font-bold text-black truncate">
+          {p.name} {p.hidden ? <span className="text-xs font-bold text-gray-400">🙈 berkitilgan</span> : null}
+        </p>
         <p className="text-sm text-gray-500">
           {p.price.toLocaleString()}₩ · Soni: {p.stock ?? 0}{p.supplier ? ` · 🏭 ${p.supplier}` : ""}
         </p>

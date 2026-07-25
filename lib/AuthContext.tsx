@@ -118,6 +118,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     exitGuest();
+    if (typeof window !== "undefined") {
+      // Boshqa contextlarga (savatcha va h.k.) shu foydalanuvchiga tegishli
+      // lokal ma'lumotlarni tozalash kerakligini bildiramiz — mehmon bo'lib
+      // kirganda avvalgi akkauntning savatchasi ko'rinib qolmasligi uchun.
+      window.dispatchEvent(new Event("mhs-signed-out"));
+    }
   };
 
   const updateAddress = async (fields: { address?: string | null; addressDetail?: string | null; addressImage?: string | null }) => {

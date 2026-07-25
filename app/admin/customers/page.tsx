@@ -41,6 +41,8 @@ export default function CustomersPage() {
   const [nameQuery, setNameQuery] = useState("");
   const [sortMode, setSortMode] = useState<"new" | "orders" | "name">("new");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [resettingId, setResettingId] = useState<string | null>(null);
+  const [newPasswords, setNewPasswords] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -80,6 +82,36 @@ export default function CustomersPage() {
     };
     load();
   }, [checkedLogin]);
+
+  const generatePassword = () => String(Math.floor(100000 + Math.random() * 900000));
+
+  const handleResetPassword = async (c: Customer) => {
+    if (!confirm(`${c.name} (${c.phone}) uchun YANGI parol o'rnatilsinmi? Eski parol ishlamay qoladi.`)) return;
+    setResettingId(c.id);
+    try {
+      const newPassword = generatePassword();
+      const res = await fetch("/api/admin/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: c.id,
+          newPassword,
+          adminSecret: process.env.NEXT_PUBLIC_ADMIN_API_SECRET,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert("Xatolik: " + (data.error || "noma'lum xatolik"));
+        return;
+      }
+      setNewPasswords((prev) => ({ ...prev, [c.id]: newPassword }));
+    } catch (e) {
+      console.error(e);
+      alert("Xatolik yuz berdi.");
+    } finally {
+      setResettingId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     let list = customers;
@@ -177,6 +209,36 @@ export default function CustomersPage() {
                   {lastOrderDate && (
                     <p className="text-black text-sm mt-1">🕓 Oxirgi buyurtma: {new Date(lastOrderDate).toLocaleString()}</p>
                   )}
+
+                  <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-2">
+                      🔑 Mijoz parolini unutgan bo'lsa (qo'ng'iroq/telegram orqali murojaat qilganda),
+                      shu yerdan yangi parol yaratib, telefon orqali ayting.
+                    </p>
+                    {newPasswords[c.id] ? (
+                      <div className="bg-white border border-green-200 rounded-lg p-3 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs text-gray-500">Yangi parol (mijozga ayting):</p>
+                          <p className="text-lg font-bold text-green-700 tracking-widest">{newPasswords[c.id]}</p>
+                        </div>
+                        <button
+                          onClick={() => handleResetPassword(c)}
+                          disabled={resettingId === c.id}
+                          className="text-xs font-bold text-blue-600 underline whitespace-nowrap"
+                        >
+                          Yana yangisi
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleResetPassword(c)}
+                        disabled={resettingId === c.id}
+                        className="bg-yellow-500 hover:bg-yellow-600 disabled:opacity-60 text-white text-sm font-bold px-4 py-2 rounded-xl"
+                      >
+                        {resettingId === c.id ? "Yaratilmoqda..." : "🔑 Yangi parol yaratish"}
+                      </button>
+                    )}
+                  </div>
 
                   <div className="mt-3">
                     <p className="font-semibold text-black mb-2">🧾 Buyurtmalar tarixi ({c.orders.length}):</p>

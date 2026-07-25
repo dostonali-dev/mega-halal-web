@@ -14,6 +14,7 @@ export type Product = {
   stock?: number;
   discount_price?: number | null;
   is_hot?: boolean | null;
+  hidden?: boolean | null;
 };
 export type Category = { id: number; name: string; icon: string | null };
 
@@ -51,13 +52,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [cart]);
 
   useEffect(() => {
+    // Foydalanuvchi chiqib ketganda (signOut), avvalgi akkauntning savatchasi
+    // mehmon rejimida yoki keyingi foydalanuvchida ko'rinib qolmasligi uchun tozalaymiz.
+    const handleSignedOut = () => setCart({});
+    window.addEventListener("mhs-signed-out", handleSignedOut);
+    return () => window.removeEventListener("mhs-signed-out", handleSignedOut);
+  }, []);
+
+  useEffect(() => {
     const loadProducts = async () => {
       const { data, error } = await supabase.from("products").select("*");
       if (error) {
         console.error(error);
         return;
       }
-      setProducts(data || []);
+      // "hidden" ustuni bazada bo'lmasa ham xatolik chiqmasligi uchun
+      // client tomonda filtrlaymiz (mijozlarga yashirilgan mahsulotlar ko'rinmasin).
+      setProducts((data || []).filter((p: any) => p.hidden !== true));
     };
     loadProducts();
 
