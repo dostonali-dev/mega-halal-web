@@ -114,22 +114,26 @@ nav {
    maxsus scope bilan qayta yozamiz, shunda login/parol panelida orqa fon rasmi
    xira ko'rinib turadi (butunlay qora bo'lib qolmaydi). */
 .auth-glass-panel {
-  background-color: rgba(10, 10, 10, 0.28) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* Android WebView'da backdrop-filter (blur) ko'pincha ishlamaydi, shu sabab
+     fon rangi shu yerda biroz to'qroq qilib qo'yilgan — iPhone'da blur bilan
+     birga baribir yengil/shaffof ko'rinadi, Androidda esa blur ishlamasa ham
+     matn o'qilishi va ortiqcha "shaffoflik" hosil bo'lmasligi uchun yetarli. */
+  background-color: rgba(8, 8, 8, 0.42) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
 .auth-glass-panel .bg-green-50 {
-  background-color: rgba(255, 255, 255, 0.06) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .auth-glass-panel .bg-white {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.16) !important;
 }
 
 .auth-glass-panel input {
-  background-color: rgba(255, 255, 255, 0.06) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.3) !important;
 }
 

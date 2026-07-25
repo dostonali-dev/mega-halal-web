@@ -54,7 +54,7 @@ export default function AuthForm() {
           filter: "brightness(0.75)",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/0 to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/40" />
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="flex justify-center gap-1.5 mb-4">
@@ -72,7 +72,7 @@ export default function AuthForm() {
           ))}
         </div>
 
-        <div className="bg-gradient-to-br from-green-600/30 to-green-700/30 backdrop-blur-sm rounded-t-3xl pt-8 pb-10 flex flex-col items-center shadow-xl">
+        <div className="bg-gradient-to-br from-green-600/45 to-green-700/45 backdrop-blur-md rounded-t-3xl pt-8 pb-10 flex flex-col items-center shadow-xl">
           <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center overflow-hidden">
             <img src="/icons/icon-192.png" alt="Mega Halal Supermarket" className="w-full h-full object-cover" />
           </div>
