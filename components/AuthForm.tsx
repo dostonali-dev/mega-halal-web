@@ -5,6 +5,9 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { LANGUAGES } from "@/lib/i18n";
 
+const STORE_PHONE = "010-2132-2202";
+const STORE_TELEGRAM = "https://t.me/megahalalsuppermarket";
+
 function isValidKoreanPhone(v: string) {
   return /^01[0-9]-?\d{3,4}-?\d{4}$/.test(v.trim());
 }
@@ -19,6 +22,7 @@ export default function AuthForm() {
   const [password2, setPassword2] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleLogin = async () => {
     setError("");
@@ -42,15 +46,24 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-green-700">
+      <div
+        className="absolute inset-0 bg-cover bg-center scale-110"
+        style={{
+          backgroundImage: "url(/images/login-bg.jpg)",
+          filter: "blur(6px) brightness(0.55)",
+        }}
+      />
+      <div className="absolute inset-0 bg-black/30" />
+
+      <div className="relative z-10 w-full max-w-sm">
         <div className="flex justify-center gap-1.5 mb-4">
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
               onClick={() => setLanguage(lang.code)}
               className={`w-9 h-9 rounded-full text-base flex items-center justify-center border transition ${
-                language === lang.code ? "border-green-600 bg-green-600 scale-105" : "border-green-100 bg-white"
+                language === lang.code ? "border-green-600 bg-green-600 scale-105" : "border-white/70 bg-white"
               }`}
               aria-label={lang.label}
             >
@@ -59,7 +72,7 @@ export default function AuthForm() {
           ))}
         </div>
 
-        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-t-3xl pt-8 pb-10 flex flex-col items-center">
+        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-t-3xl pt-8 pb-10 flex flex-col items-center shadow-xl">
           <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center overflow-hidden">
             <img src="/icons/icon-192.png" alt="Mega Halal Supermarket" className="w-full h-full object-cover" />
           </div>
@@ -125,6 +138,16 @@ export default function AuthForm() {
             />
           )}
 
+          {mode === "login" && (
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="block text-right w-full text-xs text-green-700 font-semibold mb-3 -mt-1"
+            >
+              {t("auth_forgot_password")}
+            </button>
+          )}
+
           <button
             onClick={mode === "login" ? handleLogin : handleRegister}
             disabled={busy}
@@ -147,6 +170,32 @@ export default function AuthForm() {
           </button>
         </div>
       </div>
+
+      {showForgotPassword && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowForgotPassword(false)}
+        >
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-black text-lg mb-2">{t("auth_forgot_password_title")}</h3>
+            <p className="text-sm text-gray-600 mb-4">{t("auth_forgot_password_message")}</p>
+            <div className="space-y-2 mb-4">
+              <a href={`tel:${STORE_PHONE}`} className="block bg-gray-100 rounded-xl p-3 text-black font-semibold text-center">
+                📱 {STORE_PHONE}
+              </a>
+              <a href={STORE_TELEGRAM} target="_blank" rel="noreferrer" className="block bg-blue-500 text-white rounded-xl p-3 text-center font-semibold">
+                ✈️ Telegram
+              </a>
+            </div>
+            <button
+              onClick={() => setShowForgotPassword(false)}
+              className="w-full bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold"
+            >
+              {t("auth_forgot_password_close")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
