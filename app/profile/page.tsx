@@ -67,6 +67,14 @@ export default function ProfilePage() {
             </Link>
           )}
         </div>
+
+        <div className="mt-10 pb-6 text-center">
+          <div className="inline-flex flex-col items-center gap-1 px-5 py-3 rounded-2xl bg-gray-50 border border-gray-200">
+            <p className="text-xs text-gray-400 tracking-wide">👨‍💻 Developer</p>
+            <p className="text-sm font-bold text-gray-600">Doston Ali-dev</p>
+            <p className="text-xs text-gray-400">dostonalibek@gmail.com</p>
+          </div>
+        </div>
       </div>
     </main>
   );
