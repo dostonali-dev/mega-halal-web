@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { TouchEvent as ReactTouchEvent } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
-import BottomNav from "@/components/BottomNav";
 import InstallPrompt from "@/components/InstallPrompt";
 import ProductRow from "@/components/ProductRow";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
@@ -17,6 +17,8 @@ type Banner = { id: number; image: string; link: string | null };
 
 function BannerCarousel({ banners }: { banners: Banner[] }) {
   const [index, setIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef(0);
 
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -28,22 +30,78 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
 
   if (banners.length === 0) return null;
 
+  const goTo = (i: number) => {
+    const len = banners.length;
+    setIndex(((i % len) + len) % len);
+  };
+
+  const handleTouchStart = (e: ReactTouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+  };
+
+  const handleTouchMove = (e: ReactTouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current === null) return;
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null) return;
+    const delta = touchDeltaX.current;
+    if (delta > 40) goTo(index - 1);
+    else if (delta < -40) goTo(index + 1);
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+  };
+
   const current = banners[index];
   const content = (
-    <img src={current.image} alt="banner" className="w-full h-40 md:h-56 object-cover rounded-2xl" />
+    <img
+      src={current.image}
+      alt="banner"
+      draggable={false}
+      className="w-full h-40 md:h-56 object-cover rounded-2xl select-none"
+    />
   );
 
   return (
-    <div className="relative mb-8">
+    <div
+      className="relative mb-8 touch-pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {current.link ? <Link href={current.link}>{content}</Link> : content}
       {banners.length > 1 && (
         <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
           {banners.map((b, i) => (
-            <span key={b.id} className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/50"}`} />
+            <button
+              key={b.id}
+              onClick={() => goTo(i)}
+              aria-label={`banner ${i + 1}`}
+              className={`w-2 h-2 rounded-full ${i === index ? "bg-white" : "bg-white/50"}`}
+            />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function RecentIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="3.5" width="17" height="17" rx="3" />
+      <path d="M12 8v4.5l3 2" />
+    </svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20.5s-7.5-4.6-10-9.3C.5 8 2 4.5 5.5 4c2-.3 3.9.7 5 2.3C11.6 4.7 13.5 3.7 15.5 4 19 4.5 20.5 8 20.5 11.2 18 15.9 12 20.5 12 20.5Z" />
+    </svg>
   );
 }
 
@@ -61,6 +119,14 @@ export default function Home() {
     loadBanners();
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#mhs-search-input") {
+      const el = document.getElementById("mhs-search-input");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      (el as HTMLInputElement | null)?.focus();
+    }
+  }, []);
+
   const searchResults = query.trim()
     ? products.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()))
     : [];
@@ -73,10 +139,28 @@ export default function Home() {
   return (
     <main className="min-h-screen p-4 md:p-8 pb-24">
       <div className="max-w-5xl mx-auto">
-        <h1 className="site-title text-4xl md:text-6xl font-extrabold text-center">
-          Mega Halal Supermarket
-        </h1>
-        <p className="text-center mt-4 text-lg mb-6">
+        <div className="flex items-center justify-between gap-3 mb-1">
+          <h1 className="site-title text-2xl md:text-3xl font-extrabold">
+            Mega Halal Supermarket
+          </h1>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/recently-viewed"
+              aria-label={t("recently_viewed_title")}
+              className="w-10 h-10 rounded-full border border-green-100 bg-white flex items-center justify-center text-green-600"
+            >
+              <RecentIcon />
+            </Link>
+            <Link
+              href="/favorites"
+              aria-label={t("favorites_title")}
+              className="w-10 h-10 rounded-full border border-green-100 bg-white flex items-center justify-center text-green-600"
+            >
+              <HeartIcon />
+            </Link>
+          </div>
+        </div>
+        <p className="text-center mt-2 text-lg mb-6">
           {t("home_subtitle")}
         </p>
 
@@ -84,26 +168,9 @@ export default function Home() {
         <InstallPrompt />
         <BannerCarousel banners={banners} />
 
-        {!query.trim() && (
-          <>
-            <ProductRow title={t("new_products")} products={newArrivals} />
-            <ProductRow title="🔥 O'zbekiston HOT" products={hotProducts} />
-            <ProductRow title="🥩 Go'sht mahsulotlari" products={meatProducts} seeAllHref={`/categories/${encodeURIComponent("Go'sht mahsulotlari")}`} />
-            <ProductRow title="🔥 Qaynoq chegirmalar" products={discounted} />
-          </>
-        )}
-
-        <div className="flex gap-3 mb-8">
-          <Link href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-3 rounded-xl font-bold">
-            📸 Instagram
-          </Link>
-          <Link href={TIKTOK_URL} target="_blank" rel="noreferrer" className="flex-1 bg-black text-white text-center py-3 rounded-xl font-bold border border-neutral-700">
-            🎵 TikTok
-          </Link>
-        </div>
-
-        <div className="max-w-xl mx-auto">
+        <div className="max-w-xl mx-auto mb-8">
           <input
+            id="mhs-search-input"
             type="text"
             placeholder={t("search_placeholder")}
             value={query}
@@ -133,22 +200,37 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="mt-4">
-            {categories.map((cat) => {
-              const items = products.filter((p) => p.category === cat.name).slice(0, 6);
-              return (
-                <ProductRow
-                  key={cat.id}
-                  title={`${cat.icon || "📦"} ${cat.name}`}
-                  products={items}
-                  seeAllHref={`/categories/${encodeURIComponent(cat.name)}`}
-                />
-              );
-            })}
-          </div>
+          <>
+            <ProductRow title={t("new_products")} products={newArrivals} />
+            <ProductRow title="🔥 O'zbekiston HOT" products={hotProducts} />
+            <ProductRow title="🥩 Go'sht mahsulotlari" products={meatProducts} seeAllHref={`/categories/${encodeURIComponent("Go'sht mahsulotlari")}`} />
+            <ProductRow title="🔥 Qaynoq chegirmalar" products={discounted} />
+
+            <div className="mt-4">
+              {categories.map((cat) => {
+                const items = products.filter((p) => p.category === cat.name).slice(0, 6);
+                return (
+                  <ProductRow
+                    key={cat.id}
+                    title={`${cat.icon || "📦"} ${cat.name}`}
+                    products={items}
+                    seeAllHref={`/categories/${encodeURIComponent(cat.name)}`}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="flex gap-3 mb-8">
+              <Link href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-3 rounded-xl font-bold">
+                📸 Instagram
+              </Link>
+              <Link href={TIKTOK_URL} target="_blank" rel="noreferrer" className="flex-1 bg-black text-white text-center py-3 rounded-xl font-bold border border-neutral-700">
+                🎵 TikTok
+              </Link>
+            </div>
+          </>
         )}
       </div>
-      <BottomNav />
     </main>
   );
 }

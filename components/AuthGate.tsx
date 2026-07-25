@@ -3,10 +3,12 @@
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import AuthForm from "@/components/AuthForm";
+import BottomNav from "@/components/BottomNav";
+import EdgeSwipeBack from "@/components/EdgeSwipeBack";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, loading } = useAuth();
+  const { user, loading, guestMode } = useAuth();
 
   if (pathname.startsWith("/admin")) return <>{children}</>;
 
@@ -18,7 +20,13 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return <AuthForm />;
+  if (!user && !guestMode) return <AuthForm />;
 
-  return <>{children}</>;
+  return (
+    <>
+      <EdgeSwipeBack />
+      {children}
+      <BottomNav />
+    </>
+  );
 }

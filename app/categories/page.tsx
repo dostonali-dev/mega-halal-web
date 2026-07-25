@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { useLanguage } from "@/lib/LanguageContext";
-import BottomNav from "@/components/BottomNav";
 
 export default function CategoriesPage() {
   const { categories } = useCart();
@@ -25,7 +24,6 @@ export default function CategoriesPage() {
           ))}
         </div>
       </div>
-      <BottomNav />
     </main>
   );
 }

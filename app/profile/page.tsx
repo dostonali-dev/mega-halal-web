@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
-import BottomNav from "@/components/BottomNav";
 
 export default function ProfilePage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, guestMode, exitGuest } = useAuth();
   const { t } = useLanguage();
 
   const menuItems = [
@@ -22,6 +21,15 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-black mb-6">👤 {t("profile_title")}</h1>
+
+        {guestMode && !user && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-6 flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-yellow-700">{t("guest_banner_text")}</p>
+            <button onClick={exitGuest} className="bg-green-600 text-white text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
+              {t("guest_banner_button")}
+            </button>
+          </div>
+        )}
 
         <div className="bg-white border border-green-100 rounded-2xl p-6 mb-6">
           <div className="flex items-center gap-4">
@@ -50,15 +58,16 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-3">
-          <button onClick={signOut} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-2xl font-bold">
+          <button onClick={guestMode && !user ? exitGuest : signOut} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-2xl font-bold">
             {t("profile_menu_signout")}
           </button>
-          <Link href="/profile/delete" className="block text-center text-gray-400 text-sm underline">
-            {t("profile_menu_delete_account")}
-          </Link>
+          {!guestMode && (
+            <Link href="/profile/delete" className="block text-center text-gray-400 text-sm underline">
+              {t("profile_menu_delete_account")}
+            </Link>
+          )}
         </div>
       </div>
-      <BottomNav />
     </main>
   );
 }

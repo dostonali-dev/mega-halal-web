@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import { useRecentlyViewed } from "@/lib/RecentlyViewedContext";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -12,6 +13,7 @@ export default function ProductDetailPage() {
   const { products, cart, setQty, getMaxQty } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
+  const { recordView } = useRecentlyViewed();
 
   const productId = Number(params.id);
   const product = products.find((p) => p.id === productId);
@@ -19,6 +21,11 @@ export default function ProductDetailPage() {
   const currentInCart = cart[productId] || 0;
   const [localQty, setLocalQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
+
+  useEffect(() => {
+    if (product) recordView(product.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
 
   if (!product) {
     return (

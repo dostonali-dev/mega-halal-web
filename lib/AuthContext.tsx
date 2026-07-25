@@ -15,6 +15,9 @@ type Profile = {
 type AuthContextType = {
   user: Profile | null;
   loading: boolean;
+  guestMode: boolean;
+  continueAsGuest: () => void;
+  exitGuest: () => void;
   signUp: (name: string, phone: string, password: string) => Promise<string | null>;
   signIn: (phone: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -34,6 +37,22 @@ function phoneToEmail(phone: string) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [guestMode, setGuestMode] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("mhs_guest_mode");
+    if (stored === "true") setGuestMode(true);
+  }, []);
+
+  const continueAsGuest = () => {
+    localStorage.setItem("mhs_guest_mode", "true");
+    setGuestMode(true);
+  };
+
+  const exitGuest = () => {
+    localStorage.removeItem("mhs_guest_mode");
+    setGuestMode(false);
+  };
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
@@ -83,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (profileError) return profileError.message;
 
     setUser({ id: data.user.id, name, phone });
+    exitGuest();
     return null;
   };
 
@@ -90,12 +110,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const email = phoneToEmail(phone);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return "Telefon raqami yoki parol noto'g'ri.";
+    exitGuest();
     return null;
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    exitGuest();
   };
 
   const updateAddress = async (fields: { address?: string | null; addressDetail?: string | null; addressImage?: string | null }) => {
@@ -154,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, updateAddress, updatePassword, updatePhone, deleteAccount }}>
+    <AuthContext.Provider value={{ user, loading, guestMode, continueAsGuest, exitGuest, signUp, signIn, signOut, updateAddress, updatePassword, updatePhone, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

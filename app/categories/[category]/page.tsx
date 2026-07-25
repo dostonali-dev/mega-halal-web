@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
-import BottomNav from "@/components/BottomNav";
 
 export default function CategoryDetailPage() {
   const params = useParams();
@@ -49,7 +48,6 @@ export default function CategoryDetailPage() {
           })}
         </div>
       </div>
-      <BottomNav />
     </main>
   );
 }

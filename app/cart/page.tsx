@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useLanguage } from "@/lib/LanguageContext";
-import BottomNav from "@/components/BottomNav";
+import ProductRow from "@/components/ProductRow";
 
 const DELIVERY_FEE = 4000;
 
@@ -13,6 +13,15 @@ export default function CartPage() {
   const { t } = useLanguage();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
   const grandTotal = total + DELIVERY_FEE;
+
+  const recommended = products
+    .filter((p) => !(cart[p.id] > 0) && p.in_stock !== false)
+    .sort((a, b) => {
+      const aHot = (a as any).is_hot ? 1 : 0;
+      const bHot = (b as any).is_hot ? 1 : 0;
+      return bHot - aHot || b.id - a.id;
+    })
+    .slice(0, 8);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
@@ -65,8 +74,13 @@ export default function CartPage() {
             </button>
           </div>
         )}
+
+        {recommended.length > 0 && (
+          <div className="mt-8">
+            <ProductRow title={t("cart_recommend_title")} products={recommended} />
+          </div>
+        )}
       </div>
-      <BottomNav />
     </main>
   );
 }

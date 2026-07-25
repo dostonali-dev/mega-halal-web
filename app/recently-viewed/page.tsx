@@ -4,20 +4,24 @@ import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import { useRecentlyViewed } from "@/lib/RecentlyViewedContext";
 
-export default function FavoritesPage() {
+export default function RecentlyViewedPage() {
   const { products, cart, addToCart, removeFromCart, setQty } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
+  const { recentIds } = useRecentlyViewed();
 
-  const items = products.filter((p) => favoriteIds.has(p.id));
+  const items = recentIds
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 pb-24">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-black mb-6">{t("favorites_title")}</h1>
+        <h1 className="text-2xl font-bold text-black mb-6">{t("recently_viewed_title")}</h1>
 
-        {items.length === 0 && <p className="text-center text-gray-400 mt-10">{t("favorites_empty")}</p>}
+        {items.length === 0 && <p className="text-center text-gray-400 mt-10">{t("recently_viewed_empty")}</p>}
 
         <div className="space-y-3">
           {items.map((item) => {
@@ -33,7 +37,9 @@ export default function FavoritesPage() {
                   </div>
                 </Link>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => toggleFavorite(item.id)} className="text-xl">❤️</button>
+                  <button onClick={() => toggleFavorite(item.id)} className="text-xl">
+                    {favoriteIds.has(item.id) ? "❤️" : "🤍"}
+                  </button>
                   {outOfStock ? (
                     <span className="text-xs text-gray-400 font-bold px-2">—</span>
                   ) : (
