@@ -46,15 +46,15 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-green-700">
+    <div className="login-screen relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-green-900">
       <div
-        className="absolute inset-0 bg-cover bg-center scale-110"
+        className="absolute inset-0 bg-cover bg-center"
         style={{
           backgroundImage: "url(/images/login-bg.jpg)",
-          filter: "blur(6px) brightness(0.55)",
+          filter: "brightness(0.75)",
         }}
       />
-      <div className="absolute inset-0 bg-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/5 to-black/55" />
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="flex justify-center gap-1.5 mb-4">
@@ -63,7 +63,7 @@ export default function AuthForm() {
               key={lang.code}
               onClick={() => setLanguage(lang.code)}
               className={`w-9 h-9 rounded-full text-base flex items-center justify-center border transition ${
-                language === lang.code ? "border-green-600 bg-green-600 scale-105" : "border-white/70 bg-white"
+                language === lang.code ? "border-green-600 bg-green-600 scale-105" : "border-white/70 bg-white/90"
               }`}
               aria-label={lang.label}
             >
@@ -72,14 +72,14 @@ export default function AuthForm() {
           ))}
         </div>
 
-        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-t-3xl pt-8 pb-10 flex flex-col items-center shadow-xl">
+        <div className="bg-gradient-to-br from-green-600/60 to-green-700/60 backdrop-blur-md rounded-t-3xl pt-8 pb-10 flex flex-col items-center shadow-xl">
           <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center overflow-hidden">
             <img src="/icons/icon-192.png" alt="Mega Halal Supermarket" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-white font-extrabold text-lg mt-3 text-center px-6">Mega Halal Supermarket</h1>
         </div>
 
-        <div className="bg-white border border-green-100 border-t-0 rounded-b-3xl p-6 shadow-xl -mt-1">
+        <div className="auth-glass-panel border border-white/20 border-t-0 rounded-b-3xl p-6 shadow-xl -mt-1">
           <div className="flex bg-green-50 rounded-xl p-1 mb-6">
             <button
               onClick={() => { setMode("login"); setError(""); }}

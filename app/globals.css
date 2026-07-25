@@ -108,3 +108,31 @@ nav {
   background-color: #3f0a0a !important;
   color: #f87171 !important;
 }
+
+/* ===== Login sahifa — orqa fon rasmi ko'rinishi uchun shaffof (glass) panel =====
+   Yuqoridagi qora mavzu qoidalari (.bg-white, .bg-green-50, input) ni shu yerda
+   maxsus scope bilan qayta yozamiz, shunda login/parol panelida orqa fon rasmi
+   xira ko'rinib turadi (butunlay qora bo'lib qolmaydi). */
+.auth-glass-panel {
+  background-color: rgba(10, 10, 10, 0.5) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.auth-glass-panel .bg-green-50 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.auth-glass-panel .bg-white {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.auth-glass-panel input {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.auth-glass-panel .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+}
