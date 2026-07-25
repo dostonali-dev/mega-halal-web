@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import InstallPrompt from "@/components/InstallPrompt";
 import ProductRow from "@/components/ProductRow";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
+import { recordSearchQuery } from "@/lib/searchHistory";
 
 const INSTAGRAM_URL = "https://instagram.com/megahalalsupermarket";
 const TIKTOK_URL = "https://tiktok.com/@megahalalsupermarket";
@@ -120,12 +121,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash === "#mhs-search-input") {
-      const el = document.getElementById("mhs-search-input");
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      (el as HTMLInputElement | null)?.focus();
-    }
-  }, []);
+    if (!query.trim()) return;
+    const timer = setTimeout(() => recordSearchQuery(query), 600);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const searchResults = query.trim()
     ? products.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()))

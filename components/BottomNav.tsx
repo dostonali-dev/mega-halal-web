@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 
 function HomeIcon({ active }: { active: boolean }) {
@@ -54,13 +54,12 @@ function ProfileIcon({ active }: { active: boolean }) {
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const { itemCount } = useCart();
 
   const tabs = [
     { href: "/", key: "home", Icon: HomeIcon },
     { href: "/categories", key: "categories", Icon: CategoriesIcon },
-    { href: "/#mhs-search-input", key: "search", Icon: SearchIcon },
+    { href: "/search", key: "search", Icon: SearchIcon },
     { href: "/cart", key: "cart", Icon: CartIcon },
     { href: "/profile", key: "profile", Icon: ProfileIcon },
   ];
@@ -71,28 +70,8 @@ export default function BottomNav() {
       style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
     >
       {tabs.map((tab) => {
-        const active = tab.key === "search" ? false : pathname === tab.href;
+        const active = pathname === tab.href;
         const Icon = tab.Icon;
-
-        if (tab.key === "search") {
-          return (
-            <button
-              key={tab.key}
-              onClick={() => {
-                if (pathname === "/") {
-                  document.getElementById("mhs-search-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  document.getElementById("mhs-search-input")?.focus();
-                } else {
-                  router.push("/#mhs-search-input");
-                }
-              }}
-              className="flex flex-col items-center px-3 py-1 text-gray-400"
-              aria-label="search"
-            >
-              <Icon active={false} />
-            </button>
-          );
-        }
 
         return (
           <Link

@@ -29,8 +29,13 @@ export default function AdminPage() {
 
   if (!loggedIn) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-green-50">
+      <main className="min-h-screen flex items-center justify-center bg-green-50 p-4">
         <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md">
+          <div className="flex justify-center mb-4">
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-green-600 to-green-700 shadow-lg flex items-center justify-center overflow-hidden p-2">
+              <img src="/icons/icon-512.png" alt="Mega Halal Admin" className="w-full h-full object-cover rounded-2xl" />
+            </div>
+          </div>
           <h1 className="text-3xl font-bold text-green-700 mb-6 text-center">
             Mega Halal Admin
           </h1>
@@ -64,6 +69,7 @@ export default function AdminPage() {
     { href: "/admin/products/new", icon: "➕", label: "Mahsulot qo'shish", desc: "Yangi mahsulot qo'shish" },
     { href: "/admin/categories", icon: "🗂️", label: "Kategoriyalar", desc: "Kategoriyalarni boshqarish" },
     { href: "/admin/orders", icon: "📦", label: "Buyurtmalar", desc: "Kelgan buyurtmalarni ko'rish" },
+    { href: "/admin/customers", icon: "👥", label: "Mijozlar", desc: "Ro'yxatdan o'tgan mijozlar ro'yhati" },
     { href: "/admin/banners", icon: "🖼️", label: "Bannerlar", desc: "Bosh sahifa bannerlari" },
     { href: "/admin/announcement", icon: "📢", label: "E'lon oynasi", desc: "Mijozlarga ko'rsatiladigan e'lon" },
   ];
@@ -71,8 +77,15 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-green-50 p-6 md:p-10">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-black mb-1">Mega Halal Admin</h1>
-        <p className="text-gray-500 mb-8">Boshqarish paneli</p>
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-700 shadow-lg flex items-center justify-center overflow-hidden p-1.5 flex-shrink-0">
+            <img src="/icons/icon-512.png" alt="Mega Halal Admin" className="w-full h-full object-cover rounded-xl" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-black mb-1">Mega Halal Admin</h1>
+            <p className="text-gray-500">Boshqarish paneli</p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           {menuItems.map((item) => (
