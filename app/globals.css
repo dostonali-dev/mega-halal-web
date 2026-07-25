@@ -114,22 +114,22 @@ nav {
    maxsus scope bilan qayta yozamiz, shunda login/parol panelida orqa fon rasmi
    xira ko'rinib turadi (butunlay qora bo'lib qolmaydi). */
 .auth-glass-panel {
-  background-color: rgba(10, 10, 10, 0.5) !important;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background-color: rgba(10, 10, 10, 0.28) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
 .auth-glass-panel .bg-green-50 {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 .auth-glass-panel .bg-white {
-  background-color: rgba(255, 255, 255, 0.14) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .auth-glass-panel input {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
   border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
