@@ -18,7 +18,13 @@ export default function CategoriesPage() {
               href={`/categories/${encodeURIComponent(cat.name)}`}
               className="bg-white border border-green-100 rounded-2xl shadow p-5 flex flex-col items-center justify-center text-center gap-2 aspect-square"
             >
-              <span className="text-3xl">{cat.icon || "📦"}</span>
+              <span className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center text-3xl bg-green-50 flex-shrink-0">
+                {cat.image_url ? (
+                  <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
+                ) : (
+                  cat.icon || "📦"
+                )}
+              </span>
               <span className="text-base font-bold">{cat.name}</span>
             </Link>
           ))}
