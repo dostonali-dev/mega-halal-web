@@ -200,24 +200,57 @@ export default function Home() {
           </div>
         ) : (
           <>
+            <div className="mt-2 mb-8">
+              <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span>🗂️</span>
+                {t("categories_title")}
+              </h2>
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <Link
+                  href="/uzbekistan"
+                  className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-sky-100 border border-blue-200 rounded-2xl shadow-sm p-3"
+                >
+                  <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0">
+                    🇺🇿
+                  </span>
+                  <span className="text-sm font-bold leading-tight">{t("uzbekistan_tile")}</span>
+                </Link>
+                <Link
+                  href="/discounts"
+                  className="flex items-center gap-3 bg-gradient-to-r from-red-50 to-orange-100 border border-red-200 rounded-2xl shadow-sm p-3"
+                >
+                  <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0">
+                    🔥
+                  </span>
+                  <span className="text-sm font-bold leading-tight">{t("discounts_tile")}</span>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/categories/${encodeURIComponent(cat.name)}`}
+                    className="flex items-center gap-3 bg-white border border-green-100 rounded-2xl shadow-sm p-3"
+                  >
+                    <span className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                      {cat.image_url ? (
+                        <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
+                      ) : (
+                        cat.icon || "📦"
+                      )}
+                    </span>
+                    <span className="text-sm font-bold leading-tight line-clamp-2">{cat.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
             <ProductRow title={t("new_products")} products={newArrivals} />
             <ProductRow title="🔥 O'zbekiston HOT" products={hotProducts} />
             <ProductRow title="🥩 Go'sht mahsulotlari" products={meatProducts} seeAllHref={`/categories/${encodeURIComponent("Go'sht mahsulotlari")}`} />
             <ProductRow title="🔥 Qaynoq chegirmalar" products={discounted} />
-
-            <div className="mt-4">
-              {categories.map((cat) => {
-                const items = products.filter((p) => p.category === cat.name).slice(0, 6);
-                return (
-                  <ProductRow
-                    key={cat.id}
-                    title={`${cat.icon || "📦"} ${cat.name}`}
-                    products={items}
-                    seeAllHref={`/categories/${encodeURIComponent(cat.name)}`}
-                  />
-                );
-              })}
-            </div>
 
             <div className="flex gap-3 mb-8">
               <Link href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-3 rounded-xl font-bold">

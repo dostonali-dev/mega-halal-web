@@ -16,7 +16,13 @@ export type Product = {
   is_hot?: boolean | null;
   hidden?: boolean | null;
 };
-export type Category = { id: number; name: string; icon: string | null };
+export type Category = {
+  id: number;
+  name: string;
+  icon: string | null;
+  image_url?: string | null;
+  sort_order?: number | null;
+};
 
 type CartContextType = {
   products: Product[];
@@ -87,7 +93,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const loadCategories = async () => {
-      const { data, error } = await supabase.from("categories").select("*").order("name");
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("sort_order", { ascending: true, nullsFirst: false })
+        .order("name", { ascending: true });
       if (error) {
         console.error(error);
         return;

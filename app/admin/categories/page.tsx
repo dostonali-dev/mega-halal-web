@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-type Category = { id: number; name: string; icon: string | null };
+type Category = {
+  id: number;
+  name: string;
+  icon: string | null;
+  image_url?: string | null;
+  sort_order?: number | null;
+};
 
 const SUGGESTED_ICONS = ["🍞", "🥛", "🥩", "🍗", "🥤", "🍬", "🍫", "🧊", "🍚", "🌶️", "🧴", "🧼", "🍎", "🥬", "🐟", "🍜", "🧀", "🥚", "☕", "📦"];
 
@@ -15,10 +21,14 @@ export default function AdminCategoriesPage() {
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryIcon, setNewCategoryIcon] = useState("📦");
+  const [newCategoryImageUrl, setNewCategoryImageUrl] = useState("");
+  const [newCategorySortOrder, setNewCategorySortOrder] = useState("");
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editIcon, setEditIcon] = useState("📦");
+  const [editImageUrl, setEditImageUrl] = useState("");
+  const [editSortOrder, setEditSortOrder] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -28,7 +38,11 @@ export default function AdminCategoriesPage() {
   }, [router]);
 
   const loadCategories = async () => {
-    const { data, error } = await supabase.from("categories").select("*").order("name");
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("sort_order", { ascending: true, nullsFirst: false })
+      .order("name", { ascending: true });
     if (!error) setCategoriesList(data || []);
   };
 
@@ -38,10 +52,27 @@ export default function AdminCategoriesPage() {
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
-    const { error } = await supabase.from("categories").insert({ name: newCategoryName.trim(), icon: newCategoryIcon });
+    const { error } = await supabase.from("categories").insert({
+      name: newCategoryName.trim(),
+      icon: newCategoryIcon,
+      image_url: newCategoryImageUrl.trim() || null,
+      sort_order: newCategorySortOrder.trim() ? Number(newCategorySortOrder) : null,
+    });
     if (error) { alert("Xato: " + error.message); return; }
     setNewCategoryName("");
     setNewCategoryIcon("📦");
+    setNewCategoryImageUrl("");
+    setNewCategorySortOrder("");
+    loadCategories();
+  };
+
+  const handleDeleteAllCategories = async () => {
+    if (!confirm("BARCHA kategoriyalarni o'chirmoqchimisiz? Bu amalni orqaga qaytarib bo'lmaydi. Mavjud mahsulotlar o'zgarmaydi, faqat kategoriyalar ro'yxati bo'shab qoladi.")) return;
+    const { error } = await supabase.from("categories").delete().neq("id", 0);
+    if (error) {
+      alert("O'chirishda xatolik: " + error.message);
+      return;
+    }
     loadCategories();
   };
 
@@ -59,11 +90,15 @@ export default function AdminCategoriesPage() {
     setEditingId(c.id);
     setEditName(c.name);
     setEditIcon(c.icon || "📦");
+    setEditImageUrl(c.image_url || "");
+    setEditSortOrder(c.sort_order != null ? String(c.sort_order) : "");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditName("");
+    setEditImageUrl("");
+    setEditSortOrder("");
   };
 
   const handleSaveEdit = async () => {
@@ -71,7 +106,12 @@ export default function AdminCategoriesPage() {
     setSaving(true);
     const { error } = await supabase
       .from("categories")
-      .update({ name: editName.trim(), icon: editIcon })
+      .update({
+        name: editName.trim(),
+        icon: editIcon,
+        image_url: editImageUrl.trim() || null,
+        sort_order: editSortOrder.trim() ? Number(editSortOrder) : null,
+      })
       .eq("id", editingId);
     setSaving(false);
     if (error) {
@@ -89,7 +129,12 @@ export default function AdminCategoriesPage() {
 
   return (
     <main className="p-6 md:p-10">
-      <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
+      <div className="flex items-center justify-between">
+        <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
+        <button onClick={handleDeleteAllCategories} className="text-red-500 text-sm font-bold underline">
+          Barchasini o'chirish
+        </button>
+      </div>
       <h1 className="text-3xl font-bold mt-3 mb-6">Kategoriyalar</h1>
 
       <div className="max-w-md bg-gray-50 border rounded-xl p-4 mb-6">
@@ -102,10 +147,23 @@ export default function AdminCategoriesPage() {
             onChange={(e) => setNewCategoryName(e.target.value)}
             className="flex-1 border p-2 rounded-xl bg-white text-black"
           />
-          <button onClick={handleAddCategory} className="bg-green-600 text-white px-4 rounded-xl font-bold">+ Qo'shish</button>
+          <input
+            type="number"
+            placeholder="Tartib #"
+            value={newCategorySortOrder}
+            onChange={(e) => setNewCategorySortOrder(e.target.value)}
+            className="w-24 border p-2 rounded-xl bg-white text-black"
+          />
         </div>
+        <input
+          type="text"
+          placeholder="Rasm URL (ixtiyoriy — bo'lmasa ikonka ishlatiladi)"
+          value={newCategoryImageUrl}
+          onChange={(e) => setNewCategoryImageUrl(e.target.value)}
+          className="w-full border p-2 rounded-xl bg-white text-black mb-3"
+        />
         <p className="text-xs text-gray-500 mb-2">Ikonka tanlang:</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-3">
           {SUGGESTED_ICONS.map((icon) => (
             <button
               key={icon}
@@ -116,6 +174,7 @@ export default function AdminCategoriesPage() {
             </button>
           ))}
         </div>
+        <button onClick={handleAddCategory} className="w-full bg-green-600 text-white px-4 py-2 rounded-xl font-bold">+ Qo'shish</button>
       </div>
 
       <div className="max-w-md space-y-2">
@@ -123,10 +182,26 @@ export default function AdminCategoriesPage() {
           <div key={c.id} className="bg-white border rounded-xl p-3">
             {editingId === c.id ? (
               <div>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="flex-1 border p-2 rounded-xl bg-white text-black"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Tartib #"
+                    value={editSortOrder}
+                    onChange={(e) => setEditSortOrder(e.target.value)}
+                    className="w-24 border p-2 rounded-xl bg-white text-black"
+                  />
+                </div>
                 <input
                   type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Rasm URL (ixtiyoriy)"
+                  value={editImageUrl}
+                  onChange={(e) => setEditImageUrl(e.target.value)}
                   className="w-full border p-2 rounded-xl bg-white text-black mb-3"
                 />
                 <p className="text-xs text-gray-500 mb-2">Ikonka:</p>
@@ -153,7 +228,16 @@ export default function AdminCategoriesPage() {
             ) : (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{c.icon || "📦"}</span>
+                  {c.sort_order != null && (
+                    <span className="text-xs font-bold text-gray-400 w-5 text-right">{c.sort_order}</span>
+                  )}
+                  <span className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center text-2xl bg-gray-50 flex-shrink-0">
+                    {c.image_url ? (
+                      <img src={c.image_url} alt={c.name} className="w-full h-full object-cover" />
+                    ) : (
+                      c.icon || "📦"
+                    )}
+                  </span>
                   <span className="text-black font-semibold">{c.name}</span>
                 </div>
                 <div className="flex gap-3">

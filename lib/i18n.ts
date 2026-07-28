@@ -33,6 +33,10 @@ export const translations = {
     categories_title: "Kategoriyalar",
     category_empty: "Bu kategoriyada mahsulot yo'q",
     out_of_stock_label: "Sotuvda yo'q",
+    uzbekistan_tile: "O'zbekiston mahsulotlari",
+    discounts_tile: "Bugungi chegirmalar",
+    uzbekistan_page_title: "🇺🇿 O'zbekiston mahsulotlari",
+    discounts_page_title: "🔥 Bugungi chegirmalar",
 
     favorites_title: "❤️ Sevimlilar",
     favorites_empty: "Hali sevimli mahsulot yo'q",
@@ -191,6 +195,10 @@ export const translations = {
     categories_title: "Categories",
     category_empty: "No products in this category",
     out_of_stock_label: "Out of stock",
+    uzbekistan_tile: "Uzbek products",
+    discounts_tile: "Today's discounts",
+    uzbekistan_page_title: "🇺🇿 Uzbek products",
+    discounts_page_title: "🔥 Today's discounts",
 
     favorites_title: "❤️ Favorites",
     favorites_empty: "No favorite products yet",
@@ -349,6 +357,10 @@ export const translations = {
     categories_title: "Категории",
     category_empty: "В этой категории нет товаров",
     out_of_stock_label: "Нет в наличии",
+    uzbekistan_tile: "Узбекские товары",
+    discounts_tile: "Скидки дня",
+    uzbekistan_page_title: "🇺🇿 Узбекские товары",
+    discounts_page_title: "🔥 Скидки дня",
 
     favorites_title: "❤️ Избранное",
     favorites_empty: "Пока нет избранных товаров",
@@ -507,6 +519,10 @@ export const translations = {
     categories_title: "카테고리",
     category_empty: "이 카테고리에는 상품이 없습니다",
     out_of_stock_label: "품절",
+    uzbekistan_tile: "우즈베키스탄 제품",
+    discounts_tile: "오늘의 할인",
+    uzbekistan_page_title: "🇺🇿 우즈베키스탄 제품",
+    discounts_page_title: "🔥 오늘의 할인",
 
     favorites_title: "❤️ 즐겨찾기",
     favorites_empty: "아직 즐겨찾는 상품이 없습니다",
