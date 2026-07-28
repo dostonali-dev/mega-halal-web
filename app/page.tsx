@@ -209,21 +209,23 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <Link
                   href="/uzbekistan"
-                  className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-sky-100 border border-blue-200 rounded-2xl shadow-sm p-3"
+                  className="flex items-center gap-3 bg-white border-2 rounded-2xl shadow-sm p-3"
+                  style={{ borderColor: "#3b82f6" }}
                 >
-                  <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                  <span className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#e0f2fe" }}>
                     <img src="/images/categories/uzbekistan-tile.png" alt="" className="w-full h-full object-cover" />
                   </span>
-                  <span className="text-sm font-bold leading-tight text-gray-900">{t("uzbekistan_tile")}</span>
+                  <span className="text-sm font-bold leading-tight" style={{ color: "#3b82f6" }}>{t("uzbekistan_tile")}</span>
                 </Link>
                 <Link
                   href="/discounts"
-                  className="flex items-center gap-3 bg-gradient-to-r from-red-50 to-orange-100 border border-red-200 rounded-2xl shadow-sm p-3"
+                  className="flex items-center gap-3 bg-white border-2 rounded-2xl shadow-sm p-3"
+                  style={{ borderColor: "#f97316" }}
                 >
-                  <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                  <span className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#ffedd5" }}>
                     <img src="/images/categories/discounts-tile.png" alt="" className="w-full h-full object-cover" />
                   </span>
-                  <span className="text-sm font-bold leading-tight text-gray-900">{t("discounts_tile")}</span>
+                  <span className="text-sm font-bold leading-tight" style={{ color: "#f97316" }}>{t("discounts_tile")}</span>
                 </Link>
               </div>
 
