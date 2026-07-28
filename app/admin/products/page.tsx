@@ -25,6 +25,9 @@ type BulkAction = "" | "move" | "delete" | "in_stock" | "out_of_stock" | "hide" 
 
 type Category = { id: number; name: string; icon: string | null };
 
+const OPEN_GROUP_KEY = "admin_products_open_group";
+const SCROLL_Y_KEY = "admin_products_scroll_y";
+
 export default function AdminProductsPage() {
   const router = useRouter();
   const [checkedLogin, setCheckedLogin] = useState(false);
@@ -32,7 +35,10 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [adminSearch, setAdminSearch] = useState("");
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [openGroup, setOpenGroup] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem(OPEN_GROUP_KEY) || null;
+  });
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkAction, setBulkAction] = useState<BulkAction>("");
@@ -44,6 +50,13 @@ export default function AdminProductsPage() {
     if (isLoggedIn !== "true") router.push("/admin");
     else setCheckedLogin(true);
   }, [router]);
+
+  // Qaysi kategoriya ochiq turgani sessiya davomida saqlanadi - tahrirlashga
+  // kirib qaytganda kategoriya yopilib, boshiga qaytib ketmasligi uchun.
+  useEffect(() => {
+    if (openGroup) sessionStorage.setItem(OPEN_GROUP_KEY, openGroup);
+    else sessionStorage.removeItem(OPEN_GROUP_KEY);
+  }, [openGroup]);
 
   const loadProducts = async () => {
     const { data, error } = await supabase.from("products").select("*").order("id", { ascending: false });
@@ -60,6 +73,19 @@ export default function AdminProductsPage() {
       loadCategories();
     }
   }, [checkedLogin]);
+
+  // Mahsulotlar yuklanib, ochiq kategoriya kengaygandan keyin, tahrirlashga
+  // ketishdan oldingi skroll pozitsiyasini tiklaymiz.
+  useEffect(() => {
+    if (!checkedLogin || products.length === 0) return;
+    const savedY = sessionStorage.getItem(SCROLL_Y_KEY);
+    if (savedY) {
+      sessionStorage.removeItem(SCROLL_Y_KEY);
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: Number(savedY), behavior: "auto" });
+      });
+    }
+  }, [checkedLogin, products]);
 
   const handleDeleteProduct = async (id: number) => {
     if (!confirm("Bu mahsulotni o'chirmoqchimisiz?")) return;
@@ -310,7 +336,13 @@ function ProductRow({ p, selected, onToggleSelect, onDelete, onToggleStock, onTo
           {p.is_hot ? "🔥 HOT" : "HOT belgilash"}
         </button>
         <div className="flex gap-2">
-          <Link href={`/admin/products/${p.id}`} className="text-blue-600 text-xs font-bold underline">Tahrirlash</Link>
+          <Link
+            href={`/admin/products/${p.id}`}
+            onClick={() => sessionStorage.setItem(SCROLL_Y_KEY, String(window.scrollY))}
+            className="text-blue-600 text-xs font-bold underline"
+          >
+            Tahrirlash
+          </Link>
           <button onClick={() => onDelete(p.id)} className="text-red-500 text-xs font-bold underline">O'chirish</button>
         </div>
       </div>
