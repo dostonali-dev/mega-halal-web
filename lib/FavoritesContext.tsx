@@ -35,7 +35,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const toggleFavorite = async (productId: number) => {
-    if (!user) return;
+    if (!user) {
+      alert("Sevimlilarga qo'shish uchun avval ro'yxatdan o'ting");
+      return;
+    }
 
     const isFavorite = favoriteIds.has(productId);
     const next = new Set(favoriteIds);
