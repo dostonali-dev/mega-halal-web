@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { formatSeoulDateTime } from "@/lib/dateUtils";
 
 type Profile = {
   id: string;
@@ -200,14 +201,14 @@ export default function CustomersPage() {
               {isOpen && (
                 <div className="px-4 pb-4 border-t pt-3">
                   <p className="text-black text-sm">
-                    📅 Ro'yxatdan o'tgan: {c.created_at ? new Date(c.created_at).toLocaleString() : "—"}
+                    📅 Ro'yxatdan o'tgan: {c.created_at ? formatSeoulDateTime(c.created_at) : "—"}
                   </p>
                   <p className="text-black text-sm mt-1">📱 {c.phone}</p>
                   <p className="text-black text-sm mt-1">
                     📍 {c.address ? `${c.address}${c.address_detail ? `, ${c.address_detail}` : ""}` : "Manzil kiritilmagan"}
                   </p>
                   {lastOrderDate && (
-                    <p className="text-black text-sm mt-1">🕓 Oxirgi buyurtma: {new Date(lastOrderDate).toLocaleString()}</p>
+                    <p className="text-black text-sm mt-1">🕓 Oxirgi buyurtma: {formatSeoulDateTime(lastOrderDate)}</p>
                   )}
 
                   <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-xl p-3">
@@ -252,7 +253,7 @@ export default function CustomersPage() {
                               <span className="font-bold text-black text-sm">№{o.id}</span>
                               <span className="font-bold text-green-700 text-sm">{o.total?.toLocaleString()}₩</span>
                             </div>
-                            <p className="text-xs text-gray-500 mb-1">{new Date(o.created_at).toLocaleString()}</p>
+                            <p className="text-xs text-gray-500 mb-1">{formatSeoulDateTime(o.created_at)}</p>
                             <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusClass}`}>
                               {o.status || "⏳ Kutilmoqda"}
                             </span>

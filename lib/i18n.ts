@@ -47,6 +47,8 @@ export const translations = {
     cart_item_count: "Mahsulotlar soni",
     cart_total: "Jami",
     delivery_fee: "Yetkazib berish",
+    free_shipping_progress: "🚚 Bepul yetkazib berish uchun yana {amount} xarid qiling",
+    free_shipping_reached: "🎉 Tabriklaymiz! Yetkazib berish bepul",
     cart_place_order: "Buyurtma berish",
 
     checkout_title: "Buyurtmani rasmiylashtirish",
@@ -210,6 +212,8 @@ export const translations = {
     cart_item_count: "Item count",
     cart_total: "Total",
     delivery_fee: "Delivery fee",
+    free_shipping_progress: "🚚 Add {amount} more for free delivery",
+    free_shipping_reached: "🎉 Congrats! Delivery is free",
     cart_place_order: "Place order",
 
     checkout_title: "Complete your order",
@@ -373,6 +377,8 @@ export const translations = {
     cart_item_count: "Количество товаров",
     cart_total: "Итого",
     delivery_fee: "Доставка",
+    free_shipping_progress: "🚚 Добавьте ещё {amount} для бесплатной доставки",
+    free_shipping_reached: "🎉 Поздравляем! Доставка бесплатная",
     cart_place_order: "Оформить заказ",
 
     checkout_title: "Оформление заказа",
@@ -536,6 +542,8 @@ export const translations = {
     cart_item_count: "상품 수",
     cart_total: "합계",
     delivery_fee: "배송비",
+    free_shipping_progress: "🚚 무료 배송까지 {amount} 남았습니다",
+    free_shipping_reached: "🎉 축하합니다! 무료 배송이 적용되었습니다",
     cart_place_order: "주문하기",
 
     checkout_title: "주문 완료하기",

@@ -4,15 +4,17 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import ProductRow from "@/components/ProductRow";
-
-const DELIVERY_FEE = 4000;
+import { DELIVERY_FEE, FREE_SHIPPING_THRESHOLD, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
 
 export default function CartPage() {
   const router = useRouter();
   const { products, cart, addToCart, removeFromCart, setQty, total, itemCount } = useCart();
   const { t } = useLanguage();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
-  const grandTotal = total + DELIVERY_FEE;
+  const deliveryFee = getDeliveryFee(total);
+  const freeShippingRemaining = getFreeShippingRemaining(total);
+  const freeShippingProgress = Math.min(100, Math.round((total / FREE_SHIPPING_THRESHOLD) * 100));
+  const grandTotal = total + deliveryFee;
 
   const recommended = products
     .filter((p) => !(cart[p.id] > 0) && p.in_stock !== false)
@@ -54,6 +56,22 @@ export default function CartPage() {
 
         {items.length > 0 && (
           <div className="bg-white border border-green-100 rounded-2xl p-4 mt-6">
+            <div className="mb-4">
+              {freeShippingRemaining > 0 ? (
+                <p className="text-sm font-bold text-green-700 mb-2">
+                  {t("free_shipping_progress").replace("{amount}", `${freeShippingRemaining.toLocaleString()}₩`)}
+                </p>
+              ) : (
+                <p className="text-sm font-bold text-green-700 mb-2">{t("free_shipping_reached")}</p>
+              )}
+              <div className="w-full h-2.5 bg-green-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-600 rounded-full transition-all"
+                  style={{ width: `${freeShippingProgress}%` }}
+                />
+              </div>
+            </div>
+
             <div className="flex justify-between text-black mb-1">
               <span>{t("cart_item_count")}</span><span>{itemCount}</span>
             </div>
@@ -61,7 +79,17 @@ export default function CartPage() {
               <span>{t("checkout_products")}</span><span>{total.toLocaleString()}₩</span>
             </div>
             <div className="flex justify-between text-gray-500 text-sm mb-2 pb-2 border-b">
-              <span>🚚 {t("delivery_fee")}</span><span>{DELIVERY_FEE.toLocaleString()}₩</span>
+              <span>🚚 {t("delivery_fee")}</span>
+              <span>
+                {deliveryFee === 0 ? (
+                  <>
+                    <span className="line-through text-gray-300 mr-1">{DELIVERY_FEE.toLocaleString()}₩</span>
+                    <span className="text-green-700 font-bold">0₩</span>
+                  </>
+                ) : (
+                  `${deliveryFee.toLocaleString()}₩`
+                )}
+              </span>
             </div>
             <div className="flex justify-between text-2xl font-extrabold text-green-700">
               <span>{t("cart_total")}</span><span>{grandTotal.toLocaleString()}₩</span>

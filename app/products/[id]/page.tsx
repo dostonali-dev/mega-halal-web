@@ -21,6 +21,7 @@ export default function ProductDetailPage() {
   const currentInCart = cart[productId] || 0;
   const [localQty, setLocalQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   useEffect(() => {
     if (product) recordView(product.id);
@@ -68,11 +69,37 @@ export default function ProductDetailPage() {
             {favoriteIds.has(product.id) ? "❤️" : "🤍"}
           </button>
           {product.image ? (
-            <img src={product.image} alt={product.name} className={`w-full h-80 object-cover ${outOfStock ? "opacity-50 grayscale" : ""}`} />
+            <img
+              src={product.image}
+              alt={product.name}
+              onClick={() => setShowLightbox(true)}
+              className={`w-full h-80 object-cover cursor-zoom-in ${outOfStock ? "opacity-50 grayscale" : ""}`}
+            />
           ) : (
             <div className="w-full h-80 bg-gray-100" />
           )}
         </div>
+
+        {showLightbox && product.image && (
+          <div
+            onClick={() => setShowLightbox(false)}
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          >
+            <button
+              onClick={() => setShowLightbox(false)}
+              aria-label="Yopish"
+              className="absolute top-4 right-4 z-10 bg-white/10 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl"
+            >
+              ×
+            </button>
+            <img
+              src={product.image}
+              alt={product.name}
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
 
         <div className="p-5">
           {outOfStock && (

@@ -7,11 +7,11 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, type Address } from "@/lib/addresses";
+import { DELIVERY_FEE, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
 
 const BANK_NAME = "농협은행";
 const BANK_ACCOUNT = "352-1676-1060-43";
 const BANK_HOLDER = "MUKHTAROV";
-const DELIVERY_FEE = 4000;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -19,7 +19,9 @@ export default function CheckoutPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
-  const grandTotal = total + DELIVERY_FEE;
+  const deliveryFee = getDeliveryFee(total);
+  const freeShippingRemaining = getFreeShippingRemaining(total);
+  const grandTotal = total + deliveryFee;
 
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -113,6 +115,8 @@ export default function CheckoutPage() {
       const orderText = items.map((p) => `${p.name} x ${cart[p.id]} = ${p.price * (cart[p.id] || 0)}₩`).join("\n");
 
       let fullAddress = "";
+      let addressMain = "";
+      let addressDetailFinal = "";
       let addressImageUrl: string | null = null;
 
       if (selectedId === "new") {
@@ -127,8 +131,11 @@ export default function CheckoutPage() {
           const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(fileName);
           addressImageUrl = urlData.publicUrl;
           fullAddress = "Photo address";
+          addressMain = "Rasm orqali (manzil rasmiga qarang)";
         } else {
           fullAddress = addressDetail ? `${address}, ${addressDetail}` : address;
+          addressMain = address;
+          addressDetailFinal = addressDetail;
         }
 
         if (saveNewAddress && user) {
@@ -148,8 +155,11 @@ export default function CheckoutPage() {
           if (chosen.address_image) {
             fullAddress = "Photo address";
             addressImageUrl = chosen.address_image;
+            addressMain = "Rasm orqali (manzil rasmiga qarang)";
           } else {
             fullAddress = chosen.address_detail ? `${chosen.address}, ${chosen.address_detail}` : chosen.address || "";
+            addressMain = chosen.address || "";
+            addressDetailFinal = chosen.address_detail || "";
           }
         }
       }
@@ -161,6 +171,8 @@ export default function CheckoutPage() {
           customer_name: customerName,
           phone,
           address: fullAddress,
+          address_main: addressMain,
+          address_detail: addressDetailFinal,
           address_image: addressImageUrl,
           note,
           order_text: orderText,
@@ -196,7 +208,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           order: orderText,
           itemsTotal: total,
-          deliveryFee: DELIVERY_FEE,
+          deliveryFee,
           total: grandTotal,
           customerName,
           phone,
@@ -251,8 +263,23 @@ export default function CheckoutPage() {
             <span>{t("checkout_products")}</span><span>{total.toLocaleString()}₩</span>
           </div>
           <div className="flex justify-between text-gray-500 text-sm mb-1">
-            <span>🚚 {t("delivery_fee")}</span><span>{DELIVERY_FEE.toLocaleString()}₩</span>
+            <span>🚚 {t("delivery_fee")}</span>
+            <span>
+              {deliveryFee === 0 ? (
+                <>
+                  <span className="line-through text-gray-300 mr-1">{DELIVERY_FEE.toLocaleString()}₩</span>
+                  <span className="text-green-700 font-bold">0₩</span>
+                </>
+              ) : (
+                `${deliveryFee.toLocaleString()}₩`
+              )}
+            </span>
           </div>
+          {freeShippingRemaining > 0 && (
+            <p className="text-xs font-semibold text-green-700 mb-1">
+              {t("free_shipping_progress").replace("{amount}", `${freeShippingRemaining.toLocaleString()}₩`)}
+            </p>
+          )}
           <div className="flex justify-between font-bold text-green-700 mt-2 pt-2 border-t text-lg">
             <span>{t("cart_total")}</span><span>{grandTotal.toLocaleString()}₩</span>
           </div>

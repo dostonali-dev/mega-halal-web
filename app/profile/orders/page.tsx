@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
+import { formatSeoulDateTime } from "@/lib/dateUtils";
 
 const STATUS_KEY_MAP: Record<string, "order_status_paid" | "order_status_shipped" | "order_status_cancelled"> = {
   "✅ To'landi": "order_status_paid",
@@ -66,7 +67,7 @@ export default function OrdersHistoryPage() {
                   <span className="font-bold text-black">{t("checkout_success_order_no")} {o.id}</span>
                   <span className="text-green-700 font-bold">{o.total.toLocaleString()}₩</span>
                 </div>
-                <p className="text-xs text-gray-500 mb-2">{new Date(o.created_at).toLocaleString()}</p>
+                <p className="text-xs text-gray-500 mb-2">{formatSeoulDateTime(o.created_at)}</p>
                 <div className="flex gap-2 mb-2">
                   <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusClass}`}>{statusLabel}</span>
                 </div>

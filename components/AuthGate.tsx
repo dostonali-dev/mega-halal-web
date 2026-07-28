@@ -14,8 +14,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-400">
-        Yuklanmoqda...
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#000000" }}>
+        <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "#86efac" }}>
+          Mega Supermarket
+        </h1>
       </div>
     );
   }
