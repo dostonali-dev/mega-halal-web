@@ -214,7 +214,7 @@ export default function Home() {
                   <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
                     <img src="/images/categories/uzbekistan-tile.png" alt="" className="w-full h-full object-cover" />
                   </span>
-                  <span className="text-sm font-bold leading-tight">{t("uzbekistan_tile")}</span>
+                  <span className="text-sm font-bold leading-tight text-gray-900">{t("uzbekistan_tile")}</span>
                 </Link>
                 <Link
                   href="/discounts"
@@ -223,7 +223,7 @@ export default function Home() {
                   <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
                     <img src="/images/categories/discounts-tile.png" alt="" className="w-full h-full object-cover" />
                   </span>
-                  <span className="text-sm font-bold leading-tight">{t("discounts_tile")}</span>
+                  <span className="text-sm font-bold leading-tight text-gray-900">{t("discounts_tile")}</span>
                 </Link>
               </div>
 
