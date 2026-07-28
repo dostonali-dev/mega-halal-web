@@ -34,12 +34,19 @@ export default function CartPage() {
 
         <div className="space-y-3">
           {items.map((p) => (
-            <div key={p.id} className="bg-white border border-green-100 rounded-2xl p-4 flex justify-between items-center">
-              <div>
-                <p className="font-semibold text-black">{p.name}</p>
-                <p className="text-green-700 font-bold">{p.price.toLocaleString()}₩</p>
+            <div key={p.id} className="bg-white border border-green-100 rounded-2xl p-4 flex justify-between items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {p.image ? (
+                  <img src={p.image} alt={p.name} className="w-16 h-16 object-cover rounded-xl border border-green-100 flex-shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-gray-100 flex-shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <p className="font-semibold text-black truncate">{p.name}</p>
+                  <p className="text-green-700 font-bold">{p.price.toLocaleString()}₩</p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button onClick={() => removeFromCart(p.id)} className="bg-red-500 text-white w-10 h-10 rounded-lg">-</button>
                 <input
                   type="number"

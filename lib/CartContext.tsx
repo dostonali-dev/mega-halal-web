@@ -117,17 +117,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const getMaxQty = (id: number) => {
     const product = products.find((p) => p.id === id);
-    if (!product || product.stock == null) return Infinity;
-    return Math.max(0, product.stock);
+    if (!product) return Infinity;
+    // "Sotuvda yo'q" deb belgilangan mahsulot - umuman qo'shib bo'lmaydi.
+    if (product.in_stock === false) return 0;
+    // "Soni" maydoni faqat admin haqiqiy son kiritgan bo'lsa cheklov bo'ladi.
+    // Bo'sh/0 qoldirilgan bo'lsa (ko'pchilik mahsulotda shunday), bu inventar
+    // hisoblanmayapti degani - cheksiz deb hisoblaymiz, aks holda "+" bosilganda
+    // hech narsa bo'lmay qoladi.
+    if (product.stock != null && product.stock > 0) return product.stock;
+    return Infinity;
   };
 
   const addToCart = (id: number) => {
-    setCart((prev) => {
-      const max = getMaxQty(id);
-      const current = prev[id] || 0;
-      if (current >= max) return prev;
-      return { ...prev, [id]: current + 1 };
-    });
+    const product = products.find((p) => p.id === id);
+    if (product?.in_stock === false) {
+      alert("Bu mahsulot hozircha sotuvda yo'q 😔");
+      return;
+    }
+    const max = getMaxQty(id);
+    const current = cart[id] || 0;
+    if (current >= max) {
+      alert(`Afsuski, "${product?.name || "bu mahsulot"}"dan faqat ${max} dona bor.`);
+      return;
+    }
+    setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
   };
 
   const removeFromCart = (id: number) => {
@@ -135,8 +148,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const setQty = (id: number, qty: number) => {
+    const max = getMaxQty(id);
+    if (max !== Infinity && qty > max) {
+      const product = products.find((p) => p.id === id);
+      if (max === 0) {
+        alert("Bu mahsulot hozircha sotuvda yo'q 😔");
+      } else {
+        alert(`Afsuski, "${product?.name || "bu mahsulot"}"dan faqat ${max} dona bor.`);
+      }
+    }
     setCart((prev) => {
-      const max = getMaxQty(id);
       const clamped = Math.min(Math.max(0, qty), max);
       const next = { ...prev };
       if (clamped <= 0) {
