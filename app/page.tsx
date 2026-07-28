@@ -7,12 +7,8 @@ import { useCart } from "@/lib/CartContext";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
 import InstallPrompt from "@/components/InstallPrompt";
-import ProductRow from "@/components/ProductRow";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
 import { recordSearchQuery } from "@/lib/searchHistory";
-
-const INSTAGRAM_URL = "https://instagram.com/megahalalsupermarket";
-const TIKTOK_URL = "https://tiktok.com/@megahalalsupermarket";
 
 type Banner = { id: number; image: string; link: string | null };
 
@@ -106,11 +102,30 @@ function HeartIcon() {
   );
 }
 
+function SearchIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
+function ArrowUpIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 19V5" />
+      <path d="M6 11l6-6 6 6" />
+    </svg>
+  );
+}
+
 export default function Home() {
   const { products, categories, cart, addToCart, removeFromCart } = useCart();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const loadBanners = async () => {
@@ -126,18 +141,35 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [query]);
 
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const searchResults = query.trim()
     ? products.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()))
     : [];
 
-  const newArrivals = [...products].sort((a, b) => b.id - a.id).slice(0, 8);
-  const hotProducts = products.filter((p) => (p as any).is_hot === true);
-  const meatProducts = products.filter((p) => p.category === "Go'sht mahsulotlari");
-  const discounted = products.filter((p) => p.discount_price != null && p.discount_price < p.price);
-
   return (
-    <main className="min-h-screen p-4 md:p-8 pb-24">
-      <div className="max-w-5xl mx-auto">
+    <main className="min-h-screen pb-24">
+      {/* Tepada "pin" bo'lib turadigan, shaffof qidiruv katakchasi */}
+      <div className="sticky top-0 z-40 backdrop-blur-md border-b border-white/10 px-4 md:px-8 py-3" style={{ backgroundColor: "rgba(10,10,10,0.35)" }}>
+        <div className="max-w-xl mx-auto relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "rgba(255,255,255,0.65)" }}>
+            <SearchIcon />
+          </span>
+          <input
+            id="mhs-search-input"
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="search-transparent-input w-full rounded-full py-3 pl-11 pr-4 text-base border focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto p-4 md:p-8">
         <div className="flex items-center justify-between gap-3 mb-1">
           <h1 className="site-title text-2xl md:text-3xl font-extrabold">
             Mega Halal Supermarket
@@ -166,17 +198,6 @@ export default function Home() {
         <AnnouncementPopup />
         <InstallPrompt />
         <BannerCarousel banners={banners} />
-
-        <div className="max-w-xl mx-auto mb-8">
-          <input
-            id="mhs-search-input"
-            type="text"
-            placeholder={t("search_placeholder")}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full border rounded-2xl p-4 text-lg shadow"
-          />
-        </div>
 
         {query.trim() ? (
           <div className="mt-8 space-y-3">
@@ -249,22 +270,45 @@ export default function Home() {
               </div>
             </div>
 
-            <ProductRow title={t("new_products")} products={newArrivals} />
-            <ProductRow title="🔥 O'zbekiston HOT" products={hotProducts} />
-            <ProductRow title="🥩 Go'sht mahsulotlari" products={meatProducts} seeAllHref={`/categories/${encodeURIComponent("Go'sht mahsulotlari")}`} />
-            <ProductRow title="🔥 Qaynoq chegirmalar" products={discounted} />
-
-            <div className="flex gap-3 mb-8">
-              <Link href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-3 rounded-xl font-bold">
-                📸 Instagram
-              </Link>
-              <Link href={TIKTOK_URL} target="_blank" rel="noreferrer" className="flex-1 bg-black text-white text-center py-3 rounded-xl font-bold border border-neutral-700">
-                🎵 TikTok
-              </Link>
+            <div className="mt-2 mb-8">
+              <h2 className="text-xl font-bold mb-3">{t("all_products_title")}</h2>
+              <div className="grid grid-cols-3 gap-2 md:gap-3">
+                {products.map((item) => {
+                  const outOfStock = item.in_stock === false;
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/products/${item.id}`}
+                      className={`bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
+                    >
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
+                      ) : (
+                        <div className="w-full aspect-square bg-gray-100" />
+                      )}
+                      <div className="p-2">
+                        <p className="font-semibold text-xs leading-tight line-clamp-2">{item.name}</p>
+                        <p className="text-green-400 font-bold text-xs mt-1">{item.price.toLocaleString()}₩</p>
+                        {outOfStock && <p className="text-red-500 text-[10px] font-bold mt-0.5">{t("out_of_stock_label")}</p>}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </>
         )}
       </div>
+
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Yuqoriga"
+          className="fixed bottom-24 right-4 z-50 w-11 h-11 rounded-full bg-green-600 text-white flex items-center justify-center shadow-lg"
+        >
+          <ArrowUpIcon />
+        </button>
+      )}
     </main>
   );
 }

@@ -81,6 +81,16 @@ input::placeholder, textarea::placeholder {
   color: #737373 !important;
 }
 
+/* Bosh sahifadagi shaffof, tepada "pin" bo'lib turadigan qidiruv katakchasi */
+.search-transparent-input {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+.search-transparent-input::placeholder {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
 /* Sarlavha (Mega Halal Supermarket) — och yashil */
 h1.site-title {
   color: #86efac !important;

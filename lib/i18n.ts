@@ -37,6 +37,7 @@ export const translations = {
     discounts_tile: "Bugungi chegirmalar",
     uzbekistan_page_title: "🇺🇿 O'zbekiston mahsulotlari",
     discounts_page_title: "🔥 Bugungi chegirmalar",
+    all_products_title: "Jami mahsulotlar",
 
     favorites_title: "❤️ Sevimlilar",
     favorites_empty: "Hali sevimli mahsulot yo'q",
@@ -199,6 +200,7 @@ export const translations = {
     discounts_tile: "Today's discounts",
     uzbekistan_page_title: "🇺🇿 Uzbek products",
     discounts_page_title: "🔥 Today's discounts",
+    all_products_title: "All products",
 
     favorites_title: "❤️ Favorites",
     favorites_empty: "No favorite products yet",
@@ -361,6 +363,7 @@ export const translations = {
     discounts_tile: "Скидки дня",
     uzbekistan_page_title: "🇺🇿 Узбекские товары",
     discounts_page_title: "🔥 Скидки дня",
+    all_products_title: "Все товары",
 
     favorites_title: "❤️ Избранное",
     favorites_empty: "Пока нет избранных товаров",
@@ -523,6 +526,7 @@ export const translations = {
     discounts_tile: "오늘의 할인",
     uzbekistan_page_title: "🇺🇿 우즈베키스탄 제품",
     discounts_page_title: "🔥 오늘의 할인",
+    all_products_title: "전체 상품",
 
     favorites_title: "❤️ 즐겨찾기",
     favorites_empty: "아직 즐겨찾는 상품이 없습니다",
