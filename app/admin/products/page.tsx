@@ -18,6 +18,7 @@ type Product = {
   discount_price?: number | null;
   is_hot?: boolean | null;
   hidden?: boolean | null;
+  product_code?: string | null;
 };
 
 type BulkAction = "" | "move" | "delete" | "in_stock" | "out_of_stock" | "hide" | "show";
@@ -41,6 +42,7 @@ export default function AdminProductsPage() {
   const [supplier, setSupplier] = useState("");
   const [stock, setStock] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
+  const [productCode, setProductCode] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [existingImage, setExistingImage] = useState("");
@@ -76,7 +78,7 @@ export default function AdminProductsPage() {
   const resetForm = () => {
     setEditingId(null);
     setName(""); setPrice(""); setCategory(""); setDescription("");
-    setSupplier(""); setStock(""); setDiscountPrice("");
+    setSupplier(""); setStock(""); setDiscountPrice(""); setProductCode("");
     setImageFile(null); setImagePreview(""); setExistingImage("");
   };
 
@@ -89,6 +91,7 @@ export default function AdminProductsPage() {
     setSupplier(p.supplier || "");
     setStock(p.stock != null ? String(p.stock) : "");
     setDiscountPrice(p.discount_price != null ? String(p.discount_price) : "");
+    setProductCode(p.product_code || "");
     setImageFile(null);
     setImagePreview("");
     setExistingImage(p.image || "");
@@ -115,6 +118,7 @@ export default function AdminProductsPage() {
         description: description || null, supplier: supplier || null,
         stock: stock ? Number(stock) : 0,
         discount_price: discountPrice ? Number(discountPrice) : null,
+        product_code: productCode.trim() || null,
       };
       if (editingId) {
         const { error } = await supabase.from("products").update(payload).eq("id", editingId);
@@ -219,7 +223,10 @@ export default function AdminProductsPage() {
     await loadProducts();
   };
 
-  const filteredProducts = products.filter((p) => p.name.toLowerCase().includes(adminSearch.toLowerCase()));
+  const filteredProducts = products.filter((p) => {
+    const q = adminSearch.toLowerCase();
+    return p.name.toLowerCase().includes(q) || (p.product_code || "").toLowerCase().includes(q);
+  });
   const knownCategoryNames = categoriesList.map((c) => c.name);
   const orphanCategories = [...new Set(products.map((p) => p.category))].filter(
     (name) => !knownCategoryNames.includes(name)
@@ -248,6 +255,7 @@ export default function AdminProductsPage() {
 
           <textarea placeholder="Mahsulot tavsifi (ixtiyoriy)" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" rows={3} />
           <input type="text" placeholder="Firma / yetkazib beruvchi (faqat siz ko'rasiz)" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
+          <input type="text" placeholder="Mahsulot kodi / barkod (faqat siz ko'rasiz, mijozga ko'rinmaydi)" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
           <input type="number" placeholder="Chegirma narxi (ixtiyoriy)" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-orange-50 text-black" />
 
           <div className="border-2 border-dashed rounded-xl p-4 text-center bg-gray-50">
@@ -275,7 +283,7 @@ export default function AdminProductsPage() {
       <div className="max-w-2xl">
         <input
           type="text"
-          placeholder="🔎 Mahsulot qidirish..."
+          placeholder="🔎 Mahsulot nomi yoki kodi bo'yicha qidirish..."
           value={adminSearch}
           onChange={(e) => setAdminSearch(e.target.value)}
           className="w-full border p-3 rounded-xl bg-white text-black mb-4"
@@ -402,7 +410,7 @@ function ProductRow({ p, selected, onToggleSelect, onEdit, onDelete, onToggleSto
           {p.name} {p.hidden ? <span className="text-xs font-bold text-gray-400">🙈 berkitilgan</span> : null}
         </p>
         <p className="text-sm text-gray-500">
-          {p.price.toLocaleString()}₩ · Soni: {p.stock ?? 0}{p.supplier ? ` · 🏭 ${p.supplier}` : ""}
+          {p.price.toLocaleString()}₩ · Soni: {p.stock ?? 0}{p.supplier ? ` · 🏭 ${p.supplier}` : ""}{p.product_code ? ` · 🔖 ${p.product_code}` : ""}
         </p>
       </div>
       <div className="flex flex-col items-end gap-2">
