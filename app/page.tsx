@@ -186,8 +186,16 @@ export default function Home() {
         <BannerCarousel banners={banners} />
       </div>
 
-      {/* Bannerdan keyin boshlanadi, pastga tushgan sari tepada "pin" bo'lib qoladi, shaffof */}
-      <div className="sticky top-2 z-40 backdrop-blur-md border-y border-white/10 px-4 md:px-8 py-3 mb-6" style={{ backgroundColor: "rgba(10,10,10,0.35)" }}>
+      {/* Bannerdan keyin boshlanadi, pastga tushgan sari tepada "pin" bo'lib qoladi, shaffof.
+          top-offset kamera/notch (safe-area) dan pastroqda turishi uchun hisoblanadi. */}
+      <div
+        className="sticky z-40 backdrop-blur-md border-y border-white/10 px-4 md:px-8 py-3 mb-6"
+        style={{
+          backgroundColor: "rgba(10,10,10,0.35)",
+          top: "calc(env(safe-area-inset-top, 0px) + 44px)",
+          scrollMarginTop: "calc(env(safe-area-inset-top, 0px) + 44px)",
+        }}
+      >
         <div className="max-w-xl mx-auto relative">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "rgba(255,255,255,0.65)" }}>
             <SearchIcon />
@@ -198,6 +206,7 @@ export default function Home() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="search-transparent-input w-full rounded-full py-3 pl-11 pr-4 text-base border focus:outline-none"
+            style={{ scrollMarginTop: "calc(env(safe-area-inset-top, 0px) + 44px)" }}
           />
         </div>
       </div>
