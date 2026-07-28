@@ -211,8 +211,8 @@ export default function Home() {
                   href="/uzbekistan"
                   className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-sky-100 border border-blue-200 rounded-2xl shadow-sm p-3"
                 >
-                  <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0">
-                    🇺🇿
+                  <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                    <img src="/images/categories/uzbekistan-tile.png" alt="" className="w-full h-full object-cover" />
                   </span>
                   <span className="text-sm font-bold leading-tight">{t("uzbekistan_tile")}</span>
                 </Link>
@@ -220,8 +220,8 @@ export default function Home() {
                   href="/discounts"
                   className="flex items-center gap-3 bg-gradient-to-r from-red-50 to-orange-100 border border-red-200 rounded-2xl shadow-sm p-3"
                 >
-                  <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0">
-                    🔥
+                  <span className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                    <img src="/images/categories/discounts-tile.png" alt="" className="w-full h-full object-cover" />
                   </span>
                   <span className="text-sm font-bold leading-tight">{t("discounts_tile")}</span>
                 </Link>
