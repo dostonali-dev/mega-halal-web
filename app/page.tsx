@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import InstallPrompt from "@/components/InstallPrompt";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
 import { recordSearchQuery } from "@/lib/searchHistory";
+import { useFavorites } from "@/lib/FavoritesContext";
 
 type Banner = { id: number; image: string; link: string | null };
 
@@ -122,6 +123,7 @@ function ArrowUpIcon() {
 
 export default function Home() {
   const { products, categories, cart, addToCart, removeFromCart } = useCart();
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -153,23 +155,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen pb-24">
-      {/* Tepada "pin" bo'lib turadigan, shaffof qidiruv katakchasi */}
-      <div className="sticky top-0 z-40 backdrop-blur-md border-b border-white/10 px-4 md:px-8 py-3" style={{ backgroundColor: "rgba(10,10,10,0.35)" }}>
-        <div className="max-w-xl mx-auto relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "rgba(255,255,255,0.65)" }}>
-            <SearchIcon />
-          </span>
-          <input
-            id="mhs-search-input"
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="search-transparent-input w-full rounded-full py-3 pl-11 pr-4 text-base border focus:outline-none"
-          />
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto p-4 md:p-8">
+      <div className="max-w-5xl mx-auto p-4 md:p-8 pb-0">
         <div className="flex items-center justify-between gap-3 mb-1">
           <h1 className="site-title text-2xl md:text-3xl font-extrabold">
             Mega Halal Supermarket
@@ -198,7 +184,25 @@ export default function Home() {
         <AnnouncementPopup />
         <InstallPrompt />
         <BannerCarousel banners={banners} />
+      </div>
 
+      {/* Bannerdan keyin boshlanadi, pastga tushgan sari tepada "pin" bo'lib qoladi, shaffof */}
+      <div className="sticky top-2 z-40 backdrop-blur-md border-y border-white/10 px-4 md:px-8 py-3 mb-6" style={{ backgroundColor: "rgba(10,10,10,0.35)" }}>
+        <div className="max-w-xl mx-auto relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "rgba(255,255,255,0.65)" }}>
+            <SearchIcon />
+          </span>
+          <input
+            id="mhs-search-input"
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="search-transparent-input w-full rounded-full py-3 pl-11 pr-4 text-base border focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto p-4 md:p-8 pt-0">
         {query.trim() ? (
           <div className="mt-8 space-y-3">
             {searchResults.length === 0 && <p className="text-center">{t("no_results")}</p>}
@@ -274,24 +278,52 @@ export default function Home() {
               <h2 className="text-xl font-bold mb-3">{t("all_products_title")}</h2>
               <div className="grid grid-cols-3 gap-2 md:gap-3">
                 {products.map((item) => {
+                  const qty = cart[item.id] || 0;
                   const outOfStock = item.in_stock === false;
                   return (
-                    <Link
-                      key={item.id}
-                      href={`/products/${item.id}`}
-                      className={`bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
-                    >
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
-                      ) : (
-                        <div className="w-full aspect-square bg-gray-100" />
-                      )}
+                    <div key={item.id} className={`relative bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}>
+                      <button
+                        onClick={() => toggleFavorite(item.id)}
+                        aria-label={t("favorites_title")}
+                        className="absolute top-1.5 right-1.5 z-10 bg-white/90 rounded-full w-7 h-7 flex items-center justify-center text-xs shadow"
+                      >
+                        {favoriteIds.has(item.id) ? "❤️" : "🤍"}
+                      </button>
+                      <Link href={`/products/${item.id}`}>
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
+                        ) : (
+                          <div className="w-full aspect-square bg-gray-100" />
+                        )}
+                      </Link>
                       <div className="p-2">
-                        <p className="font-semibold text-xs leading-tight line-clamp-2">{item.name}</p>
-                        <p className="text-green-400 font-bold text-xs mt-1">{item.price.toLocaleString()}₩</p>
-                        {outOfStock && <p className="text-red-500 text-[10px] font-bold mt-0.5">{t("out_of_stock_label")}</p>}
+                        <Link href={`/products/${item.id}`}>
+                          <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1">{item.name}</p>
+                        </Link>
+                        <p className="text-green-400 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
+
+                        {outOfStock ? (
+                          <span className="text-[10px] text-red-400 font-bold">{t("out_of_stock_label")}</span>
+                        ) : qty === 0 ? (
+                          <button
+                            onClick={() => addToCart(item.id)}
+                            className="w-full bg-green-600 text-white rounded-lg py-1 text-xs font-bold"
+                          >
+                            +
+                          </button>
+                        ) : (
+                          <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
+                            <button onClick={() => removeFromCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
+                              {qty === 1 ? "🗑" : "−"}
+                            </button>
+                            <span className="text-white font-bold text-xs">{qty}</span>
+                            <button onClick={() => addToCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
+                              +
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
