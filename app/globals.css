@@ -91,8 +91,8 @@ input::placeholder, textarea::placeholder {
 
 /* Bosh sahifadagi shaffof, tepada "pin" bo'lib turadigan qidiruv katakchasi */
 .search-transparent-input {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;
 }
 .search-transparent-input::placeholder {

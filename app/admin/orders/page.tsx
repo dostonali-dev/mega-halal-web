@@ -13,6 +13,7 @@ export default function OrdersPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -47,12 +48,30 @@ export default function OrdersPage() {
     "✅ To'landi": "status-paid",
   };
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allSelected = orders.length > 0 && selectedIds.size === orders.length;
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? new Set() : new Set(orders.map((o) => o.id)));
+  };
+
   const handleExportExcel = async () => {
-    if (orders.length === 0) return;
+    const selectedOrders = orders.filter((o) => selectedIds.has(o.id));
+    if (selectedOrders.length === 0) {
+      alert("Avval eksport qilmoqchi bo'lgan buyurtmalarni belgilang (☑)");
+      return;
+    }
     setExporting(true);
     try {
       const XLSX = await import("xlsx");
-      const rows = orders.map((o) => ({
+      const rows = selectedOrders.map((o) => ({
         "Buyurtma raqami": o.id,
         "Sana": formatSeoulDate(o.created_at),
         "Vaqt": formatSeoulTime(o.created_at),
@@ -99,13 +118,25 @@ export default function OrdersPage() {
         <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
         <button
           onClick={handleExportExcel}
-          disabled={exporting || orders.length === 0}
+          disabled={exporting || selectedIds.size === 0}
           className="bg-green-600 disabled:opacity-50 text-white text-sm font-bold px-4 py-2 rounded-xl"
         >
-          {exporting ? "Tayyorlanmoqda..." : "📤 Excel yuklab olish"}
+          {exporting ? "Tayyorlanmoqda..." : `📤 Excel yuklab olish${selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}`}
         </button>
       </div>
-      <h1 className="text-3xl font-bold mb-6">📦 Buyurtmalar</h1>
+      <h1 className="text-3xl font-bold mb-3">📦 Buyurtmalar</h1>
+
+      {orders.length > 0 && (
+        <label className="flex items-center gap-2 mb-4 text-sm font-semibold text-gray-600 cursor-pointer w-fit">
+          <input
+            type="checkbox"
+            checked={allSelected}
+            onChange={toggleSelectAll}
+            className="w-5 h-5"
+          />
+          Hammasini belgilash
+        </label>
+      )}
 
       <div className="max-w-3xl">
         {groups.map((group) => (
@@ -122,10 +153,22 @@ export default function OrdersPage() {
                 const statusClass = statusColors[order.status] || "status-pending";
                 return (
                   <div key={order.id} className="bg-white rounded-2xl shadow border">
-                    <button
-                      onClick={() => setExpandedId(isOpen ? null : order.id)}
-                      className="w-full p-4 flex items-center justify-between text-left"
-                    >
+                    <div className="flex items-center">
+                      <label
+                        onClick={(e) => e.stopPropagation()}
+                        className="pl-4 flex-shrink-0 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(order.id)}
+                          onChange={() => toggleSelect(order.id)}
+                          className="w-5 h-5"
+                        />
+                      </label>
+                      <button
+                        onClick={() => setExpandedId(isOpen ? null : order.id)}
+                        className="flex-1 p-4 flex items-center justify-between text-left min-w-0"
+                      >
                       <div className="flex items-center gap-3 min-w-0">
                         {order.receipt_image && (
                           <img src={order.receipt_image} alt="chek" className="w-10 h-10 object-cover rounded-lg border flex-shrink-0" />
@@ -143,6 +186,7 @@ export default function OrdersPage() {
                         <span className="text-gray-400">{isOpen ? "▲" : "▼"}</span>
                       </div>
                     </button>
+                    </div>
 
                     {isOpen && (
                       <div className="px-4 pb-4 border-t pt-3">

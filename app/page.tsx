@@ -204,7 +204,7 @@ export default function Home() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="search-transparent-input w-full rounded-full py-3 pl-11 pr-4 text-base border backdrop-blur-md focus:outline-none"
+            className="search-transparent-input w-full rounded-full py-3 pl-11 pr-4 text-base border backdrop-blur-sm focus:outline-none"
             style={{ scrollMarginTop: "calc(env(safe-area-inset-top, 0px) + 44px)" }}
           />
         </div>
