@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBackButtonClose } from "@/lib/useBackButtonClose";
 
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -50,6 +51,10 @@ export default function InstallPrompt() {
     localStorage.setItem("mhs_install_dismissed", "true");
     setShowBanner(false);
   };
+
+  // Android "orqaga" tugmasi bosilganda, ko'rsatma oynasi ochiq bo'lsa,
+  // ilovadan chiqib ketish o'rniga shu oynani yopish uchun.
+  useBackButtonClose(showIOSInstructions, () => setShowIOSInstructions(false));
 
   if (!showBanner) return null;
 

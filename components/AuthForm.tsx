@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { LANGUAGES } from "@/lib/i18n";
+import { useBackButtonClose } from "@/lib/useBackButtonClose";
 
 const STORE_PHONE = "010-2132-2202";
 const STORE_TELEGRAM = "https://t.me/megahalalsuppermarket";
@@ -23,6 +24,10 @@ export default function AuthForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  // Android "orqaga" tugmasi bosilganda, "parolni unutdingizmi" oynasi
+  // ochiq bo'lsa, ilovadan chiqib ketish o'rniga shu oynani yopish uchun.
+  useBackButtonClose(showForgotPassword, () => setShowForgotPassword(false));
 
   const handleLogin = async () => {
     setError("");

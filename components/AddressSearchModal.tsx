@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useBackButtonClose } from "@/lib/useBackButtonClose";
 
 // Daum Postcode'ni popup oyna (window.open) sifatida emas, shu komponent
 // ichida "embed" rejimida ko'rsatadi. Popup usuli iPhone Safari'da
@@ -18,6 +19,11 @@ export default function AddressSearchModal({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+
+  // Bu komponent mount qilinganining o'zi "modal ochiq" degani - Android
+  // "orqaga" tugmasi bosilganda ilovadan chiqib ketish o'rniga shu modal
+  // yopilishi uchun.
+  useBackButtonClose(true, onClose);
 
   useEffect(() => {
     let cancelled = false;

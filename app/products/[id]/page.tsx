@@ -6,6 +6,7 @@ import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRecentlyViewed } from "@/lib/RecentlyViewedContext";
+import { useBackButtonClose } from "@/lib/useBackButtonClose";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -22,6 +23,10 @@ export default function ProductDetailPage() {
   const [localQty, setLocalQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
+
+  // Android "orqaga" tugmasi bosilganda, rasm kattalashtirilgan holatda
+  // bo'lsa, ilovadan chiqib ketish o'rniga shu rasmni yopish uchun.
+  useBackButtonClose(showLightbox, () => setShowLightbox(false));
 
   useEffect(() => {
     if (product) recordView(product.id);

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useBackButtonClose } from "@/lib/useBackButtonClose";
 
 type Announcement = {
   id: number;
@@ -42,6 +43,11 @@ export default function AnnouncementPopup() {
     }
     setVisible(false);
   };
+
+  // Android "orqaga" tugmasi bosilganda, e'lon oynasi ochiq bo'lsa,
+  // ilovadan chiqib ketish o'rniga shu oynani yopish uchun. Bu popup
+  // ilova ochilishi bilanoq chiqishi mumkin, shuning uchun ayniqsa muhim.
+  useBackButtonClose(visible && !!announcement, handleClose);
 
   if (!visible || !announcement) return null;
 
