@@ -44,24 +44,47 @@ export async function POST(req: NextRequest) {
     }
 
     const email = phoneToEmail(digits);
+    let userId: string | null = null;
+
     const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
     });
+
     if (createError || !created.user) {
-      return NextResponse.json({ error: createError?.message || "Ro'yxatdan o'tishda xatolik." }, { status: 500 });
+      // Ilgari (masalan, sinov paytida yoki muvaffaqiyatsiz urinishdan keyin)
+      // shu email bilan "etim" auth hisobi qolib ketgan bo'lishi mumkin —
+      // profili yo'q, lekin auth tizimida mavjud. Shunday holatni topib,
+      // uni shu ma'lumotlar bilan qayta ishga tushiramiz (parolni yangilab,
+      // profilini yaratamiz), xatolik chiqarish o'rniga.
+      const isAlreadyRegistered = /already|registered|exists/i.test(createError?.message || "");
+      if (isAlreadyRegistered) {
+        const { data: list } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+        const orphan = list?.users.find((u) => u.email === email);
+        if (orphan) {
+          const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(orphan.id, { password });
+          if (pwError) return NextResponse.json({ error: pwError.message }, { status: 500 });
+          userId = orphan.id;
+        }
+      }
+      if (!userId) {
+        return NextResponse.json(
+          { error: createError?.message || "Ro'yxatdan o'tishda xatolik." },
+          { status: 500 }
+        );
+      }
+    } else {
+      userId = created.user.id;
     }
 
-    const { error: profileError } = await supabaseAdmin.from("profiles").insert({
-      id: created.user.id,
-      name: name.trim(),
-      phone: digits,
-    });
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .upsert({ id: userId, name: name.trim(), phone: digits }, { onConflict: "id" });
     if (profileError) {
-      // Profil yaratilmasa, yaratilgan auth foydalanuvchisini ham bekor qilamiz —
-      // aks holda "profilsiz" hisob qolib ketadi.
-      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      // Yangi yaratilgan (etim bo'lmagan) foydalanuvchida profil saqlanmasa,
+      // auth hisobini ham bekor qilamiz — aks holda "profilsiz" hisob qolib ketadi.
+      if (created?.user) await supabaseAdmin.auth.admin.deleteUser(userId);
       return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
 
