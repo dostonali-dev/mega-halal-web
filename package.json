@@ -17,6 +17,7 @@
     "@capacitor/ios": "^8.4.2",
     "@capacitor/share": "^8.0.1",
     "@supabase/supabase-js": "^2.110.2",
+    "solapi": "^6.0.1",
     "xlsx": "^0.18.5",
     "next": "16.2.10",
     "react": "19.2.4",

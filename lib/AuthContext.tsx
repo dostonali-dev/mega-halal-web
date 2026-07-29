@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import { phoneToEmail, normalizePhone } from "@/lib/phone";
 
 type Profile = {
   id: string;
@@ -21,6 +22,10 @@ type AuthContextType = {
   signUp: (name: string, phone: string, password: string) => Promise<string | null>;
   signIn: (phone: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
+  sendVerificationCode: (phone: string, purpose: "signup" | "reset") => Promise<string | null>;
+  verifyCode: (phone: string, code: string, purpose: "signup" | "reset") => Promise<{ verifyId?: string; error?: string }>;
+  completeRegistration: (name: string, phone: string, password: string, verifyId: string) => Promise<string | null>;
+  completePasswordReset: (phone: string, verifyId: string) => Promise<string | null>;
   updateAddress: (data: { address?: string | null; addressDetail?: string | null; addressImage?: string | null }) => Promise<string | null>;
   updatePassword: (newPassword: string) => Promise<string | null>;
   updatePhone: (newPhone: string) => Promise<string | null>;
@@ -28,11 +33,6 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-function phoneToEmail(phone: string) {
-  const digits = phone.replace(/[^0-9]/g, "");
-  return `${digits}@megahalal.local`;
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
@@ -89,7 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (name: string, phone: string, password: string) => {
-    const email = phoneToEmail(phone);
+    const digits = normalizePhone(phone);
+    const email = phoneToEmail(digits);
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return error.message;
     if (!data.user) return "Ro'yxatdan o'tishda xatolik.";
@@ -97,11 +98,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error: profileError } = await supabase.from("profiles").insert({
       id: data.user.id,
       name,
-      phone,
+      phone: digits,
     });
     if (profileError) return profileError.message;
 
-    setUser({ id: data.user.id, name, phone });
+    setUser({ id: data.user.id, name, phone: digits });
     exitGuest();
     return null;
   };
@@ -150,24 +151,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updatePhone = async (newPhone: string) => {
     if (!user) return "Avval tizimga kiring.";
+    const digits = normalizePhone(newPhone);
 
     const { data: existing } = await supabase
       .from("profiles")
       .select("id")
-      .eq("phone", newPhone)
+      .eq("phone", digits)
       .neq("id", user.id)
       .maybeSingle();
     if (existing) return "Bu raqam allaqachon ro'yxatdan o'tgan.";
 
-    const newEmail = phoneToEmail(newPhone);
+    const newEmail = phoneToEmail(digits);
     const { error: authError } = await supabase.auth.updateUser({ email: newEmail });
     if (authError) return authError.message;
 
-    const { error: profileError } = await supabase.from("profiles").update({ phone: newPhone }).eq("id", user.id);
+    const { error: profileError } = await supabase.from("profiles").update({ phone: digits }).eq("id", user.id);
     if (profileError) return profileError.message;
 
-    setUser((prev) => (prev ? { ...prev, phone: newPhone } : prev));
+    setUser((prev) => (prev ? { ...prev, phone: digits } : prev));
     return null;
+  };
+
+  // Ro'yxatdan o'tish yoki parolni tiklash uchun telefon raqamiga SMS orqali
+  // 6 xonali tasdiqlash kodi yuborishni so'raydi.
+  const sendVerificationCode = async (phone: string, purpose: "signup" | "reset") => {
+    try {
+      const res = await fetch("/api/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, purpose }),
+      });
+      const data = await res.json();
+      if (!res.ok) return data.error || "Kod yuborishda xatolik.";
+      return null;
+    } catch {
+      return "Tarmoq xatoligi. Internetni tekshiring.";
+    }
+  };
+
+  // Foydalanuvchi kiritgan kodni serverda tekshiradi. Muvaffaqiyatli bo'lsa,
+  // keyingi qadam (ro'yxatdan o'tish yoki parol tiklash) uchun kerak bo'ladigan
+  // "verifyId"ni qaytaradi.
+  const verifyCode = async (phone: string, code: string, purpose: "signup" | "reset") => {
+    try {
+      const res = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code, purpose }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { error: data.error || "Kod noto'g'ri." };
+      return { verifyId: data.verifyId as string };
+    } catch {
+      return { error: "Tarmoq xatoligi. Internetni tekshiring." };
+    }
+  };
+
+  // Telefon tasdiqlangandan keyin hisobni serverda yaratadi, so'ng shu
+  // ma'lumotlar bilan avtomatik tizimga kiritadi.
+  const completeRegistration = async (name: string, phone: string, password: string, verifyId: string) => {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, password, verifyId }),
+      });
+      const data = await res.json();
+      if (!res.ok) return data.error || "Ro'yxatdan o'tishda xatolik.";
+      return await signIn(phone, password);
+    } catch {
+      return "Tarmoq xatoligi. Internetni tekshiring.";
+    }
+  };
+
+  // Telefon tasdiqlangandan keyin, tizim o'zi yangi parol yaratib, uni SMS
+  // orqali foydalanuvchiga yuboradi (admin aralashuvisiz).
+  const completePasswordReset = async (phone: string, verifyId: string) => {
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, verifyId }),
+      });
+      const data = await res.json();
+      if (!res.ok) return data.error || "Xatolik yuz berdi.";
+      return null;
+    } catch {
+      return "Tarmoq xatoligi. Internetni tekshiring.";
+    }
   };
 
   const deleteAccount = async () => {
@@ -182,7 +253,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, guestMode, continueAsGuest, exitGuest, signUp, signIn, signOut, updateAddress, updatePassword, updatePhone, deleteAccount }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        guestMode,
+        continueAsGuest,
+        exitGuest,
+        signUp,
+        signIn,
+        signOut,
+        sendVerificationCode,
+        verifyCode,
+        completeRegistration,
+        completePasswordReset,
+        updateAddress,
+        updatePassword,
+        updatePhone,
+        deleteAccount,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
