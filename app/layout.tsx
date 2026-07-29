@@ -9,6 +9,7 @@ import { RecentlyViewedProvider } from "@/lib/RecentlyViewedContext";
 import AuthGate from "@/components/AuthGate";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import AppUpdateChecker from "@/components/AppUpdateChecker";
+import BackButtonHandler from "@/components/BackButtonHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegister />
         <AppUpdateChecker />
+        <BackButtonHandler />
         <LanguageProvider>
           <AuthProvider>
             <CartProvider>
