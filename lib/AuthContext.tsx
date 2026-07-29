@@ -243,12 +243,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const deleteAccount = async () => {
     if (!user) return "Avval tizimga kiring.";
-    await supabase.from("addresses").delete().eq("user_id", user.id);
-    await supabase.from("favorites").delete().eq("user_id", user.id);
-    const { error } = await supabase.from("profiles").delete().eq("id", user.id);
-    if (error) return error.message;
-    await supabase.auth.signOut();
-    setUser(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) return "Sessiya topilmadi, qaytadan tizimga kiring.";
+
+    try {
+      const res = await fetch("/api/auth/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) return data.error || "Hisobni o'chirishda xatolik.";
+    } catch {
+      return "Tarmoq xatoligi. Internetni tekshiring.";
+    }
+
+    // signOut() (raw supabase.auth.signOut() emas) — bu boshqa contextlarga
+    // (masalan savatcha) "mhs-signed-out" hodisasini yuborib, shu qurilmadagi
+    // eski hisobga tegishli lokal ma'lumotlarni ham tozalaydi.
+    await signOut();
     return null;
   };
 
