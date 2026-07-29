@@ -8,6 +8,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, type Address } from "@/lib/addresses";
 import { DELIVERY_FEE, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
+import AddressSearchModal from "@/components/AddressSearchModal";
 
 const BANK_NAME = "농협은행";
 const BANK_ACCOUNT = "352-1676-1060-43";
@@ -27,7 +28,11 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
 
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-  const [selectedId, setSelectedId] = useState<number | "new" | null>(null);
+  // Mehmon (login qilmagan) foydalanuvchi uchun ham "yangi manzil" formasi
+  // boshidanoq ko'rinishi kerak - shuning uchun default "new" (null emas).
+  // Aks holda mehmon uchun manzil formasi umuman chiqmay, faqat "izoh"
+  // maydoni bilan buyurtma berib bo'lar edi (manzil talab qilinmasdan).
+  const [selectedId, setSelectedId] = useState<number | "new" | null>("new");
 
   const [addressMode, setAddressMode] = useState<"form" | "photo">("form");
   const [address, setAddress] = useState("");
@@ -35,6 +40,7 @@ export default function CheckoutPage() {
   const [addressImageFile, setAddressImageFile] = useState<File | null>(null);
   const [addressImagePreview, setAddressImagePreview] = useState("");
   const [saveNewAddress, setSaveNewAddress] = useState(true);
+  const [showAddressSearch, setShowAddressSearch] = useState(false);
 
   const [note, setNote] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -55,14 +61,6 @@ export default function CheckoutPage() {
       else setSelectedId("new");
     });
   }, [user]);
-
-  const openAddressSearch = () => {
-    new (window as any).daum.Postcode({
-      oncomplete: function (data: any) {
-        setAddress(data.address);
-      },
-    }).open();
-  };
 
   const validateStock = async (): Promise<string | null> => {
     const ids = items.map((i) => i.id);
@@ -234,8 +232,8 @@ export default function CheckoutPage() {
           <h2 className="text-2xl font-bold text-green-600">{t("checkout_success_title")}</h2>
           <p className="mt-3 text-lg font-bold text-black">{t("checkout_success_order_no")} {orderNumber}</p>
           <p className="mt-4 text-black">{t("checkout_success_message")}</p>
-          <div className="mt-3 p-3 bg-yellow-100 rounded-xl">
-            <p className="text-yellow-800 font-medium">{t("checkout_success_note")}</p>
+          <div className="mt-3 p-3 rounded-xl" style={{ backgroundColor: "#fef9c3" }}>
+            <p className="font-medium" style={{ color: "#854d0e" }}>{t("checkout_success_note")}</p>
           </div>
           <button onClick={() => router.push("/")} className="mt-6 w-full bg-green-600 text-white py-3 rounded-xl font-bold">
             {t("checkout_back_home")}
@@ -246,7 +244,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8">
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-28">
       <div className="max-w-2xl mx-auto">
         <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">{t("back")}</button>
         <h1 className="text-2xl font-bold text-black mb-4">{t("checkout_title")}</h1>
@@ -330,7 +328,7 @@ export default function CheckoutPage() {
                 <>
                   <div className="flex gap-2 mb-2">
                     <input type="text" placeholder={t("checkout_address_placeholder")} value={address} readOnly className="flex-1 border rounded-xl p-3 text-black" />
-                    <button type="button" onClick={openAddressSearch} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
+                    <button type="button" onClick={() => setShowAddressSearch(true)} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
                   </div>
                   <input type="text" placeholder={t("checkout_detail_placeholder")} value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} className="w-full border rounded-xl p-3 text-black mb-2" />
                 </>
@@ -398,6 +396,13 @@ export default function CheckoutPage() {
           {submitting ? t("checkout_submitting") : t("checkout_submit")}
         </button>
       </div>
+
+      {showAddressSearch && (
+        <AddressSearchModal
+          onComplete={(addr) => setAddress(addr)}
+          onClose={() => setShowAddressSearch(false)}
+        />
+      )}
     </main>
   );
 }

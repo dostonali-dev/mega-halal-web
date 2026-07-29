@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, setDefaultAddress, deleteAddress, type Address } from "@/lib/addresses";
 import { useLanguage } from "@/lib/LanguageContext";
+import AddressSearchModal from "@/components/AddressSearchModal";
 
 export default function AddressesPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function AddressesPage() {
   const [addressImageFile, setAddressImageFile] = useState<File | null>(null);
   const [addressImagePreview, setAddressImagePreview] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showAddressSearch, setShowAddressSearch] = useState(false);
 
   const loadAddresses = async () => {
     if (!user) return;
@@ -33,14 +35,6 @@ export default function AddressesPage() {
   useEffect(() => {
     loadAddresses();
   }, [user]);
-
-  const openAddressSearch = () => {
-    new (window as any).daum.Postcode({
-      oncomplete: function (data: any) {
-        setAddress(data.address);
-      },
-    }).open();
-  };
 
   const resetForm = () => {
     setAddress("");
@@ -178,7 +172,7 @@ export default function AddressesPage() {
                 <>
                   <div className="flex gap-2 mb-2">
                     <input type="text" placeholder={t("checkout_address_placeholder")} value={address} readOnly className="flex-1 border rounded-xl p-3 text-black" />
-                    <button type="button" onClick={openAddressSearch} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
+                    <button type="button" onClick={() => setShowAddressSearch(true)} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
                   </div>
                   <input
                     type="text"
@@ -218,6 +212,13 @@ export default function AddressesPage() {
           )}
         </div>
       </div>
+
+      {showAddressSearch && (
+        <AddressSearchModal
+          onComplete={(addr) => setAddress(addr)}
+          onClose={() => setShowAddressSearch(false)}
+        />
+      )}
     </main>
   );
 }
