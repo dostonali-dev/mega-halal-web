@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/lib/LanguageContext";
 import { RecentlyViewedProvider } from "@/lib/RecentlyViewedContext";
 import AuthGate from "@/components/AuthGate";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import AppUpdateChecker from "@/components/AppUpdateChecker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +51,7 @@ export default function RootLayout({
       <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegister />
+        <AppUpdateChecker />
         <LanguageProvider>
           <AuthProvider>
             <CartProvider>
