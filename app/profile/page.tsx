@@ -23,8 +23,11 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold text-black mb-6">👤 {t("profile_title")}</h1>
 
         {guestMode && !user && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-6 flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-yellow-700">{t("guest_banner_text")}</p>
+          <div
+            className="rounded-2xl p-4 mb-6 flex items-center justify-between gap-3"
+            style={{ backgroundColor: "#fefce8", border: "1px solid #fef08a" }}
+          >
+            <p className="text-sm font-semibold" style={{ color: "#a16207" }}>{t("guest_banner_text")}</p>
             <button onClick={exitGuest} className="bg-green-600 text-white text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
               {t("guest_banner_button")}
             </button>

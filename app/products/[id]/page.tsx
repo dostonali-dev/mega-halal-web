@@ -140,7 +140,10 @@ export default function ProductDetailPage() {
                 {t("product_out_of_stock")}
               </div>
             ) : remaining <= 0 ? (
-              <div className="w-full bg-yellow-100 text-yellow-700 py-4 rounded-2xl font-bold text-center">
+              <div
+                className="w-full py-4 rounded-2xl font-bold text-center"
+                style={{ backgroundColor: "#fef9c3", color: "#a16207" }}
+              >
                 {t("product_max_in_cart")}
               </div>
             ) : (
