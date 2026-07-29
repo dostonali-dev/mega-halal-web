@@ -98,7 +98,9 @@ export default function AdminEditProductPage() {
       const payload = {
         name, price: Number(price), category, image: imageUrl || null,
         description: description || null, supplier: supplier || null,
-        stock: stock ? Number(stock) : 0,
+        // Bo'sh qoldirilsa -> null (soni kuzatilmayapti, cheklovsiz sotiladi).
+        // Aniq son (0 ham) kiritilsa -> shu son qat'iy chegara bo'ladi.
+        stock: stock.trim() !== "" ? Number(stock) : null,
         discount_price: discountPrice ? Number(discountPrice) : null,
         product_code: productCode.trim() || null,
       };
@@ -140,7 +142,7 @@ export default function AdminEditProductPage() {
       <div className="max-w-md space-y-4 bg-gray-50 border rounded-xl p-4">
         <input type="text" placeholder="Mahsulot nomi" value={name} onChange={(e) => setName(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
         <input type="number" placeholder="Narxi" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
-        <input type="number" placeholder="Soni (ombordagi miqdor)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+        <input type="number" placeholder="Soni (bo'sh = cheklovsiz, 0 = sotuvda yo'q)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
 
         <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black">
           <option value="">Kategoriyani tanlang</option>
