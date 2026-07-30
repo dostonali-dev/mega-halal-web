@@ -63,7 +63,8 @@ export default function ProductDetailPage() {
         <div className="relative">
           <button
             onClick={() => router.back()}
-            className="absolute top-4 left-4 z-10 bg-white/90 rounded-full w-10 h-10 flex items-center justify-center shadow text-black"
+            className="absolute top-4 left-4 z-10 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold"
+            style={{ backgroundColor: "#ffffff", color: "#000000", boxShadow: "0 2px 8px rgba(0,0,0,0.35)" }}
           >
             ←
           </button>

@@ -29,7 +29,7 @@ export default function CategoriesPage() {
     <main className="min-h-screen p-4 pb-24">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">{t("categories_title")}</h1>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           {categories.map((cat, i) => {
             const gradient = TILE_GRADIENTS[i % TILE_GRADIENTS.length];
             const count = countFor(cat.name);
@@ -37,7 +37,7 @@ export default function CategoriesPage() {
               <Link
                 key={cat.id}
                 href={`/categories/${encodeURIComponent(cat.name)}`}
-                className="relative block rounded-3xl overflow-hidden shadow-lg aspect-[4/5] active:scale-[0.97] transition-transform"
+                className="relative block rounded-2xl overflow-hidden shadow-lg aspect-square active:scale-[0.97] transition-transform"
                 style={{ background: gradient }}
               >
                 {cat.image_url ? (
@@ -47,7 +47,7 @@ export default function CategoriesPage() {
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-6xl">
+                  <div className="absolute inset-0 flex items-center justify-center text-4xl">
                     {cat.icon || "📦"}
                   </div>
                 )}
@@ -61,27 +61,19 @@ export default function CategoriesPage() {
                   }}
                 />
 
-                {/* Yuqori burchakda rangli belgi - kartochkaga jonlilik beradi */}
-                <div
-                  className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center text-base backdrop-blur-sm"
-                  style={{ background: "rgba(255,255,255,0.22)" }}
-                >
-                  {cat.icon || "🛒"}
-                </div>
-
-                <div className="absolute bottom-0 left-0 right-0 p-3.5">
+                <div className="absolute bottom-0 left-0 right-0 p-2">
                   <p
-                    className="font-extrabold text-base leading-tight line-clamp-2"
+                    className="font-extrabold text-xs leading-tight line-clamp-2"
                     style={{ color: "#ffffff", textShadow: "0 1px 6px rgba(0,0,0,0.7)" }}
                   >
                     {cat.name}
                   </p>
                   {count > 0 && (
                     <p
-                      className="text-xs font-bold mt-1"
+                      className="text-[10px] font-bold mt-0.5"
                       style={{ color: "rgba(255,255,255,0.9)", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}
                     >
-                      {count} ta mahsulot
+                      {count} ta
                     </p>
                   )}
                 </div>

@@ -233,13 +233,8 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="mt-2 mb-8">
-              <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <span>🗂️</span>
-                {t("categories_title")}
-              </h2>
-
-              <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="mt-2 mb-6">
+              <div className="grid grid-cols-2 gap-3">
                 <Link
                   href="/uzbekistan"
                   className="flex items-center gap-3 bg-white border-2 rounded-2xl shadow-sm p-3"
@@ -261,22 +256,30 @@ export default function Home() {
                   <span className="text-sm font-bold leading-tight" style={{ color: "#f97316" }}>{t("discounts_tile")}</span>
                 </Link>
               </div>
+            </div>
+
+            <div className="mt-2 mb-8">
+              <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span>🗂️</span>
+                {t("categories_title")}
+              </h2>
 
               <div className="grid grid-cols-2 gap-3">
                 {categories.map((cat) => (
                   <Link
                     key={cat.id}
                     href={`/categories/${encodeURIComponent(cat.name)}`}
-                    className="flex items-center gap-3 bg-white border border-green-100 rounded-2xl shadow-sm p-3"
+                    className="flex items-center gap-3 rounded-2xl shadow-sm p-3"
+                    style={{ backgroundColor: "#dcfce7", border: "1px solid #bbf7d0" }}
                   >
-                    <span className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                    <span className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
                       {cat.image_url ? (
                         <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
                       ) : (
                         cat.icon || "📦"
                       )}
                     </span>
-                    <span className="text-sm font-bold leading-tight line-clamp-2">{cat.name}</span>
+                    <span className="text-sm font-bold leading-tight line-clamp-2" style={{ color: "#000000" }}>{cat.name}</span>
                   </Link>
                 ))}
               </div>

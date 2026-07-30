@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import BarcodeScannerModal from "@/components/BarcodeScannerModal";
 
 type Product = {
   id: number;
@@ -35,6 +36,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [adminSearch, setAdminSearch] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return sessionStorage.getItem(OPEN_GROUP_KEY) || null;
@@ -194,13 +196,32 @@ export default function AdminProductsPage() {
       <h1 className="text-3xl font-bold mt-3 mb-6">Mahsulotlar</h1>
 
       <div className="max-w-2xl">
-        <input
-          type="text"
-          placeholder="🔎 Mahsulot nomi yoki kodi bo'yicha qidirish..."
-          value={adminSearch}
-          onChange={(e) => setAdminSearch(e.target.value)}
-          className="w-full border p-3 rounded-xl bg-white text-black mb-4"
-        />
+        <div className="relative mb-4">
+          <input
+            type="text"
+            placeholder="🔎 Mahsulot nomi yoki kodi bo'yicha qidirish..."
+            value={adminSearch}
+            onChange={(e) => setAdminSearch(e.target.value)}
+            className="w-full border p-3 pr-14 rounded-xl bg-white text-black"
+          />
+          <button
+            onClick={() => setShowScanner(true)}
+            aria-label="Barkodni kamera bilan skanerlash"
+            className="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 rounded-lg bg-green-600 text-white flex items-center justify-center text-lg"
+          >
+            📷
+          </button>
+        </div>
+
+        {showScanner && (
+          <BarcodeScannerModal
+            onScan={(code) => {
+              setAdminSearch(code);
+              setShowScanner(false);
+            }}
+            onClose={() => setShowScanner(false)}
+          />
+        )}
 
         <div className="bg-gray-50 border rounded-xl p-4 mb-4 space-y-3">
           <p className="text-sm font-bold text-black">

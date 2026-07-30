@@ -41,6 +41,7 @@ export default function AdminEditProductPage() {
   const [stock, setStock] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
   const [productCode, setProductCode] = useState("");
+  const [isHot, setIsHot] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [existingImage, setExistingImage] = useState("");
@@ -75,6 +76,7 @@ export default function AdminEditProductPage() {
       setStock(p.stock != null ? String(p.stock) : "");
       setDiscountPrice(p.discount_price != null ? String(p.discount_price) : "");
       setProductCode(p.product_code || "");
+      setIsHot(p.is_hot === true);
       setExistingImage(p.image || "");
       setLoading(false);
     })();
@@ -103,6 +105,7 @@ export default function AdminEditProductPage() {
         stock: stock.trim() !== "" ? Number(stock) : null,
         discount_price: discountPrice ? Number(discountPrice) : null,
         product_code: productCode.trim() || null,
+        is_hot: isHot,
       };
       const { error } = await supabase.from("products").update(payload).eq("id", productId);
       if (error) { alert("Xato: " + error.message); setSaving(false); return; }
@@ -153,6 +156,16 @@ export default function AdminEditProductPage() {
         <input type="text" placeholder="Firma / yetkazib beruvchi (faqat siz ko'rasiz)" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="text" placeholder="Mahsulot kodi / barkod (faqat siz ko'rasiz, mijozga ko'rinmaydi)" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="number" placeholder="Chegirma narxi (ixtiyoriy)" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-orange-50 text-black" />
+
+        <label
+          className="flex items-center gap-2 p-3 rounded-xl"
+          style={{ backgroundColor: "#dbeafe" }}
+        >
+          <input type="checkbox" checked={isHot} onChange={(e) => setIsHot(e.target.checked)} className="w-5 h-5" />
+          <span className="text-sm font-semibold" style={{ color: "#1e3a8a" }}>
+            🇺🇿 O'zbekiston tovari (bosh sahifadagi "O'zbekiston" bo'limida ko'rinadi)
+          </span>
+        </label>
 
         <div className="border-2 border-dashed rounded-xl p-4 text-center bg-gray-50">
           <p className="text-sm text-gray-600 mb-2">📷 Mahsulot rasmi</p>
