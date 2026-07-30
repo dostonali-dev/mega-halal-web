@@ -41,7 +41,7 @@ function ProductStrip({
   cart: Record<number, number>;
   addToCart: (id: number) => void;
   removeFromCart: (id: number) => void;
-  t: (key: string) => string;
+  t: (key: any) => string;
 }) {
   if (items.length === 0) return null;
 
