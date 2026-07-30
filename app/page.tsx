@@ -19,6 +19,7 @@ type StripProduct = {
   price: number;
   image?: string;
   in_stock?: boolean;
+  discount_price?: number | null;
 };
 
 // Bosh sahifada "O'zbekiston HOT" va "Chegirma tovarlar" uchun - yon tomonga
@@ -57,11 +58,20 @@ function ProductStrip({
         {items.slice(0, 12).map((item) => {
           const qty = cart[item.id] || 0;
           const outOfStock = item.in_stock === false;
+          const hasDiscount = item.discount_price != null && item.discount_price < item.price;
+          const discountPct = hasDiscount
+            ? Math.round((1 - (item.discount_price as number) / item.price) * 100)
+            : 0;
           return (
             <div
               key={item.id}
               className={`flex-shrink-0 w-32 relative bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
             >
+              {hasDiscount && (
+                <span className="absolute top-1.5 left-1.5 z-10 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  -{discountPct}%
+                </span>
+              )}
               <Link href={`/products/${item.id}`}>
                 {item.image ? (
                   <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
@@ -73,7 +83,14 @@ function ProductStrip({
                 <Link href={`/products/${item.id}`}>
                   <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1">{item.name}</p>
                 </Link>
-                <p className="text-green-400 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
+                {hasDiscount ? (
+                  <div className="mb-1.5">
+                    <p className="text-green-400 font-bold text-xs">{item.discount_price!.toLocaleString()}₩</p>
+                    <p className="text-gray-400 text-[10px] line-through">{item.price.toLocaleString()}₩</p>
+                  </div>
+                ) : (
+                  <p className="text-green-400 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
+                )}
 
                 {outOfStock ? (
                   <span className="text-[10px] text-red-400 font-bold">{t("out_of_stock_label")}</span>
@@ -382,8 +399,17 @@ export default function Home() {
                 {products.map((item) => {
                   const qty = cart[item.id] || 0;
                   const outOfStock = item.in_stock === false;
+                  const hasDiscount = item.discount_price != null && item.discount_price < item.price;
+                  const discountPct = hasDiscount
+                    ? Math.round((1 - (item.discount_price as number) / item.price) * 100)
+                    : 0;
                   return (
                     <div key={item.id} className={`relative bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}>
+                      {hasDiscount && (
+                        <span className="absolute top-1.5 left-1.5 z-10 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                          -{discountPct}%
+                        </span>
+                      )}
                       <button
                         onClick={() => toggleFavorite(item.id)}
                         aria-label={t("favorites_title")}
@@ -402,7 +428,14 @@ export default function Home() {
                         <Link href={`/products/${item.id}`}>
                           <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1">{item.name}</p>
                         </Link>
-                        <p className="text-green-400 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
+                        {hasDiscount ? (
+                          <div className="mb-1.5">
+                            <p className="text-green-400 font-bold text-xs">{item.discount_price!.toLocaleString()}₩</p>
+                            <p className="text-gray-400 text-[10px] line-through">{item.price.toLocaleString()}₩</p>
+                          </div>
+                        ) : (
+                          <p className="text-green-400 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
+                        )}
 
                         {outOfStock ? (
                           <span className="text-[10px] text-red-400 font-bold">{t("out_of_stock_label")}</span>
