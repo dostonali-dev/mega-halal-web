@@ -13,6 +13,97 @@ import { useFavorites } from "@/lib/FavoritesContext";
 
 type Banner = { id: number; image: string; link: string | null };
 
+type StripProduct = {
+  id: number;
+  name: string;
+  price: number;
+  image?: string;
+  in_stock?: boolean;
+};
+
+// Bosh sahifada "O'zbekiston HOT" va "Chegirma tovarlar" uchun - yon tomonga
+// (gorizontal) surib ko'radigan mahsulot lentasi. Avval bu joyda faqat
+// kichik havola-kartochka (kategoriya kabi) bor edi, lekin dastlab shu
+// tarzda - haqiqiy mahsulotlar bilan gorizontal skroll qilib chiqqan edi,
+// shu ko'rinishga qaytarildi.
+function ProductStrip({
+  title,
+  items,
+  seeAllHref,
+  cart,
+  addToCart,
+  removeFromCart,
+  t,
+}: {
+  title: string;
+  items: StripProduct[];
+  seeAllHref: string;
+  cart: Record<number, number>;
+  addToCart: (id: number) => void;
+  removeFromCart: (id: number) => void;
+  t: (key: string) => string;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mt-2 mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-xl font-bold">{title}</h2>
+        <Link href={seeAllHref} className="text-sm font-bold" style={{ color: "#4ade80" }}>
+          →
+        </Link>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+        {items.slice(0, 12).map((item) => {
+          const qty = cart[item.id] || 0;
+          const outOfStock = item.in_stock === false;
+          return (
+            <div
+              key={item.id}
+              className={`flex-shrink-0 w-32 relative bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
+            >
+              <Link href={`/products/${item.id}`}>
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
+                ) : (
+                  <div className="w-full aspect-square bg-gray-100" />
+                )}
+              </Link>
+              <div className="p-2">
+                <Link href={`/products/${item.id}`}>
+                  <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1">{item.name}</p>
+                </Link>
+                <p className="text-green-400 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
+
+                {outOfStock ? (
+                  <span className="text-[10px] text-red-400 font-bold">{t("out_of_stock_label")}</span>
+                ) : qty === 0 ? (
+                  <button
+                    onClick={() => addToCart(item.id)}
+                    className="w-full bg-green-600 text-white rounded-lg py-1 text-xs font-bold"
+                  >
+                    +
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
+                    <button onClick={() => removeFromCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
+                      {qty === 1 ? "🗑" : "−"}
+                    </button>
+                    <span className="text-white font-bold text-xs">{qty}</span>
+                    <button onClick={() => addToCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
+                      +
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function BannerCarousel({ banners }: { banners: Banner[] }) {
   const [index, setIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -153,6 +244,11 @@ export default function Home() {
     ? products.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()))
     : [];
 
+  const hotItems = products.filter((p) => (p as any).is_hot === true);
+  const discountItems = products.filter(
+    (p) => p.discount_price != null && p.discount_price < p.price
+  );
+
   return (
     <main className="min-h-screen pb-24">
       <div className="max-w-5xl mx-auto p-4 md:p-8 pb-0">
@@ -233,30 +329,25 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="mt-2 mb-6">
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/uzbekistan"
-                  className="flex items-center gap-3 bg-white border-2 rounded-2xl shadow-sm p-3"
-                  style={{ borderColor: "#3b82f6" }}
-                >
-                  <span className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#e0f2fe" }}>
-                    <img src="/images/categories/uzbekistan-tile.png" alt="" className="w-full h-full object-cover" />
-                  </span>
-                  <span className="text-sm font-bold leading-tight" style={{ color: "#3b82f6" }}>{t("uzbekistan_tile")}</span>
-                </Link>
-                <Link
-                  href="/discounts"
-                  className="flex items-center gap-3 bg-white border-2 rounded-2xl shadow-sm p-3"
-                  style={{ borderColor: "#f97316" }}
-                >
-                  <span className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#ffedd5" }}>
-                    <img src="/images/categories/discounts-tile.png" alt="" className="w-full h-full object-cover" />
-                  </span>
-                  <span className="text-sm font-bold leading-tight" style={{ color: "#f97316" }}>{t("discounts_tile")}</span>
-                </Link>
-              </div>
-            </div>
+            <ProductStrip
+              title={t("uzbekistan_page_title")}
+              items={hotItems}
+              seeAllHref="/uzbekistan"
+              cart={cart}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              t={t}
+            />
+
+            <ProductStrip
+              title={t("discounts_page_title")}
+              items={discountItems}
+              seeAllHref="/discounts"
+              cart={cart}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              t={t}
+            />
 
             <div className="mt-2 mb-8">
               <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
