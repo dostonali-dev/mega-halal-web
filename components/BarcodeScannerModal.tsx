@@ -40,7 +40,20 @@ export default function BarcodeScannerModal({ onScan, onClose }: Props) {
 
         await scanner.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 260, height: 180 } },
+          {
+            fps: 10,
+            // Shtrix-kod (barkod) keng va past bo'lgani uchun qrbox ham
+            // shunga mos - kengroq va pastroq qilib beriladi.
+            qrbox: { width: 280, height: 120 },
+            // Kamera past aniqlikda ochilsa, telefonni juda yaqin olib
+            // bormasa kod o'qilmay qolardi - shu sabab yuqori aniqlik
+            // so'raymiz, shunda odatiy masofadan ham o'qiy oladi.
+            videoConstraints: {
+              facingMode: "environment",
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+          },
           (decodedText: string) => {
             if (stoppedRef.current) return;
             stoppedRef.current = true;
@@ -75,7 +88,8 @@ export default function BarcodeScannerModal({ onScan, onClose }: Props) {
       <button
         onClick={onClose}
         aria-label="Yopish"
-        className="absolute top-4 right-4 z-10 bg-white/10 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl"
+        className="absolute right-4 z-10 bg-white/10 text-white rounded-full w-11 h-11 flex items-center justify-center text-2xl"
+        style={{ top: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
       >
         ×
       </button>
