@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendAdminPush } from "@/lib/onesignal";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -51,6 +52,14 @@ ${order}
 
   const result = await response.json();
   console.log("TELEGRAM JAVOB:", result);
+
+  // Admin ilovasi o'rnatilgan telefonlarga push bildirishnoma yuboramiz.
+  // Bu xatolik bersa ham buyurtmaning o'zi muvaffaqiyatli qolishi kerak,
+  // shuning uchun sendAdminPush ichida xatoliklar faqat log qilinadi.
+  await sendAdminPush(
+    "🛒 Yangi buyurtma keldi!",
+    `Buyurtma № ${orderNumber} - ${customerName}, ${total.toLocaleString()}₩`
+  );
 
   return NextResponse.json({
     success: true,
