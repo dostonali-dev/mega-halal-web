@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
 import InstallPrompt from "@/components/InstallPrompt";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
+import ProductImage from "@/components/ProductImage";
 import { recordSearchQuery } from "@/lib/searchHistory";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { fetchProductSalesCounts, buildBestSellingList } from "@/lib/salesStats";
@@ -81,11 +82,7 @@ function ProductStrip({
                 </span>
               )}
               <Link href={`/products/${item.id}`}>
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
-                ) : (
-                  <div className="w-full aspect-square bg-gray-100" />
-                )}
+                <ProductImage image={item.image} alt={item.name} className="w-full aspect-square object-cover" />
               </Link>
               <div className="p-2">
                 <Link href={`/products/${item.id}`}>
@@ -372,7 +369,7 @@ export default function Home() {
             {searchResults.map((item) => (
               <div key={item.id} className="bg-white border border-green-100 rounded-2xl p-4 flex justify-between items-center">
                 <Link href={`/products/${item.id}`} className="flex items-center gap-3">
-                  {item.image ? <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" /> : <div className="w-14 h-14 rounded-lg border bg-gray-100 flex-shrink-0" />}
+                  <ProductImage image={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" compact />
                   <div>
                     <p className="font-semibold">{item.name}</p>
                     <p className="text-green-400 font-bold">{item.price.toLocaleString()}₩</p>
@@ -483,11 +480,7 @@ export default function Home() {
                         {favoriteIds.has(item.id) ? "❤️" : "🤍"}
                       </button>
                       <Link href={`/products/${item.id}`}>
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
-                        ) : (
-                          <div className="w-full aspect-square bg-gray-100" />
-                        )}
+                        <ProductImage image={item.image} alt={item.name} className="w-full aspect-square object-cover" />
                       </Link>
                       <div className="p-2">
                         <Link href={`/products/${item.id}`}>

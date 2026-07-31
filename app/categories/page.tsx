@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import ProductImage from "@/components/ProductImage";
 
 // "Bo'limlar" (kategoriyalar) sahifasi - endi katta rasmli plitkalar
 // o'rniga, har bir kategoriya uchun: nomi+icon (och yashil fonda,
@@ -71,11 +72,7 @@ export default function CategoriesPage() {
                         </span>
                       )}
                       <Link href={`/products/${item.id}`}>
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
-                        ) : (
-                          <div className="w-full aspect-square bg-gray-100" />
-                        )}
+                        <ProductImage image={item.image} alt={item.name} className="w-full aspect-square object-cover" />
                       </Link>
                       <div className="p-2">
                         <Link href={`/products/${item.id}`}>

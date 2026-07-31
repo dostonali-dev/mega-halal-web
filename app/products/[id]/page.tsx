@@ -8,6 +8,7 @@ import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRecentlyViewed } from "@/lib/RecentlyViewedContext";
 import { useBackButtonClose } from "@/lib/useBackButtonClose";
+import ProductImage from "@/components/ProductImage";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -86,7 +87,7 @@ export default function ProductDetailPage() {
               className={`w-full h-80 object-cover cursor-zoom-in ${outOfStock ? "opacity-50 grayscale" : ""}`}
             />
           ) : (
-            <div className="w-full h-80 bg-gray-100" />
+            <ProductImage image={null} alt={product.name} className="w-full h-80" />
           )}
         </div>
 

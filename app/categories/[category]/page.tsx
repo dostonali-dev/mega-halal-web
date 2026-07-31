@@ -6,6 +6,7 @@ import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import PageHeader from "@/components/PageHeader";
+import ProductImage from "@/components/ProductImage";
 
 export default function CategoryDetailPage() {
   const params = useParams();
@@ -77,11 +78,7 @@ export default function CategoryDetailPage() {
                   {favoriteIds.has(item.id) ? "❤️" : "🤍"}
                 </button>
                 <Link href={`/products/${item.id}`}>
-                  {item.image ? (
-                    <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
-                  ) : (
-                    <div className="w-full aspect-square bg-gray-100" />
-                  )}
+                  <ProductImage image={item.image} alt={item.name} className="w-full aspect-square object-cover" />
                 </Link>
                 <div className="p-2">
                   <Link href={`/products/${item.id}`}>

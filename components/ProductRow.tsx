@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
+import ProductImage from "@/components/ProductImage";
 
 type Product = {
   id: number;
@@ -50,11 +51,7 @@ export default function ProductRow({
                 </span>
               )}
               <Link href={`/products/${p.id}`}>
-                {p.image ? (
-                  <img src={p.image} alt={p.name} className={`w-full h-28 object-cover ${outOfStock ? "opacity-50 grayscale" : ""}`} />
-                ) : (
-                  <div className="w-full h-28 bg-gray-100" />
-                )}
+                <ProductImage image={p.image} alt={p.name} className={`w-full h-28 object-cover ${outOfStock ? "opacity-50 grayscale" : ""}`} />
               </Link>
               <div className="p-2">
                 <p className={`text-gray-400 text-xs line-through ${hasDiscount ? "" : "invisible"}`}>

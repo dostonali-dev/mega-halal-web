@@ -6,6 +6,7 @@ import { useCart } from "@/lib/CartContext";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import ProductRow from "@/components/ProductRow";
+import ProductImage from "@/components/ProductImage";
 import { DELIVERY_FEE, FREE_SHIPPING_THRESHOLD, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
 import { fetchUserPurchaseHistory } from "@/lib/salesStats";
 
@@ -100,11 +101,7 @@ export default function CartPage() {
           {items.map((p) => (
             <div key={p.id} className="bg-white border border-green-100 rounded-2xl p-4 flex justify-between items-center gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                {p.image ? (
-                  <img src={p.image} alt={p.name} className="w-16 h-16 object-cover rounded-xl border border-green-100 flex-shrink-0" />
-                ) : (
-                  <div className="w-16 h-16 rounded-xl bg-gray-100 flex-shrink-0" />
-                )}
+                <ProductImage image={p.image} alt={p.name} className="w-16 h-16 object-cover rounded-xl border border-green-100 flex-shrink-0" compact />
                 <div className="min-w-0">
                   <p className="font-semibold text-black truncate">{p.name}</p>
                   <p className="text-green-700 font-bold">{p.price.toLocaleString()}₩</p>

@@ -6,6 +6,7 @@ import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useRecentlyViewed } from "@/lib/RecentlyViewedContext";
 import PageHeader from "@/components/PageHeader";
+import ProductImage from "@/components/ProductImage";
 
 export default function RecentlyViewedPage() {
   const { products, cart, addToCart, removeFromCart, setQty } = useCart();
@@ -29,7 +30,7 @@ export default function RecentlyViewedPage() {
             return (
               <div key={item.id} className={`bg-white border border-green-100 rounded-2xl p-4 flex justify-between items-center ${outOfStock ? "opacity-60" : ""}`}>
                 <Link href={`/products/${item.id}`} className="flex items-center gap-3">
-                  {item.image ? <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" /> : <div className="w-14 h-14 rounded-lg border bg-gray-100 flex-shrink-0" />}
+                  <ProductImage image={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-lg border flex-shrink-0" compact />
                   <div>
                     <p className="font-semibold text-black">{item.name}</p>
                     <p className="text-green-700 font-bold">{item.price.toLocaleString()}₩</p>

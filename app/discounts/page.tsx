@@ -5,6 +5,7 @@ import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import PageHeader from "@/components/PageHeader";
+import ProductImage from "@/components/ProductImage";
 
 export default function DiscountsPage() {
   const { products } = useCart();
@@ -31,7 +32,7 @@ export default function DiscountsPage() {
                   {favoriteIds.has(item.id) ? "❤️" : "🤍"}
                 </button>
                 <Link href={`/products/${item.id}`}>
-                  {item.image ? <img src={item.image} alt={item.name} className="w-full h-32 object-cover" /> : <div className="w-full h-32 bg-gray-100" />}
+                  <ProductImage image={item.image} alt={item.name} className="w-full h-32 object-cover" />
                   <div className="p-3">
                     <p className="font-semibold text-black text-sm line-clamp-2">{item.name}</p>
                     <div className="flex items-center gap-2 mt-1">
