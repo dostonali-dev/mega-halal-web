@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 import BarcodeScannerModal from "@/components/BarcodeScannerModal";
 
 type Product = {
@@ -64,22 +65,18 @@ export default function AdminProductsPage() {
   }, [openGroup]);
 
   const loadProducts = async () => {
-    // "count: exact" - bazadagi UMUMIY mahsulot sonini ham olamiz, shu orqali
-    // "yuklangan X ta / bazada Y ta" solishtirib, biror qism kesilib
-    // qolayotganini (masalan Supabase'ning standart 1000 qatorlik chegarasi)
-    // aniqlash mumkin bo'ladi.
-    const { data, error, count } = await supabase
-      .from("products")
-      .select("*", { count: "exact" })
-      .order("id", { ascending: false });
-    if (error) {
-      console.error(error);
-      setLoadError(error.message);
-      return;
+    // Supabase bir so'rovda standart holatda faqat 1000 tagacha qator
+    // qaytaradi — fetchAllRows barchasini sahifalab (1000 tadan) yuklaydi,
+    // shunda katalog 1000 tadan katta bo'lsa ham hech biri tushib qolmaydi.
+    try {
+      const data = await fetchAllRows<Product>("products", "id", false);
+      setLoadError("");
+      setProducts(data);
+      setTotalCount(data.length);
+    } catch (e: any) {
+      console.error(e);
+      setLoadError(e?.message || String(e));
     }
-    setLoadError("");
-    setProducts(data || []);
-    setTotalCount(count ?? null);
   };
   const loadCategories = async () => {
     const { data, error } = await supabase.from("categories").select("*").order("name");

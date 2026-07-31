@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 
 export type Product = {
   id: number;
@@ -68,14 +69,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const loadProducts = async () => {
-      const { data, error } = await supabase.from("products").select("*");
-      if (error) {
+      try {
+        const data = await fetchAllRows<any>("products", "id", false);
+        // "hidden" ustuni bazada bo'lmasa ham xatolik chiqmasligi uchun
+        // client tomonda filtrlaymiz (mijozlarga yashirilgan mahsulotlar ko'rinmasin).
+        setProducts(data.filter((p: any) => p.hidden !== true));
+      } catch (error) {
         console.error(error);
-        return;
       }
-      // "hidden" ustuni bazada bo'lmasa ham xatolik chiqmasligi uchun
-      // client tomonda filtrlaymiz (mijozlarga yashirilgan mahsulotlar ko'rinmasin).
-      setProducts((data || []).filter((p: any) => p.hidden !== true));
     };
     loadProducts();
 
