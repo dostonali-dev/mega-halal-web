@@ -301,16 +301,25 @@ export default function AdminProductsPage() {
               return (
                 <div key={groupName} className="bg-white border rounded-xl overflow-hidden">
                   <div className="w-full p-4 flex justify-between items-center gap-2">
-                    <button onClick={() => setOpenGroup(openGroup === groupName ? null : groupName)} className="flex-1 flex justify-between items-center text-left">
-                      <span className="font-bold text-black">{groupName}</span>
-                      <span className="text-green-700 text-xl mr-2">{openGroup === groupName ? "−" : "+"}</span>
+                    <button onClick={() => setOpenGroup(openGroup === groupName ? null : groupName)} className="flex-1 flex justify-between items-center text-left min-w-0">
+                      <span className="font-bold text-black truncate">{groupName}</span>
+                      <span className="text-green-700 text-xl ml-2 flex-shrink-0">{openGroup === groupName ? "−" : "+"}</span>
                     </button>
-                    <input
-                      type="checkbox"
-                      title="Shu kategoriyadagi barchasini belgilash"
-                      checked={groupProducts.length > 0 && groupProducts.every((p) => selectedIds.has(p.id))}
-                      onChange={() => toggleSelectGroup(groupProducts)}
-                    />
+                    <label
+                      className="flex items-center gap-1.5 flex-shrink-0 py-2 pl-3"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        className="w-5 h-5"
+                        checked={groupProducts.length > 0 && groupProducts.every((p) => selectedIds.has(p.id))}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleSelectGroup(groupProducts);
+                        }}
+                      />
+                      <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap">barchasi</span>
+                    </label>
                   </div>
                   {openGroup === groupName && (
                     <div className="px-4 pb-4 space-y-3 border-t pt-3">
