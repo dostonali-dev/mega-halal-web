@@ -85,6 +85,11 @@ export default function ImportProductsPage() {
   const [mapping, setMapping] = useState<Record<FieldKey, string>>({
     name: "", price: "", description: "", image: "", stock: "", productCode: "", keywords: "", supplier: "",
   });
+  // "Firma / yetkazib beruvchi" ustundan olinishi shart emas — butun fayl
+  // bitta firmadan bo'lsa, shu yerga bir marta qo'lda yozib qo'yish mumkin,
+  // shunda barcha import qilinadigan mahsulotlarga o'sha nom yoziladi.
+  const [supplierManual, setSupplierManual] = useState(false);
+  const [manualSupplierValue, setManualSupplierValue] = useState("");
   const [parsing, setParsing] = useState(false);
   const [existingCount, setExistingCount] = useState<number | null>(null);
   const [deleteExisting, setDeleteExisting] = useState(false);
@@ -233,7 +238,9 @@ export default function ImportProductsPage() {
         image: imageIdx >= 0 ? cellToStr(r[imageIdx]) || null : null,
         stock: stockIdx >= 0 && cellToStr(r[stockIdx]) !== "" ? Number(cellToStr(r[stockIdx]).replace(/[^\d.-]/g, "")) : null,
         product_code: codeIdx >= 0 ? cellToStr(r[codeIdx]) || null : null,
-        supplier: supplierIdx >= 0 ? cellToStr(r[supplierIdx]) || null : null,
+        supplier: supplierManual
+          ? (manualSupplierValue.trim() || null)
+          : (supplierIdx >= 0 ? cellToStr(r[supplierIdx]) || null : null),
         keywords: kwIdx >= 0 ? cellToStr(r[kwIdx]) || null : null,
         in_stock: true,
       }));
@@ -360,26 +367,52 @@ export default function ImportProductsPage() {
             </p>
             {FIELD_DEFS.map((f) => (
               <div key={f.key}>
-                <label className="text-xs font-bold text-gray-600 flex items-center gap-1">
-                  {f.label} {f.required && <span className="text-red-500">*</span>}
-                </label>
-                <select
-                  value={mapping[f.key]}
-                  onChange={(e) => setMapping((m) => ({ ...m, [f.key]: e.target.value }))}
-                  className="w-full border p-2 rounded-lg bg-white text-black text-sm mt-1"
-                >
-                  <option value="">— tanlanmagan —</option>
-                  {headers.map((h, idx) => {
-                    const sample = sampleFor(idx);
-                    const label = h && !/^[^\wㄱ-힝]*$/.test(h) ? h : `Ustun ${idx + 1}`;
-                    return (
-                      <option key={idx} value={idx}>
-                        {label}{sample ? ` — masalan: "${sample.length > 30 ? sample.slice(0, 30) + "…" : sample}"` : ""}
-                      </option>
-                    );
-                  })}
-                </select>
-                {f.hint && <p className="text-[11px] text-gray-400 mt-0.5">{f.hint}</p>}
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-xs font-bold text-gray-600 flex items-center gap-1">
+                    {f.label} {f.required && <span className="text-red-500">*</span>}
+                  </label>
+                  {f.key === "supplier" && (
+                    <button
+                      type="button"
+                      onClick={() => setSupplierManual((v) => !v)}
+                      className="text-[11px] font-bold text-blue-600 underline flex-shrink-0"
+                    >
+                      {supplierManual ? "Ustundan olish" : "✏️ Qo'lda kiritish"}
+                    </button>
+                  )}
+                </div>
+
+                {f.key === "supplier" && supplierManual ? (
+                  <input
+                    type="text"
+                    placeholder="Masalan: Koreyski suv MChJ"
+                    value={manualSupplierValue}
+                    onChange={(e) => setManualSupplierValue(e.target.value)}
+                    className="w-full border p-2 rounded-lg bg-green-50 text-black text-sm mt-1"
+                  />
+                ) : (
+                  <select
+                    value={mapping[f.key]}
+                    onChange={(e) => setMapping((m) => ({ ...m, [f.key]: e.target.value }))}
+                    className="w-full border p-2 rounded-lg bg-white text-black text-sm mt-1"
+                  >
+                    <option value="">— tanlanmagan —</option>
+                    {headers.map((h, idx) => {
+                      const sample = sampleFor(idx);
+                      const label = h && !/^[^\wㄱ-힝]*$/.test(h) ? h : `Ustun ${idx + 1}`;
+                      return (
+                        <option key={idx} value={idx}>
+                          {label}{sample ? ` — masalan: "${sample.length > 30 ? sample.slice(0, 30) + "…" : sample}"` : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+                {f.key === "supplier" && supplierManual ? (
+                  <p className="text-[11px] text-gray-400 mt-0.5">Import qilinadigan barcha mahsulotlarga shu nom yoziladi.</p>
+                ) : (
+                  f.hint && <p className="text-[11px] text-gray-400 mt-0.5">{f.hint}</p>
+                )}
               </div>
             ))}
 
