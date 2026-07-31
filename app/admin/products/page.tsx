@@ -47,6 +47,8 @@ export default function AdminProductsPage() {
   const [bulkAction, setBulkAction] = useState<BulkAction>("");
   const [bulkTargetCategory, setBulkTargetCategory] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -62,8 +64,22 @@ export default function AdminProductsPage() {
   }, [openGroup]);
 
   const loadProducts = async () => {
-    const { data, error } = await supabase.from("products").select("*").order("id", { ascending: false });
-    if (!error) setProducts(data || []);
+    // "count: exact" - bazadagi UMUMIY mahsulot sonini ham olamiz, shu orqali
+    // "yuklangan X ta / bazada Y ta" solishtirib, biror qism kesilib
+    // qolayotganini (masalan Supabase'ning standart 1000 qatorlik chegarasi)
+    // aniqlash mumkin bo'ladi.
+    const { data, error, count } = await supabase
+      .from("products")
+      .select("*", { count: "exact" })
+      .order("id", { ascending: false });
+    if (error) {
+      console.error(error);
+      setLoadError(error.message);
+      return;
+    }
+    setLoadError("");
+    setProducts(data || []);
+    setTotalCount(count ?? null);
   };
   const loadCategories = async () => {
     const { data, error } = await supabase.from("categories").select("*").order("name");
@@ -202,7 +218,17 @@ export default function AdminProductsPage() {
         <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
         <Link href="/admin/products/import" className="text-blue-600 text-sm font-bold underline">📥 Excel import</Link>
       </div>
-      <h1 className="text-3xl font-bold mt-3 mb-6">Mahsulotlar</h1>
+      <h1 className="text-3xl font-bold mt-3 mb-1">Mahsulotlar</h1>
+      {totalCount !== null && (
+        <p className="text-xs text-gray-400 mb-4">
+          Yuklandi: {products.length} / bazada jami: {totalCount}
+        </p>
+      )}
+      {loadError && (
+        <div className="rounded-xl p-3 text-sm font-bold mb-4" style={{ backgroundColor: "#fee2e2", color: "#991b1b" }}>
+          Yuklashda xatolik: {loadError}
+        </div>
+      )}
 
       <div className="max-w-2xl">
         <div className="relative mb-4">
