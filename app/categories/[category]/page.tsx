@@ -51,7 +51,7 @@ export default function CategoryDetailPage() {
       <div className="max-w-5xl mx-auto p-4 md:p-8">
         {items.length === 0 && <p className="text-gray-400 text-center mt-10">{t("category_empty")}</p>}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-2 md:gap-3">
           {items.map((item) => {
             const qty = cart[item.id] || 0;
             const outOfStock = item.in_stock === false;
@@ -62,7 +62,7 @@ export default function CategoryDetailPage() {
             return (
               <div
                 key={item.id}
-                className={`relative bg-white border border-green-100 rounded-2xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
+                className={`relative bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
               >
                 {hasDiscount && (
                   <span className="absolute top-1.5 left-1.5 z-10 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
@@ -89,11 +89,11 @@ export default function CategoryDetailPage() {
                   </Link>
                   {hasDiscount ? (
                     <div className="mb-1.5">
-                      <p className="text-green-600 font-bold text-xs">{item.discount_price!.toLocaleString()}₩</p>
+                      <p className="text-green-400 font-bold text-xs">{item.discount_price!.toLocaleString()}₩</p>
                       <p className="text-gray-400 text-[10px] line-through">{item.price.toLocaleString()}₩</p>
                     </div>
                   ) : (
-                    <p className="text-green-600 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
+                    <p className="text-green-400 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
                   )}
 
                   {outOfStock ? (
