@@ -57,14 +57,12 @@ export default function ProductRow({
                 )}
               </Link>
               <div className="p-2">
-                {hasDiscount ? (
-                  <>
-                    <p className="text-gray-400 text-xs line-through">{p.price.toLocaleString()}₩</p>
-                    <p className="text-red-500 font-bold text-sm">{p.discount_price!.toLocaleString()}₩</p>
-                  </>
-                ) : (
-                  <p className="text-green-400 font-bold text-sm">{p.price.toLocaleString()}₩</p>
-                )}
+                <p className={`text-gray-400 text-xs line-through ${hasDiscount ? "" : "invisible"}`}>
+                  {p.price.toLocaleString()}₩
+                </p>
+                <p className={hasDiscount ? "text-red-500 font-bold text-sm" : "text-green-400 font-bold text-sm"}>
+                  {(hasDiscount ? p.discount_price! : p.price).toLocaleString()}₩
+                </p>
                 <p className="text-xs font-semibold line-clamp-2 mb-2">{p.name}</p>
 
                 {outOfStock ? (

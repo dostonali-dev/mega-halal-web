@@ -39,9 +39,6 @@ export default function CategoriesPage() {
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "#15803d" }}>
-                    {t("category_label")}
-                  </p>
                   <p className="font-extrabold text-base truncate" style={{ color: "#000000" }}>{cat.name}</p>
                 </div>
                 <span
@@ -84,14 +81,14 @@ export default function CategoriesPage() {
                         <Link href={`/products/${item.id}`}>
                           <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1">{item.name}</p>
                         </Link>
-                        {hasDiscount ? (
-                          <div className="mb-1.5">
-                            <p className="text-green-400 font-bold text-xs">{item.discount_price!.toLocaleString()}₩</p>
-                            <p className="text-gray-400 text-[10px] line-through">{item.price.toLocaleString()}₩</p>
-                          </div>
-                        ) : (
-                          <p className="text-green-400 font-bold text-xs mb-1.5">{item.price.toLocaleString()}₩</p>
-                        )}
+                        <div className="mb-1.5">
+                          <p className="text-green-400 font-bold text-xs">
+                            {(hasDiscount ? item.discount_price! : item.price).toLocaleString()}₩
+                          </p>
+                          <p className={`text-gray-400 text-[10px] line-through ${hasDiscount ? "" : "invisible"}`}>
+                            {item.price.toLocaleString()}₩
+                          </p>
+                        </div>
 
                         {outOfStock ? (
                           <span className="text-[10px] text-red-400 font-bold">{t("out_of_stock_label")}</span>

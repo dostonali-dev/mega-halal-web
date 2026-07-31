@@ -9,6 +9,48 @@ import ProductRow from "@/components/ProductRow";
 import { DELIVERY_FEE, FREE_SHIPPING_THRESHOLD, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
 import { fetchUserPurchaseHistory } from "@/lib/salesStats";
 
+// Miqdor inputi - o'zining lokal "qoralama" holatiga ega, shuning uchun
+// foydalanuchi maydonni tozalab (bo'sh qoldirib) yangi raqam yozayotganda
+// savatchadagi mahsulot darhol o'chib ketmaydi (0 -> setQty o'chirib
+// yuboradi -> qator darhol yo'qoladi va yozish imkonsiz bo'ladi edi).
+function CartQtyInput({
+  productId,
+  qty,
+  setQty,
+}: {
+  productId: number;
+  qty: number;
+  setQty: (id: number, qty: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(qty));
+
+  useEffect(() => {
+    setDraft(String(qty));
+  }, [qty]);
+
+  return (
+    <input
+      type="number"
+      min={0}
+      value={draft}
+      onChange={(e) => {
+        const val = e.target.value;
+        setDraft(val);
+        if (val !== "") {
+          setQty(productId, Math.max(0, Number(val) || 0));
+        }
+      }}
+      onBlur={() => {
+        if (draft === "") {
+          setDraft("0");
+          setQty(productId, 0);
+        }
+      }}
+      className="w-12 text-center border rounded-lg text-black font-bold py-1.5"
+    />
+  );
+}
+
 export default function CartPage() {
   const router = useRouter();
   const { products, cart, addToCart, removeFromCart, setQty, total, itemCount } = useCart();
@@ -76,13 +118,7 @@ export default function CartPage() {
                 >
                   −
                 </button>
-                <input
-                  type="number"
-                  min={0}
-                  value={cart[p.id] || 0}
-                  onChange={(e) => setQty(p.id, Math.max(0, Number(e.target.value) || 0))}
-                  className="w-12 text-center border rounded-lg text-black font-bold py-1.5"
-                />
+                <CartQtyInput productId={p.id} qty={cart[p.id] || 0} setQty={setQty} />
                 <button onClick={() => addToCart(p.id)} aria-label="Ko'paytirish" className="bg-green-600 text-white w-9 h-10 rounded-lg font-bold text-lg flex items-center justify-center">
                   +
                 </button>
