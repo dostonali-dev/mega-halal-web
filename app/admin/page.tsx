@@ -67,6 +67,7 @@ export default function AdminPage() {
   const menuItems = [
     { href: "/admin/products", icon: "🔍", label: "Mahsulotlar", desc: "Qidirish, tahrirlash, o'chirish" },
     { href: "/admin/products/new", icon: "➕", label: "Mahsulot qo'shish", desc: "Yangi mahsulot qo'shish" },
+    { href: "/admin/products/import", icon: "📥", label: "Excel import", desc: "Excel fayldan ommaviy mahsulot qo'shish" },
     { href: "/admin/categories", icon: "🗂️", label: "Kategoriyalar", desc: "Kategoriyalarni boshqarish" },
     { href: "/admin/orders", icon: "📦", label: "Buyurtmalar", desc: "Kelgan buyurtmalarni ko'rish" },
     { href: "/admin/customers", icon: "👥", label: "Mijozlar", desc: "Ro'yxatdan o'tgan mijozlar ro'yhati" },

@@ -288,7 +288,14 @@ export default function Home() {
   }, []);
 
   const searchResults = query.trim()
-    ? products.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()))
+    ? products.filter((p) => {
+        const q = query.trim().toLowerCase();
+        return (
+          p.name.toLowerCase().includes(q) ||
+          (p.description || "").toLowerCase().includes(q) ||
+          ((p as any).keywords || "").toLowerCase().includes(q)
+        );
+      })
     : [];
 
   const hotItems = products.filter((p) => (p as any).is_hot === true);

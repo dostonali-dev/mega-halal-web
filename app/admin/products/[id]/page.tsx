@@ -19,6 +19,7 @@ type Product = {
   is_hot?: boolean | null;
   hidden?: boolean | null;
   product_code?: string | null;
+  keywords?: string | null;
 };
 
 type Category = { id: number; name: string; icon: string | null };
@@ -37,6 +38,7 @@ export default function AdminEditProductPage() {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [keywords, setKeywords] = useState("");
   const [supplier, setSupplier] = useState("");
   const [stock, setStock] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
@@ -72,6 +74,7 @@ export default function AdminEditProductPage() {
       setPrice(String(p.price));
       setCategory(p.category);
       setDescription(p.description || "");
+      setKeywords(p.keywords || "");
       setSupplier(p.supplier || "");
       setStock(p.stock != null ? String(p.stock) : "");
       setDiscountPrice(p.discount_price != null ? String(p.discount_price) : "");
@@ -99,7 +102,7 @@ export default function AdminEditProductPage() {
       }
       const payload = {
         name, price: Number(price), category, image: imageUrl || null,
-        description: description || null, supplier: supplier || null,
+        description: description || null, keywords: keywords.trim() || null, supplier: supplier || null,
         // Bo'sh qoldirilsa -> null (soni kuzatilmayapti, cheklovsiz sotiladi).
         // Aniq son (0 ham) kiritilsa -> shu son qat'iy chegara bo'ladi.
         stock: stock.trim() !== "" ? Number(stock) : null,
@@ -108,7 +111,16 @@ export default function AdminEditProductPage() {
         is_hot: isHot,
       };
       const { error } = await supabase.from("products").update(payload).eq("id", productId);
-      if (error) { alert("Xato: " + error.message); setSaving(false); return; }
+      if (error) {
+        alert(
+          "Xato: " + error.message +
+          (error.message.includes("keywords")
+            ? "\n\nEslatma: bazangizda \"keywords\" ustuni bo'lmasa, avval Supabase SQL Editor'da quyidagini ishga tushiring:\nALTER TABLE products ADD COLUMN IF NOT EXISTS keywords text;"
+            : "")
+        );
+        setSaving(false);
+        return;
+      }
       alert("Mahsulot yangilandi ✅");
       router.push("/admin/products");
     } catch (e) {
@@ -153,6 +165,10 @@ export default function AdminEditProductPage() {
         </select>
 
         <textarea placeholder="Mahsulot tavsifi (ixtiyoriy)" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" rows={3} />
+        <div>
+          <input type="text" placeholder="Kalit so'zlar (vergul bilan, masalan: rolton, lapsha)" value={keywords} onChange={(e) => setKeywords(e.target.value)} className="w-full border p-3 rounded-xl bg-green-50 text-black" />
+          <p className="text-xs text-gray-400 mt-1 px-1">Mijoz qidirganda mahsulot nomi topilmasa ham, shu so'zlar orqali topiladi.</p>
+        </div>
         <input type="text" placeholder="Firma / yetkazib beruvchi (faqat siz ko'rasiz)" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="text" placeholder="Mahsulot kodi / barkod (faqat siz ko'rasiz, mijozga ko'rinmaydi)" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="number" placeholder="Chegirma narxi (ixtiyoriy)" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-orange-50 text-black" />

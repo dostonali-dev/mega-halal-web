@@ -15,6 +15,7 @@ export type Product = {
   discount_price?: number | null;
   is_hot?: boolean | null;
   hidden?: boolean | null;
+  keywords?: string | null;
 };
 export type Category = {
   id: number;

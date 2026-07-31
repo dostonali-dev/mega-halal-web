@@ -20,6 +20,7 @@ type Product = {
   is_hot?: boolean | null;
   hidden?: boolean | null;
   product_code?: string | null;
+  keywords?: string | null;
 };
 
 type BulkAction = "" | "move" | "delete" | "in_stock" | "out_of_stock" | "hide" | "show";
@@ -180,7 +181,12 @@ export default function AdminProductsPage() {
 
   const filteredProducts = products.filter((p) => {
     const q = adminSearch.toLowerCase();
-    return p.name.toLowerCase().includes(q) || (p.product_code || "").toLowerCase().includes(q);
+    return (
+      p.name.toLowerCase().includes(q) ||
+      (p.product_code || "").toLowerCase().includes(q) ||
+      (p.description || "").toLowerCase().includes(q) ||
+      (p.keywords || "").toLowerCase().includes(q)
+    );
   });
   const knownCategoryNames = categoriesList.map((c) => c.name);
   const orphanCategories = [...new Set(products.map((p) => p.category))].filter(
@@ -192,7 +198,10 @@ export default function AdminProductsPage() {
 
   return (
     <main className="p-6 md:p-10">
-      <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
+      <div className="flex items-center justify-between">
+        <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
+        <Link href="/admin/products/import" className="text-blue-600 text-sm font-bold underline">📥 Excel import</Link>
+      </div>
       <h1 className="text-3xl font-bold mt-3 mb-6">Mahsulotlar</h1>
 
       <div className="max-w-2xl">

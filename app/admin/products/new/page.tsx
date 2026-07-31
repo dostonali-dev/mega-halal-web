@@ -16,6 +16,7 @@ export default function NewProductPage() {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [keywords, setKeywords] = useState("");
   const [supplier, setSupplier] = useState("");
   const [stock, setStock] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
@@ -39,6 +40,7 @@ export default function NewProductPage() {
 
   const resetForm = () => {
     setName(""); setPrice(""); setCategory(""); setDescription("");
+    setKeywords("");
     setSupplier(""); setStock(""); setDiscountPrice(""); setIsHot(false);
     setImageFile(null); setImagePreview("");
   };
@@ -60,13 +62,22 @@ export default function NewProductPage() {
       }
       const { error } = await supabase.from("products").insert([{
         name, price: Number(price), category, image: imageUrl || null,
-        description: description || null, supplier: supplier || null,
+        description: description || null, keywords: keywords.trim() || null, supplier: supplier || null,
         stock: stock ? Number(stock) : 0,
         discount_price: discountPrice ? Number(discountPrice) : null,
         is_hot: isHot,
         in_stock: true,
       }]);
-      if (error) { alert("Xato: " + error.message); setSaving(false); return; }
+      if (error) {
+        alert(
+          "Xato: " + error.message +
+          (error.message.includes("keywords")
+            ? "\n\nEslatma: bazangizda \"keywords\" ustuni bo'lmasa, avval Supabase SQL Editor'da quyidagini ishga tushiring:\nALTER TABLE products ADD COLUMN IF NOT EXISTS keywords text;"
+            : "")
+        );
+        setSaving(false);
+        return;
+      }
       alert("Mahsulot qo'shildi ✅");
       resetForm();
     } catch (e) {
@@ -99,6 +110,10 @@ export default function NewProductPage() {
         </div>
 
         <textarea placeholder="Mahsulot tavsifi (ixtiyoriy)" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" rows={3} />
+        <div>
+          <input type="text" placeholder="Kalit so'zlar (vergul bilan, masalan: rolton, lapsha)" value={keywords} onChange={(e) => setKeywords(e.target.value)} className="w-full border p-3 rounded-xl bg-green-50 text-black" />
+          <p className="text-xs text-gray-400 mt-1 px-1">Mijoz qidirganda mahsulot nomi topilmasa ham, shu so'zlar orqali topiladi.</p>
+        </div>
         <input type="text" placeholder="Firma / yetkazib beruvchi (faqat siz ko'rasiz)" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="number" placeholder="Chegirma narxi (ixtiyoriy)" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-orange-50 text-black" />
 
