@@ -120,13 +120,6 @@ export default function ProductDetailPage() {
           <h1 className="text-2xl font-bold text-black">{product.name}</h1>
           <p className="text-green-700 font-extrabold text-3xl mt-2">{product.price.toLocaleString()}₩</p>
 
-          {product.description && (
-            <div className="mt-4">
-              <h2 className="font-bold text-black mb-1">{t("product_description")}</h2>
-              <p className="text-gray-600 whitespace-pre-line">{product.description}</p>
-            </div>
-          )}
-
           {currentInCart > 0 && (
             <p className="mt-4 text-sm text-green-700 font-semibold">
               {t("product_in_cart")} {currentInCart}
@@ -152,6 +145,13 @@ export default function ProductDetailPage() {
                   <path d="m9 5 7 7-7 7" />
                 </svg>
               </Link>
+            </div>
+          )}
+
+          {product.description && (
+            <div className="mt-4">
+              <h2 className="font-bold text-black mb-1">{t("product_description")}</h2>
+              <p className="text-gray-600 whitespace-pre-line">{product.description}</p>
             </div>
           )}
 
