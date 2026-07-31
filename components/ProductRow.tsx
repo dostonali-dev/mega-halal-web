@@ -60,7 +60,7 @@ export default function ProductRow({
                 <p className={hasDiscount ? "text-red-500 font-bold text-sm" : "text-green-400 font-bold text-sm"}>
                   {(hasDiscount ? p.discount_price! : p.price).toLocaleString()}₩
                 </p>
-                <p className="text-xs font-semibold line-clamp-2 mb-2">{p.name}</p>
+                <p className="text-xs font-semibold leading-tight line-clamp-2 mb-2 min-h-[2.5em]">{p.name}</p>
 
                 {outOfStock ? (
                   <span className="text-[10px] text-red-400 font-bold">Sotuvda yo'q</span>

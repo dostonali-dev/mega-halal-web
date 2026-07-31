@@ -34,7 +34,7 @@ export default function DiscountsPage() {
                 <Link href={`/products/${item.id}`}>
                   <ProductImage image={item.image} alt={item.name} className="w-full h-32 object-cover" />
                   <div className="p-3">
-                    <p className="font-semibold text-black text-sm line-clamp-2">{item.name}</p>
+                    <p className="font-semibold text-black text-sm leading-tight line-clamp-2 min-h-[2.5em]">{item.name}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-green-700 font-bold">{item.discount_price!.toLocaleString()}₩</p>
                       <p className="text-gray-400 text-xs line-through">{item.price.toLocaleString()}₩</p>

@@ -34,7 +34,7 @@ export default function NewProductsPage() {
                 <Link href={`/products/${item.id}`}>
                   <ProductImage image={item.image} alt={item.name} className="w-full h-32 object-cover" />
                   <div className="p-3">
-                    <p className="font-semibold text-black text-sm line-clamp-2">{item.name}</p>
+                    <p className="font-semibold text-black text-sm leading-tight line-clamp-2 min-h-[2.5em]">{item.name}</p>
                     <p className="text-green-700 font-bold mt-1">{item.price.toLocaleString()}₩</p>
                     {outOfStock && <p className="text-red-500 text-xs font-bold mt-1">{t("out_of_stock_label")}</p>}
                   </div>

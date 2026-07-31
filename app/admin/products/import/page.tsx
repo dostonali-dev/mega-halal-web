@@ -18,7 +18,7 @@ import { supabase } from "@/lib/supabase";
 
 type Category = { id: number; name: string };
 
-type FieldKey = "name" | "price" | "description" | "image" | "stock" | "productCode" | "keywords";
+type FieldKey = "name" | "price" | "description" | "image" | "stock" | "productCode" | "keywords" | "supplier";
 
 const FIELD_DEFS: { key: FieldKey; label: string; required?: boolean; hint?: string }[] = [
   { key: "name", label: "Mahsulot nomi", required: true },
@@ -27,6 +27,7 @@ const FIELD_DEFS: { key: FieldKey; label: string; required?: boolean; hint?: str
   { key: "image", label: "Rasm URL", hint: "Faylda tayyor rasm havolasi bo'lsa" },
   { key: "stock", label: "Soni (ombordagi miqdor)" },
   { key: "productCode", label: "Mahsulot kodi / barkod" },
+  { key: "supplier", label: "Firma / yetkazib beruvchi", hint: "Faqat siz ko'rasiz, mijozga ko'rinmaydi (masalan 공급사 ustuni)" },
   { key: "keywords", label: "Kalit so'zlar" },
 ];
 
@@ -82,7 +83,7 @@ export default function ImportProductsPage() {
   // ba'zi fayllarda ustun sarlavhalari bo'sh yoki bir xil bo'lib chiqishi
   // mumkin, shu sabab matn bo'yicha moslashtirish xato bo'lishi mumkin edi.
   const [mapping, setMapping] = useState<Record<FieldKey, string>>({
-    name: "", price: "", description: "", image: "", stock: "", productCode: "", keywords: "",
+    name: "", price: "", description: "", image: "", stock: "", productCode: "", keywords: "", supplier: "",
   });
   const [parsing, setParsing] = useState(false);
   const [existingCount, setExistingCount] = useState<number | null>(null);
@@ -143,6 +144,7 @@ export default function ImportProductsPage() {
         image: guess(["rasm", "image", "이미지", "사진"]),
         stock: guess(["soni", "stock", "수량", "재고"]),
         productCode: guess(["kod", "barkod", "barcode", "code", "바코드", "코드"]),
+        supplier: guess(["firma", "yetkazib", "supplier", "공급사", "제조사"]),
         keywords: guess(["kalit", "keyword", "키워드"]),
       });
     } catch (e: any) {
@@ -220,6 +222,7 @@ export default function ImportProductsPage() {
       const imageIdx = colIndex("image");
       const stockIdx = colIndex("stock");
       const codeIdx = colIndex("productCode");
+      const supplierIdx = colIndex("supplier");
       const kwIdx = colIndex("keywords");
 
       const products = goodRows.map((r) => ({
@@ -230,6 +233,7 @@ export default function ImportProductsPage() {
         image: imageIdx >= 0 ? cellToStr(r[imageIdx]) || null : null,
         stock: stockIdx >= 0 && cellToStr(r[stockIdx]) !== "" ? Number(cellToStr(r[stockIdx]).replace(/[^\d.-]/g, "")) : null,
         product_code: codeIdx >= 0 ? cellToStr(r[codeIdx]) || null : null,
+        supplier: supplierIdx >= 0 ? cellToStr(r[supplierIdx]) || null : null,
         keywords: kwIdx >= 0 ? cellToStr(r[kwIdx]) || null : null,
         in_stock: true,
       }));

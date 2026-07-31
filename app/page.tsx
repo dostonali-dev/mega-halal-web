@@ -86,7 +86,7 @@ function ProductStrip({
               </Link>
               <div className="p-2">
                 <Link href={`/products/${item.id}`}>
-                  <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1">{item.name}</p>
+                  <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1 min-h-[2.5em]">{item.name}</p>
                 </Link>
                 <div className="mb-1.5">
                   <p className="text-green-400 font-bold text-xs">
@@ -484,7 +484,7 @@ export default function Home() {
                       </Link>
                       <div className="p-2">
                         <Link href={`/products/${item.id}`}>
-                          <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1">{item.name}</p>
+                          <p className="font-semibold text-xs leading-tight line-clamp-2 mb-1 min-h-[2.5em]">{item.name}</p>
                         </Link>
                         <div className="mb-1.5">
                           <p className="text-green-400 font-bold text-xs">
