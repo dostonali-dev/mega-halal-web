@@ -11,6 +11,10 @@ import { supabase } from "@/lib/supabase";
 // bo'lsa, avtomatik yaratiladi). Fayldagi ustunlar turlicha nomlangan
 // bo'lishi mumkin (masalan koreyscha "원산지", "판매가"), shuning uchun
 // foydalanuvchi har bir maydonni qaysi ustunga mos kelishini o'zi tanlaydi.
+// Eski (.xls) fayllarda ba'zan kodировка noto'g'ri aniqlanib, koreyscha
+// matn tushunarsiz belgilarga aylanib qoladi — shu holatni avtomatik
+// tuzatishga harakat qilamiz, tuzatilmasa ham har bir ustun tagida
+// haqiqiy misol qiymat ko'rsatiladi (shu orqali ustunni tanish mumkin).
 
 type Category = { id: number; name: string };
 
@@ -37,15 +41,46 @@ function parsePrice(raw: any): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+// Ba'zi eski .xls fayllarda kodировка (masalan koreyscha CP949/EUC-KR)
+// noto'g'ri aniqlanib, matn tushunarsiz lotin belgilariga aylanib qoladi
+// (masalan "상품명" o'rniga "»óÇ°¸í"). Bu funksiya shunday holatni
+// tuzatishga harakat qiladi: har bir belgini bitta bayt deb hisoblab,
+// EUC-KR sifatida qayta o'qiydi, va agar natijada haqiqiy koreyscha
+// harflar paydo bo'lsa, o'shani qaytaradi.
+function fixMojibake(s: string): string {
+  if (!s) return s;
+  try {
+    const bytes = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) {
+      const code = s.charCodeAt(i);
+      if (code > 0xff) return s; // allaqachon haqiqiy unicode belgilar bor - tegmaymiz
+      bytes[i] = code;
+    }
+    const decoded = new TextDecoder("euc-kr").decode(bytes);
+    if (/[가-힣]/.test(decoded) && !/[가-힣]/.test(s)) return decoded;
+  } catch {}
+  return s;
+}
+
+function cellToStr(v: any): string {
+  return fixMojibake(String(v ?? "").trim());
+}
+
 export default function ImportProductsPage() {
   const router = useRouter();
   const [checkedLogin, setCheckedLogin] = useState(false);
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
-  const [targetCategory, setTargetCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [addingNewCategory, setAddingNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const targetCategory = addingNewCategory ? newCategoryName : selectedCategory;
 
   const [fileName, setFileName] = useState("");
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<any[][]>([]);
+  // Har bir maydon uchun ustun INDEXI saqlanadi (matn emas) — chunki
+  // ba'zi fayllarda ustun sarlavhalari bo'sh yoki bir xil bo'lib chiqishi
+  // mumkin, shu sabab matn bo'yicha moslashtirish xato bo'lishi mumkin edi.
   const [mapping, setMapping] = useState<Record<FieldKey, string>>({
     name: "", price: "", description: "", image: "", stock: "", productCode: "", keywords: "",
   });
@@ -90,15 +125,17 @@ export default function ImportProductsPage() {
       const wb = XLSX.read(buf, { type: "array" });
       const sheet = wb.Sheets[wb.SheetNames[0]];
       const raw: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-      const hdrs = (raw[0] || []).map((h) => String(h).trim());
+      const hdrs = (raw[0] || []).map((h) => fixMojibake(String(h).trim()));
       const dataRows = raw.slice(1).filter((r) => r.some((cell) => String(cell).trim() !== ""));
       setHeaders(hdrs);
       setRows(dataRows);
       setFileName(file.name);
 
       // Ustun nomlariga qarab avtomatik mos kelishini taxmin qilishga urinib ko'ramiz.
-      const guess = (candidates: string[]) =>
-        hdrs.find((h) => candidates.some((c) => h.toLowerCase().includes(c.toLowerCase()))) || "";
+      const guess = (candidates: string[]) => {
+        const idx = hdrs.findIndex((h) => candidates.some((c) => h.toLowerCase().includes(c.toLowerCase())));
+        return idx >= 0 ? String(idx) : "";
+      };
       setMapping({
         name: guess(["nomi", "name", "상품명", "제품명", "품명"]),
         price: guess(["narx", "price", "판매가", "가격", "단가"]),
@@ -115,12 +152,22 @@ export default function ImportProductsPage() {
     setParsing(false);
   };
 
-  const colIndex = (field: FieldKey) => headers.indexOf(mapping[field]);
+  const colIndex = (field: FieldKey) => (mapping[field] === "" ? -1 : Number(mapping[field]));
+
+  // Har bir ustun uchun birinchi bo'sh bo'lmagan namuna qiymatini topamiz —
+  // sarlavha tushunarsiz bo'lib chiqsa ham, ustunni misol orqali tanish mumkin.
+  const sampleFor = (colIdx: number): string => {
+    for (const r of rows) {
+      const v = cellToStr(r[colIdx]);
+      if (v) return v;
+    }
+    return "";
+  };
 
   const validRows = () => {
     const nameIdx = colIndex("name");
     return rows.filter((r) => {
-      const name = String(r[nameIdx] ?? "").trim();
+      const name = cellToStr(r[nameIdx]);
       if (!name) return false;
       const lower = name.toLowerCase();
       return !SKIP_NAME_PATTERNS.some((p) => lower === p.toLowerCase() || lower.includes(p.toLowerCase()));
@@ -133,7 +180,7 @@ export default function ImportProductsPage() {
       alert("Qaysi kategoriyaga qo'shishni tanlang yoki yozing.");
       return;
     }
-    if (!mapping.name || !mapping.price) {
+    if (mapping.name === "" || mapping.price === "") {
       alert("Kamida \"Mahsulot nomi\" va \"Narxi\" ustunlarini tanlang.");
       return;
     }
@@ -176,14 +223,14 @@ export default function ImportProductsPage() {
       const kwIdx = colIndex("keywords");
 
       const products = goodRows.map((r) => ({
-        name: String(r[nameIdx] ?? "").trim(),
+        name: cellToStr(r[nameIdx]),
         price: parsePrice(r[priceIdx]),
         category,
-        description: descIdx >= 0 ? String(r[descIdx] ?? "").trim() || null : null,
-        image: imageIdx >= 0 ? String(r[imageIdx] ?? "").trim() || null : null,
-        stock: stockIdx >= 0 && String(r[stockIdx] ?? "").trim() !== "" ? Number(String(r[stockIdx]).replace(/[^\d.-]/g, "")) : null,
-        product_code: codeIdx >= 0 ? String(r[codeIdx] ?? "").trim() || null : null,
-        keywords: kwIdx >= 0 ? String(r[kwIdx] ?? "").trim() || null : null,
+        description: descIdx >= 0 ? cellToStr(r[descIdx]) || null : null,
+        image: imageIdx >= 0 ? cellToStr(r[imageIdx]) || null : null,
+        stock: stockIdx >= 0 && cellToStr(r[stockIdx]) !== "" ? Number(cellToStr(r[stockIdx]).replace(/[^\d.-]/g, "")) : null,
+        product_code: codeIdx >= 0 ? cellToStr(r[codeIdx]) || null : null,
+        keywords: kwIdx >= 0 ? cellToStr(r[kwIdx]) || null : null,
         in_stock: true,
       }));
 
@@ -235,19 +282,47 @@ export default function ImportProductsPage() {
       <div className="max-w-xl space-y-4">
         <div className="bg-white border rounded-xl p-4">
           <label className="text-xs font-bold text-gray-600">Qaysi kategoriyaga qo'shilsin? <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            list="category-options"
-            placeholder="Masalan: Salqin ichimliklar"
-            value={targetCategory}
-            onChange={(e) => setTargetCategory(e.target.value)}
-            className="w-full border p-3 rounded-xl bg-white text-black mt-1"
-          />
-          <datalist id="category-options">
-            {categoriesList.map((c) => <option key={c.id} value={c.name} />)}
-          </datalist>
+          {!addingNewCategory ? (
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                if (e.target.value === "__new__") {
+                  setAddingNewCategory(true);
+                  setSelectedCategory("");
+                } else {
+                  setSelectedCategory(e.target.value);
+                }
+              }}
+              className="w-full border p-3 rounded-xl bg-white text-black mt-1"
+            >
+              <option value="">— kategoriyani tanlang —</option>
+              {categoriesList.map((c) => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))}
+              <option value="__new__">➕ Yangi kategoriya qo'shish</option>
+            </select>
+          ) : (
+            <div className="flex gap-2 mt-1">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Yangi kategoriya nomi"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                className="flex-1 border p-3 rounded-xl bg-white text-black"
+              />
+              <button
+                onClick={() => { setAddingNewCategory(false); setNewCategoryName(""); }}
+                className="px-4 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
+              >
+                Bekor
+              </button>
+            </div>
+          )}
           <p className="text-[11px] text-gray-400 mt-1 px-1">
-            Mavjud kategoriyalardan birini yozib boshlang (ro'yxatdan tanlanadi) yoki yangi nom kiriting — bazada bo'lmasa, avtomatik yaratiladi.
+            {addingNewCategory
+              ? "Bu nom bazangizda yo'q — import paytida avtomatik yaratiladi."
+              : "Mavjud kategoriyalar ro'yxatidan tanlang, yoki \"➕ Yangi kategoriya qo'shish\"ni tanlab yangi nom kiriting."}
           </p>
           {targetCategory.trim() && existingCount !== null && (
             <div className="rounded-lg p-2 text-xs mt-2" style={{ backgroundColor: "#fef9c3", color: "#a16207" }}>
@@ -276,7 +351,9 @@ export default function ImportProductsPage() {
         {headers.length > 0 && (
           <div className="bg-white border rounded-xl p-4 space-y-3">
             <h2 className="font-bold text-black">Ustunlarni moslashtirish</h2>
-            <p className="text-xs text-gray-500">Faylingizdagi qaysi ustun qaysi maydonga mos kelishini tanlang.</p>
+            <p className="text-xs text-gray-500">
+              Har bir maydon uchun mos ustunni tanlang. Sarlavha tushunarsiz chiqsa ham, qavs ichidagi misol qiymatga qarab ustunni tanishingiz mumkin.
+            </p>
             {FIELD_DEFS.map((f) => (
               <div key={f.key}>
                 <label className="text-xs font-bold text-gray-600 flex items-center gap-1">
@@ -288,15 +365,21 @@ export default function ImportProductsPage() {
                   className="w-full border p-2 rounded-lg bg-white text-black text-sm mt-1"
                 >
                   <option value="">— tanlanmagan —</option>
-                  {headers.map((h) => (
-                    <option key={h} value={h}>{h}</option>
-                  ))}
+                  {headers.map((h, idx) => {
+                    const sample = sampleFor(idx);
+                    const label = h && !/^[^\wㄱ-힝]*$/.test(h) ? h : `Ustun ${idx + 1}`;
+                    return (
+                      <option key={idx} value={idx}>
+                        {label}{sample ? ` — masalan: "${sample.length > 30 ? sample.slice(0, 30) + "…" : sample}"` : ""}
+                      </option>
+                    );
+                  })}
                 </select>
                 {f.hint && <p className="text-[11px] text-gray-400 mt-0.5">{f.hint}</p>}
               </div>
             ))}
 
-            {rows.length > 0 && mapping.name && mapping.price && (
+            {rows.length > 0 && mapping.name !== "" && mapping.price !== "" && (
               <div className="border rounded-lg overflow-hidden mt-3">
                 <p className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1">
                   Ko'rinish (dastlabki 3 qator, {validRows().length}/{rows.length} qator import qilinadi):
@@ -305,10 +388,10 @@ export default function ImportProductsPage() {
                   <tbody>
                     {validRows().slice(0, 3).map((r, i) => (
                       <tr key={i} className="border-t">
-                        <td className="p-2 font-semibold">{r[colIndex("name")]}</td>
+                        <td className="p-2 font-semibold">{cellToStr(r[colIndex("name")])}</td>
                         <td className="p-2">{parsePrice(r[colIndex("price")]).toLocaleString()}₩</td>
                         <td className="p-2 text-gray-500 truncate max-w-[150px]">
-                          {colIndex("description") >= 0 ? r[colIndex("description")] : ""}
+                          {colIndex("description") >= 0 ? cellToStr(r[colIndex("description")]) : ""}
                         </td>
                       </tr>
                     ))}
@@ -326,7 +409,7 @@ export default function ImportProductsPage() {
 
             <button
               onClick={handleImport}
-              disabled={importing || !mapping.name || !mapping.price || !targetCategory.trim()}
+              disabled={importing || mapping.name === "" || mapping.price === "" || !targetCategory.trim()}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-3 rounded-xl font-bold"
             >
               {importing ? (progress || "Import qilinmoqda...") : `Import qilish (${validRows().length} ta)`}
