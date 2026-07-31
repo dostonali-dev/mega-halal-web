@@ -77,6 +77,15 @@ export default function BottomNav() {
           <Link
             key={tab.key}
             href={tab.href}
+            onClick={(e) => {
+              // Foydalanuvchi allaqachon bosh sahifada bo'lsa-yu, "Bosh sahifa"
+              // tugmasini yana bossa - sahifani qayta yuklamasdan, faqat
+              // boshiga (yuqoriga) qaytaramiz.
+              if (tab.key === "home" && pathname === "/") {
+                e.preventDefault();
+                window.dispatchEvent(new Event("mhs-home-tab-tap"));
+              }
+            }}
             className={`flex flex-col items-center px-3 py-1 relative ${active ? "text-green-600" : "text-gray-400"}`}
             aria-label={tab.key}
           >

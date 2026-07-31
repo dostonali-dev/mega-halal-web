@@ -1,18 +1,15 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/LanguageContext";
 import { LANGUAGES } from "@/lib/i18n";
+import PageHeader from "@/components/PageHeader";
 
 export default function LanguagePage() {
-  const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8">
-      <div className="max-w-md mx-auto">
-        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">{t("back")}</button>
-        <h1 className="text-2xl font-bold text-black mb-6">🌐 {t("profile_menu_language")}</h1>
-
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      <PageHeader title={`🌐 ${t("profile_menu_language")}`} />
+      <div className="max-w-md mx-auto p-4 md:p-8">
         <div className="bg-white border border-green-100 rounded-2xl p-4">
           <div className="grid grid-cols-2 gap-2">
             {LANGUAGES.map((lang) => (

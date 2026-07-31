@@ -72,9 +72,10 @@ export default function ProductRow({
                 ) : qty === 0 ? (
                   <button
                     onClick={() => addToCart(p.id)}
-                    className="w-full bg-green-600 text-white rounded-lg py-1.5 text-sm font-bold"
+                    aria-label="Savatchaga qo'shish"
+                    className="w-full bg-green-600 text-white rounded-lg py-1.5 text-sm font-bold flex items-center justify-center"
                   >
-                    +
+                    🛒
                   </button>
                 ) : (
                   <div className="flex items-center justify-between bg-green-600 rounded-lg px-2 py-1">

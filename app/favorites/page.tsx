@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import PageHeader from "@/components/PageHeader";
 
 export default function FavoritesPage() {
   const { products, cart, addToCart, removeFromCart, setQty } = useCart();
@@ -13,10 +14,9 @@ export default function FavoritesPage() {
   const items = products.filter((p) => favoriteIds.has(p.id));
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 pb-24">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-black mb-6">{t("favorites_title")}</h1>
-
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-24">
+      <PageHeader title={t("favorites_title")} />
+      <div className="max-w-2xl mx-auto p-4">
         {items.length === 0 && <p className="text-center text-gray-400 mt-10">{t("favorites_empty")}</p>}
 
         <div className="space-y-3">

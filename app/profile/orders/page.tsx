@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
 import { formatSeoulDateTime } from "@/lib/dateUtils";
+import PageHeader from "@/components/PageHeader";
+import OrderRating from "@/components/OrderRating";
 
 const STATUS_KEY_MAP: Record<string, "order_status_paid" | "order_status_shipped" | "order_status_cancelled"> = {
   "✅ To'landi": "order_status_paid",
@@ -26,7 +27,6 @@ type Order = {
 };
 
 export default function OrdersHistoryPage() {
-  const router = useRouter();
   const { user } = useAuth();
   const { t } = useLanguage();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -47,11 +47,9 @@ export default function OrdersHistoryPage() {
   }, [user]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8">
-      <div className="max-w-md mx-auto">
-        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">{t("back")}</button>
-        <h1 className="text-2xl font-bold text-black mb-6">🧾 {t("profile_menu_orders")}</h1>
-
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-10">
+      <PageHeader title={`🧾 ${t("profile_menu_orders")}`} />
+      <div className="max-w-md mx-auto p-4 md:p-8">
         {loading && <p className="text-gray-400 text-sm">{t("orders_loading")}</p>}
         {!loading && orders.length === 0 && <p className="text-gray-400 text-sm">{t("orders_empty")}</p>}
 
@@ -72,6 +70,7 @@ export default function OrdersHistoryPage() {
                   <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusClass}`}>{statusLabel}</span>
                 </div>
                 <p className="text-sm text-black whitespace-pre-line">{o.order_text}</p>
+                {status === "📦 Jo'natildi" && <OrderRating orderId={o.id} />}
               </div>
             );
           })}

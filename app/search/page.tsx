@@ -6,18 +6,21 @@ import { useCart } from "@/lib/CartContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import ProductRow from "@/components/ProductRow";
 import { recordSearchQuery, getTopSearchQueries } from "@/lib/searchHistory";
+import { fetchProductSalesCounts, buildGlobalBestSellers } from "@/lib/salesStats";
 
 export default function SearchPage() {
   const { products, cart, addToCart, removeFromCart } = useCart();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [topQueries, setTopQueries] = useState<string[]>([]);
+  const [salesCounts, setSalesCounts] = useState<Record<number, number>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
     setTopQueries(getTopSearchQueries());
+    fetchProductSalesCounts().then(setSalesCounts);
   }, []);
 
   useEffect(() => {
@@ -48,6 +51,8 @@ export default function SearchPage() {
     }
     return result;
   }, [topQueries, products]);
+
+  const mostBoughtProducts = useMemo(() => buildGlobalBestSellers(products, salesCounts, 12), [products, salesCounts]);
 
   const recommended = useMemo(() => {
     return [...products]
@@ -100,6 +105,9 @@ export default function SearchPage() {
           <>
             {mostSearchedProducts.length > 0 && (
               <ProductRow title={t("search_most_searched_title")} products={mostSearchedProducts} />
+            )}
+            {mostBoughtProducts.length > 0 && (
+              <ProductRow title={t("search_most_bought_title")} products={mostBoughtProducts} />
             )}
             <ProductRow title={t("search_recommended_title")} products={recommended} />
           </>

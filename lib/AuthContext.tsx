@@ -29,6 +29,7 @@ type AuthContextType = {
   updateAddress: (data: { address?: string | null; addressDetail?: string | null; addressImage?: string | null }) => Promise<string | null>;
   updatePassword: (newPassword: string) => Promise<string | null>;
   updatePhone: (newPhone: string) => Promise<string | null>;
+  updateName: (newName: string) => Promise<string | null>;
   deleteAccount: () => Promise<string | null>;
 };
 
@@ -172,6 +173,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
+  const updateName = async (newName: string) => {
+    if (!user) return "Avval tizimga kiring.";
+    if (!newName.trim()) return "Ism bo'sh bo'lishi mumkin emas.";
+    const { error } = await supabase.from("profiles").update({ name: newName.trim() }).eq("id", user.id);
+    if (error) return error.message;
+    setUser((prev) => (prev ? { ...prev, name: newName.trim() } : prev));
+    return null;
+  };
+
   // Ro'yxatdan o'tish yoki parolni tiklash uchun telefon raqamiga SMS orqali
   // 6 xonali tasdiqlash kodi yuborishni so'raydi.
   const sendVerificationCode = async (phone: string, purpose: "signup" | "reset") => {
@@ -285,6 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateAddress,
         updatePassword,
         updatePhone,
+        updateName,
         deleteAccount,
       }}
     >

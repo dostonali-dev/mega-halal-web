@@ -1,14 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, setDefaultAddress, deleteAddress, type Address } from "@/lib/addresses";
 import { useLanguage } from "@/lib/LanguageContext";
 import AddressSearchModal from "@/components/AddressSearchModal";
+import PageHeader from "@/components/PageHeader";
 
 export default function AddressesPage() {
-  const router = useRouter();
   const { user } = useAuth();
   const { t } = useLanguage();
 
@@ -107,11 +106,9 @@ export default function AddressesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8">
-      <div className="max-w-md mx-auto">
-        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">{t("back")}</button>
-        <h1 className="text-2xl font-bold text-black mb-6">📍 {t("profile_menu_addresses")}</h1>
-
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      <PageHeader title={`📍 ${t("profile_menu_addresses")}`} />
+      <div className="max-w-md mx-auto p-4 md:p-8">
         <div className="bg-white border border-green-100 rounded-2xl p-4">
           {loadingAddresses && <p className="text-gray-400 text-sm">{t("orders_loading")}</p>}
 

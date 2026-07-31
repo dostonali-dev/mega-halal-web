@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchAddresses, addAddress, type Address } from "@/lib/addresses";
 import { DELIVERY_FEE, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
 import AddressSearchModal from "@/components/AddressSearchModal";
+import PageHeader from "@/components/PageHeader";
 
 const BANK_NAME = "농협은행";
 const BANK_ACCOUNT = "352-1676-1060-43";
@@ -187,6 +188,20 @@ export default function CheckoutPage() {
 
       const orderId = orderData.id;
 
+      // "Eng ko'p sotiladigan" / "eng ko'p sotib olingan" statistikasi uchun
+      // har bir mahsulotni alohida qatorlarga yozib boramiz. Bu xatolik
+      // bersa ham (masalan jadval hali yaratilmagan bo'lsa) buyurtmaning
+      // o'zi muvaffaqiyatli qolishi kerak - shu sababli xatolik faqat log qilinadi.
+      const orderItemsRows = items.map((p) => ({
+        order_id: orderId,
+        product_id: p.id,
+        product_name: p.name,
+        quantity: cart[p.id] || 0,
+        price: p.price,
+      }));
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItemsRows);
+      if (itemsError) console.error("order_items yozishda xatolik:", itemsError);
+
       await decrementStock();
 
       const receiptFileName = `${orderId}-${Date.now()}.jpg`;
@@ -244,11 +259,9 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-28">
-      <div className="max-w-2xl mx-auto">
-        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">{t("back")}</button>
-        <h1 className="text-2xl font-bold text-black mb-4">{t("checkout_title")}</h1>
-
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-28">
+      <PageHeader title={t("checkout_title")} />
+      <div className="max-w-2xl mx-auto p-4 md:p-8">
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
           <h2 className="font-bold text-black mb-2">{t("checkout_products")}</h2>
           {items.map((p) => (

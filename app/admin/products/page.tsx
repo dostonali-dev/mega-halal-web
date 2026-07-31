@@ -223,7 +223,10 @@ export default function AdminProductsPage() {
           />
         )}
 
-        <div className="bg-gray-50 border rounded-xl p-4 mb-4 space-y-3">
+        <div
+          className={`bg-gray-50 border rounded-xl p-4 mb-4 space-y-3 ${selectedIds.size > 0 ? "sticky z-30 shadow-lg" : ""}`}
+          style={selectedIds.size > 0 ? { top: "calc(env(safe-area-inset-top, 0px) + 8px)" } : undefined}
+        >
           <p className="text-sm font-bold text-black">
             📋 Ommaviy amal {selectedIds.size > 0 ? `— ${selectedIds.size} ta mahsulot belgilangan` : "(pastdan mahsulot(lar)ni belgilang)"}
           </p>

@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import PageHeader from "@/components/PageHeader";
 
 export default function UzbekistanProductsPage() {
-  const router = useRouter();
   const { products } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
@@ -15,11 +14,9 @@ export default function UzbekistanProductsPage() {
   const items = products.filter((p) => (p as any).is_hot === true);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
-      <div className="max-w-5xl mx-auto">
-        <button onClick={() => router.back()} className="text-green-700 font-semibold mb-4">{t("back")}</button>
-        <h1 className="text-2xl font-bold text-black mb-6">{t("uzbekistan_page_title")}</h1>
-
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-24">
+      <PageHeader title={t("uzbekistan_page_title")} />
+      <div className="max-w-5xl mx-auto p-4 md:p-8">
         {items.length === 0 && <p className="text-gray-400 text-center mt-10">{t("category_empty")}</p>}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

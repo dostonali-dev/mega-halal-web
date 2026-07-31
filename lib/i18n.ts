@@ -186,6 +186,35 @@ export const translations = {
     delete_account_type_instruction: "Tasdiqlash uchun pastga DELETE deb yozing",
     delete_account_button: "Akkauntni butunlay o'chirish",
     delete_account_cancel: "Bekor qilish",
+
+    best_selling_title: "🔥 Eng ko'p sotiladigan",
+    search_most_bought_title: "🛒 Eng ko'p sotib olingan",
+    cart_recent_purchases_title: "🕓 Oxirgi sotib olingan",
+    cart_most_purchased_title: "🛒 Eng ko'p sotib olingan",
+    cart_details_button: "Batafsil",
+
+    profile_menu_recently_viewed: "Oxirgi ko'rilganlar",
+    profile_menu_favorites: "Sevimlilar",
+    profile_menu_best_selling: "Eng ko'p sotib olingan mahsulotlar",
+    profile_menu_my_account: "Mening akkountim",
+
+    my_account_title: "Mening akkountim",
+    my_account_name: "Ism",
+    my_account_phone: "Telefon raqamini o'zgartirish",
+    my_account_password: "Parolni o'zgartirish",
+    my_account_addresses: "Manzillarim",
+    my_account_payment: "To'lov kartasi",
+    my_account_language: "Til",
+    my_account_logout: "Chiqish",
+    my_account_delete: "Akkauntni o'chirish",
+
+    payment_card_title: "To'lov kartasi",
+    payment_card_empty: "Hali karta qo'shilmagan",
+
+    rate_order_title: "Buyurtmani baholang",
+    rate_order_placeholder: "Izoh qoldiring (ixtiyoriy)",
+    rate_order_submit: "Yuborish",
+    rate_order_already: "✅ Baholandi:",
   },
   en: {
     nav_home: "Home",
@@ -365,6 +394,35 @@ export const translations = {
     delete_account_type_instruction: "Type DELETE below to confirm",
     delete_account_button: "Permanently delete account",
     delete_account_cancel: "Cancel",
+
+    best_selling_title: "🔥 Best sellers",
+    search_most_bought_title: "🛒 Most bought",
+    cart_recent_purchases_title: "🕓 Recently bought",
+    cart_most_purchased_title: "🛒 Most bought",
+    cart_details_button: "Details",
+
+    profile_menu_recently_viewed: "Recently viewed",
+    profile_menu_favorites: "Favorites",
+    profile_menu_best_selling: "Most bought products",
+    profile_menu_my_account: "My account",
+
+    my_account_title: "My account",
+    my_account_name: "Name",
+    my_account_phone: "Change phone number",
+    my_account_password: "Change password",
+    my_account_addresses: "My addresses",
+    my_account_payment: "Payment card",
+    my_account_language: "Language",
+    my_account_logout: "Log out",
+    my_account_delete: "Delete account",
+
+    payment_card_title: "Payment card",
+    payment_card_empty: "No card added yet",
+
+    rate_order_title: "Rate your order",
+    rate_order_placeholder: "Leave a comment (optional)",
+    rate_order_submit: "Submit",
+    rate_order_already: "✅ Rated:",
   },
   ru: {
     nav_home: "Главная",
@@ -544,6 +602,35 @@ export const translations = {
     delete_account_type_instruction: "Введите DELETE ниже для подтверждения",
     delete_account_button: "Удалить аккаунт навсегда",
     delete_account_cancel: "Отмена",
+
+    best_selling_title: "🔥 Хиты продаж",
+    search_most_bought_title: "🛒 Часто покупаемые",
+    cart_recent_purchases_title: "🕓 Недавно купленные",
+    cart_most_purchased_title: "🛒 Часто покупаемые",
+    cart_details_button: "Подробнее",
+
+    profile_menu_recently_viewed: "Недавно просмотренные",
+    profile_menu_favorites: "Избранное",
+    profile_menu_best_selling: "Часто покупаемые товары",
+    profile_menu_my_account: "Мой аккаунт",
+
+    my_account_title: "Мой аккаунт",
+    my_account_name: "Имя",
+    my_account_phone: "Изменить номер телефона",
+    my_account_password: "Изменить пароль",
+    my_account_addresses: "Мои адреса",
+    my_account_payment: "Платёжная карта",
+    my_account_language: "Язык",
+    my_account_logout: "Выйти",
+    my_account_delete: "Удалить аккаунт",
+
+    payment_card_title: "Платёжная карта",
+    payment_card_empty: "Карта ещё не добавлена",
+
+    rate_order_title: "Оцените заказ",
+    rate_order_placeholder: "Оставьте комментарий (необязательно)",
+    rate_order_submit: "Отправить",
+    rate_order_already: "✅ Оценено:",
   },
   ko: {
     nav_home: "홈",
@@ -723,6 +810,35 @@ export const translations = {
     delete_account_type_instruction: "확인을 위해 아래에 DELETE를 입력하세요",
     delete_account_button: "계정 영구 삭제",
     delete_account_cancel: "취소",
+
+    best_selling_title: "🔥 베스트셀러",
+    search_most_bought_title: "🛒 많이 구매한 상품",
+    cart_recent_purchases_title: "🕓 최근 구매한 상품",
+    cart_most_purchased_title: "🛒 많이 구매한 상품",
+    cart_details_button: "자세히",
+
+    profile_menu_recently_viewed: "최근 본 상품",
+    profile_menu_favorites: "즐겨찾기",
+    profile_menu_best_selling: "많이 구매한 상품",
+    profile_menu_my_account: "내 계정",
+
+    my_account_title: "내 계정",
+    my_account_name: "이름",
+    my_account_phone: "전화번호 변경",
+    my_account_password: "비밀번호 변경",
+    my_account_addresses: "내 주소",
+    my_account_payment: "결제 카드",
+    my_account_language: "언어",
+    my_account_logout: "로그아웃",
+    my_account_delete: "계정 삭제",
+
+    payment_card_title: "결제 카드",
+    payment_card_empty: "아직 등록된 카드가 없습니다",
+
+    rate_order_title: "주문을 평가해 주세요",
+    rate_order_placeholder: "댓글을 남겨주세요 (선택 사항)",
+    rate_order_submit: "제출",
+    rate_order_already: "✅ 평가 완료:",
   },
 } as const;
 

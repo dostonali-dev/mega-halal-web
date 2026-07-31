@@ -6,16 +6,16 @@ import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import PageHeader from "@/components/PageHeader";
 
-export default function DiscountsPage() {
+export default function NewProductsPage() {
   const { products } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
 
-  const items = products.filter((p) => p.discount_price != null && p.discount_price < p.price);
+  const items = [...products].sort((a, b) => b.id - a.id);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-24">
-      <PageHeader title={t("discounts_page_title")} />
+      <PageHeader title={t("new_products")} />
       <div className="max-w-5xl mx-auto p-4 md:p-8">
         {items.length === 0 && <p className="text-gray-400 text-center mt-10">{t("category_empty")}</p>}
 
@@ -34,10 +34,7 @@ export default function DiscountsPage() {
                   {item.image ? <img src={item.image} alt={item.name} className="w-full h-32 object-cover" /> : <div className="w-full h-32 bg-gray-100" />}
                   <div className="p-3">
                     <p className="font-semibold text-black text-sm line-clamp-2">{item.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-green-700 font-bold">{item.discount_price!.toLocaleString()}₩</p>
-                      <p className="text-gray-400 text-xs line-through">{item.price.toLocaleString()}₩</p>
-                    </div>
+                    <p className="text-green-700 font-bold mt-1">{item.price.toLocaleString()}₩</p>
                     {outOfStock && <p className="text-red-500 text-xs font-bold mt-1">{t("out_of_stock_label")}</p>}
                   </div>
                 </Link>

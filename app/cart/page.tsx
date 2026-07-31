@@ -1,20 +1,52 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
+import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import ProductRow from "@/components/ProductRow";
 import { DELIVERY_FEE, FREE_SHIPPING_THRESHOLD, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
+import { fetchUserPurchaseHistory } from "@/lib/salesStats";
+
+function CartIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
+      <circle cx="9" cy="20.5" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="18" cy="20.5" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 export default function CartPage() {
   const router = useRouter();
   const { products, cart, addToCart, removeFromCart, setQty, total, itemCount } = useCart();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
   const deliveryFee = getDeliveryFee(total);
   const freeShippingRemaining = getFreeShippingRemaining(total);
   const freeShippingProgress = Math.min(100, Math.round((total / FREE_SHIPPING_THRESHOLD) * 100));
   const grandTotal = total + deliveryFee;
+  const [showDetails, setShowDetails] = useState(false);
+  const [recentIds, setRecentIds] = useState<number[]>([]);
+  const [mostPurchasedIds, setMostPurchasedIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchUserPurchaseHistory(user.id).then((h) => {
+      setRecentIds(h.recentProductIds);
+      setMostPurchasedIds(h.mostPurchasedIds);
+    });
+  }, [user]);
+
+  const recentProducts = recentIds
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
+  const mostPurchasedProducts = mostPurchasedIds
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const recommended = products
     .filter((p) => !(cart[p.id] > 0) && p.in_stock !== false)
@@ -26,7 +58,7 @@ export default function CartPage() {
     .slice(0, 8);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8 pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white p-4 md:p-8" style={{ paddingBottom: items.length > 0 ? "340px" : "96px" }}>
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-black mb-6">{t("cart_title")}</h1>
 
@@ -46,76 +78,114 @@ export default function CartPage() {
                   <p className="text-green-700 font-bold">{p.price.toLocaleString()}₩</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => removeFromCart(p.id)} className="bg-red-500 text-white w-10 h-10 rounded-lg">-</button>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button onClick={() => removeFromCart(p.id)} className="bg-gray-200 text-black w-8 h-10 rounded-lg font-bold">−</button>
                 <input
                   type="number"
                   min={0}
                   value={cart[p.id] || 0}
                   onChange={(e) => setQty(p.id, Math.max(0, Number(e.target.value) || 0))}
-                  className="w-16 text-center border rounded-lg text-black font-bold py-1"
+                  className="w-12 text-center border rounded-lg text-black font-bold py-1.5"
                 />
-                <button onClick={() => addToCart(p.id)} className="bg-green-600 text-white w-10 h-10 rounded-lg">+</button>
+                <button onClick={() => addToCart(p.id)} aria-label="Savatchaga qo'shish" className="bg-green-600 text-white w-9 h-10 rounded-lg flex items-center justify-center">
+                  <CartIcon />
+                </button>
+                <button
+                  onClick={() => setQty(p.id, 0)}
+                  aria-label="Olib tashlash"
+                  className="w-9 h-10 rounded-lg flex items-center justify-center font-bold"
+                  style={{ backgroundColor: "#fee2e2", color: "#dc2626" }}
+                >
+                  ✕
+                </button>
               </div>
             </div>
           ))}
         </div>
 
-        {items.length > 0 && (
-          <div className="bg-white border border-green-100 rounded-2xl p-4 mt-6">
-            <div className="mb-4">
-              {freeShippingRemaining > 0 ? (
-                <p className="text-sm font-bold text-green-700 mb-2">
-                  {t("free_shipping_progress").replace("{amount}", `${freeShippingRemaining.toLocaleString()}₩`)}
-                </p>
-              ) : (
-                <p className="text-sm font-bold text-green-700 mb-2">{t("free_shipping_reached")}</p>
-              )}
-              <div className="w-full h-2.5 bg-green-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-green-600 rounded-full transition-all"
-                  style={{ width: `${freeShippingProgress}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between text-black mb-1">
-              <span>{t("cart_item_count")}</span><span>{itemCount}</span>
-            </div>
-            <div className="flex justify-between text-gray-500 text-sm mb-1">
-              <span>{t("checkout_products")}</span><span>{total.toLocaleString()}₩</span>
-            </div>
-            <div className="flex justify-between text-gray-500 text-sm mb-2 pb-2 border-b">
-              <span>🚚 {t("delivery_fee")}</span>
-              <span>
-                {deliveryFee === 0 ? (
-                  <>
-                    <span className="line-through text-gray-300 mr-1">{DELIVERY_FEE.toLocaleString()}₩</span>
-                    <span className="text-green-700 font-bold">0₩</span>
-                  </>
-                ) : (
-                  `${deliveryFee.toLocaleString()}₩`
-                )}
-              </span>
-            </div>
-            <div className="flex justify-between text-2xl font-extrabold text-green-700">
-              <span>{t("cart_total")}</span><span>{grandTotal.toLocaleString()}₩</span>
-            </div>
-            <button
-              onClick={() => router.push("/checkout")}
-              className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold"
-            >
-              {t("cart_place_order")}
-            </button>
+        {mostPurchasedProducts.length > 0 && (
+          <div className="mt-8">
+            <ProductRow title={t("cart_most_purchased_title")} products={mostPurchasedProducts} />
+          </div>
+        )}
+        {recentProducts.length > 0 && (
+          <div className="mt-2">
+            <ProductRow title={t("cart_recent_purchases_title")} products={recentProducts} />
           </div>
         )}
 
         {recommended.length > 0 && (
-          <div className="mt-8">
+          <div className="mt-2">
             <ProductRow title={t("cart_recommend_title")} products={recommended} />
           </div>
         )}
       </div>
+
+      {items.length > 0 && (
+        <div
+          className="fixed left-0 right-0 z-40"
+          style={{
+            bottom: "calc(40px + env(safe-area-inset-bottom, 0px))",
+            backgroundColor: "#141414",
+            borderTop: "1px solid #2a2a2a",
+            paddingBottom: "16px",
+          }}
+        >
+          <div className="max-w-2xl mx-auto px-4 pt-3">
+            {freeShippingRemaining > 0 ? (
+              <p className="text-xs font-bold text-green-500 mb-2">
+                {t("free_shipping_progress").replace("{amount}", `${freeShippingRemaining.toLocaleString()}₩`)}
+              </p>
+            ) : (
+              <p className="text-xs font-bold text-green-500 mb-2">{t("free_shipping_reached")}</p>
+            )}
+            <div className="w-full h-2 bg-green-100 rounded-full overflow-hidden mb-3">
+              <div className="h-full bg-green-600 rounded-full transition-all" style={{ width: `${freeShippingProgress}%` }} />
+            </div>
+
+            <button
+              onClick={() => setShowDetails((v) => !v)}
+              className="w-full flex items-center justify-between mb-2"
+            >
+              <span className="text-sm font-bold" style={{ color: "#a3a3a3" }}>
+                {t("cart_details_button")} {showDetails ? "▲" : "▼"}
+              </span>
+              <span className="text-2xl font-extrabold" style={{ color: "#4ade80" }}>{grandTotal.toLocaleString()}₩</span>
+            </button>
+
+            {showDetails && (
+              <div className="rounded-xl p-3 mb-2" style={{ backgroundColor: "#1f1f1f" }}>
+                <div className="flex justify-between text-sm mb-1" style={{ color: "#e5e5e5" }}>
+                  <span>{t("cart_item_count")}</span><span>{itemCount}</span>
+                </div>
+                <div className="flex justify-between text-sm mb-1" style={{ color: "#a3a3a3" }}>
+                  <span>{t("checkout_products")}</span><span>{total.toLocaleString()}₩</span>
+                </div>
+                <div className="flex justify-between text-sm" style={{ color: "#a3a3a3" }}>
+                  <span>🚚 {t("delivery_fee")}</span>
+                  <span>
+                    {deliveryFee === 0 ? (
+                      <>
+                        <span className="line-through mr-1" style={{ color: "#525252" }}>{DELIVERY_FEE.toLocaleString()}₩</span>
+                        <span className="text-green-500 font-bold">0₩</span>
+                      </>
+                    ) : (
+                      `${deliveryFee.toLocaleString()}₩`
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => router.push("/checkout")}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold"
+            >
+              {t("cart_place_order")}
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

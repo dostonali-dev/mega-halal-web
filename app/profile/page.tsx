@@ -5,16 +5,16 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 
 export default function ProfilePage() {
-  const { user, signOut, guestMode, exitGuest } = useAuth();
+  const { user, guestMode, exitGuest } = useAuth();
   const { t } = useLanguage();
 
   const menuItems = [
-    { href: "/profile/password", icon: "🔒", label: t("profile_menu_password") },
-    { href: "/profile/phone", icon: "📱", label: t("profile_menu_phone") },
-    { href: "/profile/language", icon: "🌐", label: t("profile_menu_language") },
-    { href: "/profile/addresses", icon: "📍", label: t("profile_menu_addresses") },
-    { href: "/profile/contact", icon: "📞", label: t("profile_menu_contact") },
+    { href: "/recently-viewed", icon: "🕓", label: t("profile_menu_recently_viewed") },
+    { href: "/favorites", icon: "❤️", label: t("profile_menu_favorites") },
     { href: "/profile/orders", icon: "🧾", label: t("profile_menu_orders") },
+    { href: "/profile/best-selling", icon: "🛒", label: t("profile_menu_best_selling") },
+    { href: "/profile/contact", icon: "📞", label: t("profile_menu_contact") },
+    { href: "/profile/account", icon: "👤", label: t("profile_menu_my_account") },
   ];
 
   return (
@@ -58,17 +58,6 @@ export default function ProfilePage() {
               <span className="text-gray-300">→</span>
             </Link>
           ))}
-        </div>
-
-        <div className="space-y-3">
-          <button onClick={guestMode && !user ? exitGuest : signOut} className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-2xl font-bold">
-            {t("profile_menu_signout")}
-          </button>
-          {!guestMode && (
-            <Link href="/profile/delete" className="block text-center text-gray-400 text-sm underline">
-              {t("profile_menu_delete_account")}
-            </Link>
-          )}
         </div>
 
         <div className="mt-10 pb-6 text-center">

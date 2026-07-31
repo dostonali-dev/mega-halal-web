@@ -63,10 +63,13 @@ export default function ProductDetailPage() {
         <div className="relative">
           <button
             onClick={() => router.back()}
-            className="absolute top-4 left-4 z-10 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold"
-            style={{ backgroundColor: "#ffffff", color: "#000000", boxShadow: "0 2px 8px rgba(0,0,0,0.35)" }}
+            aria-label="Orqaga"
+            className="absolute top-4 left-4 z-10 rounded-full w-10 h-10 flex items-center justify-center"
+            style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 8px rgba(0,0,0,0.35)" }}
           >
-            ←
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 5 8 12l7 7" />
+            </svg>
           </button>
           <button
             onClick={() => toggleFavorite(product.id)}
@@ -114,7 +117,7 @@ export default function ProductDetailPage() {
             </span>
           )}
           <h1 className="text-2xl font-bold text-black">{product.name}</h1>
-          <p className="text-green-700 font-extrabold text-xl mt-2">{product.price.toLocaleString()}₩</p>
+          <p className="text-green-700 font-extrabold text-3xl mt-2">{product.price.toLocaleString()}₩</p>
 
           {product.description && (
             <div className="mt-4">
@@ -176,7 +179,7 @@ export default function ProductDetailPage() {
 
                 <button
                   onClick={handleConfirm}
-                  className={`w-full py-4 rounded-2xl font-bold text-lg text-white ${justAdded ? "bg-green-800" : "bg-green-600 hover:bg-green-700"}`}
+                  className={`w-full py-5 rounded-2xl font-bold text-xl text-white ${justAdded ? "bg-green-800" : "bg-green-600 hover:bg-green-700"}`}
                 >
                   {justAdded ? t("product_added") : t("product_add_to_cart")}
                 </button>

@@ -10,6 +10,7 @@ import InstallPrompt from "@/components/InstallPrompt";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
 import { recordSearchQuery } from "@/lib/searchHistory";
 import { useFavorites } from "@/lib/FavoritesContext";
+import { fetchProductSalesCounts, buildBestSellingList } from "@/lib/salesStats";
 
 type Banner = { id: number; image: string; link: string | null };
 
@@ -50,8 +51,15 @@ function ProductStrip({
     <div className="mt-2 mb-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-bold">{title}</h2>
-        <Link href={seeAllHref} className="text-sm font-bold" style={{ color: "#4ade80" }}>
-          →
+        <Link
+          href={seeAllHref}
+          aria-label="Barchasini ko'rish"
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: "#16a34a" }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m9 5 7 7-7 7" />
+          </svg>
         </Link>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
@@ -97,9 +105,10 @@ function ProductStrip({
                 ) : qty === 0 ? (
                   <button
                     onClick={() => addToCart(item.id)}
-                    className="w-full bg-green-600 text-white rounded-lg py-1 text-xs font-bold"
+                    aria-label="Savatchaga qo'shish"
+                    className="w-full bg-green-600 text-white rounded-lg py-1 text-xs font-bold flex items-center justify-center"
                   >
-                    +
+                    🛒
                   </button>
                 ) : (
                   <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
@@ -229,6 +238,8 @@ function ArrowUpIcon() {
   );
 }
 
+const CATEGORIES_COLLAPSED_COUNT = 8;
+
 export default function Home() {
   const { products, categories, cart, addToCart, removeFromCart } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
@@ -236,6 +247,8 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [banners, setBanners] = useState<Banner[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [salesCounts, setSalesCounts] = useState<Record<number, number>>({});
 
   useEffect(() => {
     const loadBanners = async () => {
@@ -243,6 +256,18 @@ export default function Home() {
       if (data) setBanners(data);
     };
     loadBanners();
+  }, []);
+
+  useEffect(() => {
+    fetchProductSalesCounts().then(setSalesCounts);
+  }, []);
+
+  // Panel instrumentov'dagi "Bosh sahifa" tugmasi allaqachon shu sahifada
+  // bosilganda, sahifani boshiga (yuqoriga) qaytarish uchun.
+  useEffect(() => {
+    const handleHomeTap = () => window.scrollTo({ top: 0, behavior: "smooth" });
+    window.addEventListener("mhs-home-tab-tap", handleHomeTap);
+    return () => window.removeEventListener("mhs-home-tab-tap", handleHomeTap);
   }, []);
 
   useEffect(() => {
@@ -265,6 +290,9 @@ export default function Home() {
   const discountItems = products.filter(
     (p) => p.discount_price != null && p.discount_price < p.price
   );
+  const bestSellingItems = buildBestSellingList(products, categories, salesCounts);
+  const newestItems = [...products].sort((a, b) => b.id - a.id).slice(0, 12);
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, CATEGORIES_COLLAPSED_COUNT);
 
   return (
     <main className="min-h-screen pb-24">
@@ -293,14 +321,11 @@ export default function Home() {
         <p className="text-center mt-2 text-lg mb-6">
           {t("home_subtitle")}
         </p>
-
-        <AnnouncementPopup />
-        <InstallPrompt />
-        <BannerCarousel banners={banners} />
       </div>
 
-      {/* Bannerdan keyin boshlanadi, pastga tushgan sari tepada "pin" bo'lib qoladi, shaffof.
-          Faqat dumaloq katakchaning o'zi — atrofida to'rtburchak ramka/fon yo'q. */}
+      {/* Qidiruv katagi banner tepasida, pastga tushgan sari tepada "pin" bo'lib
+          qoladi, shaffof. Faqat dumaloq katakchaning o'zi — atrofida
+          to'rtburchak ramka/fon yo'q. */}
       <div
         className="sticky z-40 px-4 md:px-8 mb-6"
         style={{
@@ -324,6 +349,11 @@ export default function Home() {
       </div>
 
       <div className="max-w-5xl mx-auto p-4 md:p-8 pt-0">
+        <div className="mb-6">
+          <AnnouncementPopup />
+          <InstallPrompt />
+          <BannerCarousel banners={banners} />
+        </div>
         {query.trim() ? (
           <div className="mt-8 space-y-3">
             {searchResults.length === 0 && <p className="text-center">{t("no_results")}</p>}
@@ -346,15 +376,55 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <ProductStrip
-              title={t("uzbekistan_page_title")}
-              items={hotItems}
-              seeAllHref="/uzbekistan"
-              cart={cart}
-              addToCart={addToCart}
-              removeFromCart={removeFromCart}
-              t={t}
-            />
+            <div className="mt-2 mb-8">
+              <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span>🗂️</span>
+                {t("categories_title")}
+              </h2>
+
+              <div className="grid grid-cols-2 gap-3">
+                {visibleCategories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/categories/${encodeURIComponent(cat.name)}`}
+                    className="flex items-center gap-3 rounded-2xl shadow-sm p-3"
+                    style={{ backgroundColor: "#dcfce7", border: "1px solid #bbf7d0" }}
+                  >
+                    <span className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
+                      {cat.image_url ? (
+                        <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
+                      ) : (
+                        cat.icon || "📦"
+                      )}
+                    </span>
+                    <span className="text-base font-extrabold leading-tight line-clamp-2" style={{ color: "#000000" }}>{cat.name}</span>
+                  </Link>
+                ))}
+              </div>
+
+              {categories.length > CATEGORIES_COLLAPSED_COUNT && (
+                <button
+                  onClick={() => setShowAllCategories((v) => !v)}
+                  className="w-full mt-3 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold"
+                  style={{ backgroundColor: "#1a1a1a", color: "#4ade80" }}
+                >
+                  {showAllCategories ? "Kamroq ko'rsatish" : "Barchasi"}
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ transform: showAllCategories ? "rotate(180deg)" : "none" }}
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+              )}
+            </div>
 
             <ProductStrip
               title={t("discounts_page_title")}
@@ -366,37 +436,20 @@ export default function Home() {
               t={t}
             />
 
-            <div className="mt-2 mb-8">
-              <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <span>🗂️</span>
-                {t("categories_title")}
-              </h2>
-
-              <div className="grid grid-cols-2 gap-3">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/categories/${encodeURIComponent(cat.name)}`}
-                    className="flex items-center gap-3 rounded-2xl shadow-sm p-3"
-                    style={{ backgroundColor: "#dcfce7", border: "1px solid #bbf7d0" }}
-                  >
-                    <span className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
-                      {cat.image_url ? (
-                        <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
-                      ) : (
-                        cat.icon || "📦"
-                      )}
-                    </span>
-                    <span className="text-sm font-bold leading-tight line-clamp-2" style={{ color: "#000000" }}>{cat.name}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
+            <ProductStrip
+              title={t("uzbekistan_page_title")}
+              items={hotItems}
+              seeAllHref="/uzbekistan"
+              cart={cart}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              t={t}
+            />
 
             <div className="mt-2 mb-8">
-              <h2 className="text-xl font-bold mb-3">{t("all_products_title")}</h2>
+              <h2 className="text-xl font-bold mb-3">{t("best_selling_title")}</h2>
               <div className="grid grid-cols-3 gap-2 md:gap-3">
-                {products.map((item) => {
+                {bestSellingItems.map((item) => {
                   const qty = cart[item.id] || 0;
                   const outOfStock = item.in_stock === false;
                   const hasDiscount = item.discount_price != null && item.discount_price < item.price;
@@ -442,9 +495,10 @@ export default function Home() {
                         ) : qty === 0 ? (
                           <button
                             onClick={() => addToCart(item.id)}
-                            className="w-full bg-green-600 text-white rounded-lg py-1 text-xs font-bold"
+                            aria-label="Savatchaga qo'shish"
+                            className="w-full bg-green-600 text-white rounded-lg py-1 text-xs font-bold flex items-center justify-center"
                           >
-                            +
+                            🛒
                           </button>
                         ) : (
                           <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
@@ -463,6 +517,16 @@ export default function Home() {
                 })}
               </div>
             </div>
+
+            <ProductStrip
+              title={t("new_products")}
+              items={newestItems}
+              seeAllHref="/new-products"
+              cart={cart}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              t={t}
+            />
           </>
         )}
       </div>
