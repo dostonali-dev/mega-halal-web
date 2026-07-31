@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 // Excel (.xlsx/.xls/.csv) fayldan mahsulotlarni ommaviy import qilish.
-// Har doim "Umumiy" kategoriyasiga tushadi (yo'q bo'lsa avtomatik yaratiladi).
-// Fayldagi ustunlar turlicha nomlangan bo'lishi mumkin (masalan koreyscha
-// "원산지"), shuning uchun foydalanuvchi har bir maydonni qaysi ustunga mos
-// kelishini o'zi tanlaydi (ustun moslashtirish).
+// Qaysi kategoriyaga tushishini o'zingiz tanlaysiz (mavjudlaridan birini
+// tanlashingiz yoki yangisini yozishingiz mumkin — kategoriya bazada yo'q
+// bo'lsa, avtomatik yaratiladi). Fayldagi ustunlar turlicha nomlangan
+// bo'lishi mumkin (masalan koreyscha "원산지", "판매가"), shuning uchun
+// foydalanuvchi har bir maydonni qaysi ustunga mos kelishini o'zi tanlaydi.
 
-const TARGET_CATEGORY = "Umumiy";
+type Category = { id: number; name: string };
 
 type FieldKey = "name" | "price" | "description" | "image" | "stock" | "productCode" | "keywords";
 
@@ -25,6 +26,11 @@ const FIELD_DEFS: { key: FieldKey; label: string; required?: boolean; hint?: str
   { key: "keywords", label: "Kalit so'zlar" },
 ];
 
+// Ba'zi fayllarning oxirida "Jami / O'rtacha" kabi statistik qatorlar
+// bo'ladi — bular haqiqiy mahsulot emas, import paytida avtomatik o'tkazib
+// yuboriladi.
+const SKIP_NAME_PATTERNS = ["합계", "총계", "평균", "표준편차", "total", "subtotal", "jami", "o'rtacha", "average"];
+
 function parsePrice(raw: any): number {
   const s = String(raw ?? "").replace(/[^\d.-]/g, "");
   const n = Number(s);
@@ -34,6 +40,8 @@ function parsePrice(raw: any): number {
 export default function ImportProductsPage() {
   const router = useRouter();
   const [checkedLogin, setCheckedLogin] = useState(false);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+  const [targetCategory, setTargetCategory] = useState("");
 
   const [fileName, setFileName] = useState("");
   const [headers, setHeaders] = useState<string[]>([]);
@@ -43,7 +51,7 @@ export default function ImportProductsPage() {
   });
   const [parsing, setParsing] = useState(false);
   const [existingCount, setExistingCount] = useState<number | null>(null);
-  const [deleteExisting, setDeleteExisting] = useState(true);
+  const [deleteExisting, setDeleteExisting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState("");
   const [resultMsg, setResultMsg] = useState("");
@@ -56,12 +64,22 @@ export default function ImportProductsPage() {
 
   useEffect(() => {
     if (!checkedLogin) return;
+    supabase.from("categories").select("id, name").order("name").then(({ data }) => {
+      if (data) setCategoriesList(data);
+    });
+  }, [checkedLogin]);
+
+  useEffect(() => {
+    if (!checkedLogin || !targetCategory.trim()) {
+      setExistingCount(null);
+      return;
+    }
     supabase
       .from("products")
       .select("id", { count: "exact", head: true })
-      .eq("category", TARGET_CATEGORY)
+      .eq("category", targetCategory.trim())
       .then(({ count }) => setExistingCount(count ?? 0));
-  }, [checkedLogin]);
+  }, [checkedLogin, targetCategory]);
 
   const handleFile = async (file: File) => {
     setParsing(true);
@@ -83,11 +101,11 @@ export default function ImportProductsPage() {
         hdrs.find((h) => candidates.some((c) => h.toLowerCase().includes(c.toLowerCase()))) || "";
       setMapping({
         name: guess(["nomi", "name", "상품명", "제품명", "품명"]),
-        price: guess(["narx", "price", "가격", "단가"]),
+        price: guess(["narx", "price", "판매가", "가격", "단가"]),
         description: guess(["원산지", "tavsif", "description", "origin"]),
         image: guess(["rasm", "image", "이미지", "사진"]),
         stock: guess(["soni", "stock", "수량", "재고"]),
-        productCode: guess(["kod", "barkod", "barcode", "code", "코드"]),
+        productCode: guess(["kod", "barkod", "barcode", "code", "바코드", "코드"]),
         keywords: guess(["kalit", "keyword", "키워드"]),
       });
     } catch (e: any) {
@@ -99,30 +117,52 @@ export default function ImportProductsPage() {
 
   const colIndex = (field: FieldKey) => headers.indexOf(mapping[field]);
 
+  const validRows = () => {
+    const nameIdx = colIndex("name");
+    return rows.filter((r) => {
+      const name = String(r[nameIdx] ?? "").trim();
+      if (!name) return false;
+      const lower = name.toLowerCase();
+      return !SKIP_NAME_PATTERNS.some((p) => lower === p.toLowerCase() || lower.includes(p.toLowerCase()));
+    });
+  };
+
   const handleImport = async () => {
+    const category = targetCategory.trim();
+    if (!category) {
+      alert("Qaysi kategoriyaga qo'shishni tanlang yoki yozing.");
+      return;
+    }
     if (!mapping.name || !mapping.price) {
       alert("Kamida \"Mahsulot nomi\" va \"Narxi\" ustunlarini tanlang.");
       return;
     }
-    if (rows.length === 0) {
+    const goodRows = validRows();
+    if (goodRows.length === 0) {
       alert("Import qilinadigan qator topilmadi.");
       return;
     }
-    if (!confirm(`${rows.length} ta mahsulot "${TARGET_CATEGORY}" kategoriyasiga import qilinsinmi?`)) return;
+    const skipped = rows.length - goodRows.length;
+    if (
+      !confirm(
+        `${goodRows.length} ta mahsulot "${category}" kategoriyasiga import qilinsinmi?` +
+        (skipped > 0 ? `\n(${skipped} ta qator - masalan jami/o'rtacha qatori - o'tkazib yuborildi)` : "")
+      )
+    ) return;
 
     setImporting(true);
     setResultMsg("");
     try {
-      // 1) "Umumiy" kategoriyasi mavjudligini tekshirish, bo'lmasa yaratish.
-      const { data: existingCat } = await supabase.from("categories").select("id").eq("name", TARGET_CATEGORY).maybeSingle();
+      // 1) Tanlangan kategoriya mavjudligini tekshirish, bo'lmasa yaratish.
+      const { data: existingCat } = await supabase.from("categories").select("id").eq("name", category).maybeSingle();
       if (!existingCat) {
-        await supabase.from("categories").insert({ name: TARGET_CATEGORY, icon: "📦" });
+        await supabase.from("categories").insert({ name: category, icon: "📦" });
       }
 
-      // 2) Kerak bo'lsa, "Umumiy" dagi eski mahsulotlarni o'chirish.
+      // 2) Kerak bo'lsa, shu kategoriyadagi eski mahsulotlarni o'chirish.
       if (deleteExisting) {
         setProgress("Eski mahsulotlar o'chirilmoqda...");
-        const { error: delError } = await supabase.from("products").delete().eq("category", TARGET_CATEGORY);
+        const { error: delError } = await supabase.from("products").delete().eq("category", category);
         if (delError) throw delError;
       }
 
@@ -135,23 +175,17 @@ export default function ImportProductsPage() {
       const codeIdx = colIndex("productCode");
       const kwIdx = colIndex("keywords");
 
-      const products = rows
-        .map((r) => {
-          const name = String(r[nameIdx] ?? "").trim();
-          if (!name) return null;
-          return {
-            name,
-            price: parsePrice(r[priceIdx]),
-            category: TARGET_CATEGORY,
-            description: descIdx >= 0 ? String(r[descIdx] ?? "").trim() || null : null,
-            image: imageIdx >= 0 ? String(r[imageIdx] ?? "").trim() || null : null,
-            stock: stockIdx >= 0 && String(r[stockIdx] ?? "").trim() !== "" ? Number(String(r[stockIdx]).replace(/[^\d.-]/g, "")) : null,
-            product_code: codeIdx >= 0 ? String(r[codeIdx] ?? "").trim() || null : null,
-            keywords: kwIdx >= 0 ? String(r[kwIdx] ?? "").trim() || null : null,
-            in_stock: true,
-          };
-        })
-        .filter(Boolean) as any[];
+      const products = goodRows.map((r) => ({
+        name: String(r[nameIdx] ?? "").trim(),
+        price: parsePrice(r[priceIdx]),
+        category,
+        description: descIdx >= 0 ? String(r[descIdx] ?? "").trim() || null : null,
+        image: imageIdx >= 0 ? String(r[imageIdx] ?? "").trim() || null : null,
+        stock: stockIdx >= 0 && String(r[stockIdx] ?? "").trim() !== "" ? Number(String(r[stockIdx]).replace(/[^\d.-]/g, "")) : null,
+        product_code: codeIdx >= 0 ? String(r[codeIdx] ?? "").trim() || null : null,
+        keywords: kwIdx >= 0 ? String(r[kwIdx] ?? "").trim() || null : null,
+        in_stock: true,
+      }));
 
       // 4) Katta bo'lsa, bo'lib-bo'lib (200 tadan) qo'shamiz.
       const CHUNK = 200;
@@ -173,14 +207,14 @@ export default function ImportProductsPage() {
       }
 
       setProgress("");
-      setResultMsg(`✅ ${inserted} ta mahsulot "${TARGET_CATEGORY}" kategoriyasiga muvaffaqiyatli qo'shildi.`);
+      setResultMsg(`✅ ${inserted} ta mahsulot "${category}" kategoriyasiga muvaffaqiyatli qo'shildi.`);
       setRows([]);
       setHeaders([]);
       setFileName("");
       const { count } = await supabase
         .from("products")
         .select("id", { count: "exact", head: true })
-        .eq("category", TARGET_CATEGORY);
+        .eq("category", category);
       setExistingCount(count ?? 0);
     } catch (e: any) {
       console.error(e);
@@ -196,16 +230,31 @@ export default function ImportProductsPage() {
     <main className="p-6 md:p-10">
       <Link href="/admin/products" className="text-green-700 font-semibold">← Mahsulotlar</Link>
       <h1 className="text-3xl font-bold mt-3 mb-1">📥 Excel'dan import qilish</h1>
-      <p className="text-gray-500 text-sm mb-6">
-        Fayldagi barcha mahsulotlar <b>"{TARGET_CATEGORY}"</b> kategoriyasiga qo'shiladi.
-      </p>
+      <p className="text-gray-500 text-sm mb-6">Excel faylni yuklang va qaysi kategoriyaga qo'shishni tanlang.</p>
 
       <div className="max-w-xl space-y-4">
-        {existingCount !== null && (
-          <div className="rounded-xl p-3 text-sm" style={{ backgroundColor: "#fef9c3", color: "#a16207" }}>
-            Hozirda <b>"{TARGET_CATEGORY}"</b> kategoriyasida <b>{existingCount}</b> ta mahsulot bor.
-          </div>
-        )}
+        <div className="bg-white border rounded-xl p-4">
+          <label className="text-xs font-bold text-gray-600">Qaysi kategoriyaga qo'shilsin? <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            list="category-options"
+            placeholder="Masalan: Salqin ichimliklar"
+            value={targetCategory}
+            onChange={(e) => setTargetCategory(e.target.value)}
+            className="w-full border p-3 rounded-xl bg-white text-black mt-1"
+          />
+          <datalist id="category-options">
+            {categoriesList.map((c) => <option key={c.id} value={c.name} />)}
+          </datalist>
+          <p className="text-[11px] text-gray-400 mt-1 px-1">
+            Mavjud kategoriyalardan birini yozib boshlang (ro'yxatdan tanlanadi) yoki yangi nom kiriting — bazada bo'lmasa, avtomatik yaratiladi.
+          </p>
+          {targetCategory.trim() && existingCount !== null && (
+            <div className="rounded-lg p-2 text-xs mt-2" style={{ backgroundColor: "#fef9c3", color: "#a16207" }}>
+              Hozirda <b>"{targetCategory.trim()}"</b> kategoriyasida <b>{existingCount}</b> ta mahsulot bor.
+            </div>
+          )}
+        </div>
 
         <div className="border-2 border-dashed rounded-xl p-4 text-center bg-gray-50">
           <p className="text-sm text-gray-600 mb-2">📄 Excel yoki CSV faylni tanlang</p>
@@ -249,10 +298,12 @@ export default function ImportProductsPage() {
 
             {rows.length > 0 && mapping.name && mapping.price && (
               <div className="border rounded-lg overflow-hidden mt-3">
-                <p className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1">Ko'rinish (dastlabki 3 qator):</p>
+                <p className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1">
+                  Ko'rinish (dastlabki 3 qator, {validRows().length}/{rows.length} qator import qilinadi):
+                </p>
                 <table className="w-full text-xs">
                   <tbody>
-                    {rows.slice(0, 3).map((r, i) => (
+                    {validRows().slice(0, 3).map((r, i) => (
                       <tr key={i} className="border-t">
                         <td className="p-2 font-semibold">{r[colIndex("name")]}</td>
                         <td className="p-2">{parsePrice(r[colIndex("price")]).toLocaleString()}₩</td>
@@ -269,16 +320,16 @@ export default function ImportProductsPage() {
             <label className="flex items-center gap-2 p-3 rounded-xl mt-2" style={{ backgroundColor: "#fee2e2" }}>
               <input type="checkbox" checked={deleteExisting} onChange={(e) => setDeleteExisting(e.target.checked)} className="w-5 h-5" />
               <span className="text-sm font-semibold" style={{ color: "#991b1b" }}>
-                Import qilishdan oldin "{TARGET_CATEGORY}" dagi hozirgi {existingCount ?? "..."} ta mahsulotni o'chirish
+                Import qilishdan oldin "{targetCategory.trim() || "..."}" dagi hozirgi {existingCount ?? "..."} ta mahsulotni o'chirish
               </span>
             </label>
 
             <button
               onClick={handleImport}
-              disabled={importing || !mapping.name || !mapping.price}
+              disabled={importing || !mapping.name || !mapping.price || !targetCategory.trim()}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-3 rounded-xl font-bold"
             >
-              {importing ? (progress || "Import qilinmoqda...") : `Import qilish (${rows.length} ta)`}
+              {importing ? (progress || "Import qilinmoqda...") : `Import qilish (${validRows().length} ta)`}
             </button>
           </div>
         )}
