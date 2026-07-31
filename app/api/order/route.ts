@@ -58,7 +58,8 @@ ${order}
   // shuning uchun sendAdminPush ichida xatoliklar faqat log qilinadi.
   await sendAdminPush(
     "🛒 Yangi buyurtma keldi!",
-    `Buyurtma № ${orderNumber} - ${customerName}, ${total.toLocaleString()}₩`
+    `Buyurtma № ${orderNumber} - ${customerName}, ${total.toLocaleString()}₩`,
+    "/admin/orders"
   );
 
   return NextResponse.json({

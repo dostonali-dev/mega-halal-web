@@ -25,6 +25,20 @@ export default function AdminPushInit() {
 
         OneSignal.initialize(appId);
         await OneSignal.Notifications.requestPermission(true);
+
+        // Push bildirishnoma bosilganda, unda ko'rsatilgan sahifaga
+        // (masalan /admin/orders) o'sha ilova ichida (webview'da) o'tadi -
+        // yangi brauzer ochilmasdan, to'g'ridan-to'g'ri kerakli sahifaga.
+        OneSignal.Notifications.addEventListener("click", (event: any) => {
+          try {
+            const targetUrl = event?.notification?.additionalData?.url;
+            if (targetUrl) {
+              window.location.href = targetUrl;
+            }
+          } catch (e) {
+            console.error("Push bosilganda yo'naltirishda xatolik:", e);
+          }
+        });
       } catch (e) {
         console.error("OneSignal (admin) init xatoligi:", e);
       }

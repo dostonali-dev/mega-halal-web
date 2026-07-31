@@ -1,7 +1,7 @@
 // Server tomonida (masalan yangi buyurtma kelganda) admin ilovasiga
 // push bildirishnoma yuborish uchun. Faqat backend/API route ichida
 // ishlatiladi - REST API kaliti hech qachon brauzerga chiqmasligi kerak.
-export async function sendAdminPush(title: string, message: string) {
+export async function sendAdminPush(title: string, message: string, url?: string) {
   const appId = process.env.NEXT_PUBLIC_ONESIGNAL_ADMIN_APP_ID;
   const restApiKey = process.env.ONESIGNAL_ADMIN_REST_API_KEY;
 
@@ -23,6 +23,9 @@ export async function sendAdminPush(title: string, message: string) {
         included_segments: ["Total Subscriptions"],
         headings: { en: title },
         contents: { en: message },
+        // "url" - push bosilganda ochiladigan sahifa. Bu native ilova
+        // ichida (webview'da) o'sha sahifaga o'tkazadi.
+        ...(url ? { data: { url } } : {}),
       }),
     });
 
