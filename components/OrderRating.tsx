@@ -90,7 +90,7 @@ export default function OrderRating({ orderId }: { orderId: number }) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder={t("rate_order_placeholder")}
-            className="w-full border rounded-lg p-2 text-xs text-black mb-2"
+            className="w-full border rounded-lg p-2 text-base text-black mb-2"
             rows={2}
           />
           <button

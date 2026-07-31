@@ -1,11 +1,11 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
 import { formatSeoulDateTime } from "@/lib/dateUtils";
 import PageHeader from "@/components/PageHeader";
-import OrderRating from "@/components/OrderRating";
 
 const STATUS_KEY_MAP: Record<string, "order_status_paid" | "order_status_shipped" | "order_status_cancelled"> = {
   "✅ To'landi": "order_status_paid",
@@ -26,6 +26,9 @@ type Order = {
   status?: string | null;
 };
 
+// Buyurtmalar ro'yxati - endi qisqacha ko'rinishda (raqam, sana, holat,
+// summa) va bosilganda /profile/orders/[id] sahifasiga o'tib, u yerda
+// to'liq tafsilotlar (mahsulotlar ro'yxati, baholash) ko'rsatiladi.
 export default function OrdersHistoryPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -60,18 +63,25 @@ export default function OrdersHistoryPage() {
             const statusLabel = statusKey ? t(statusKey) : t("order_status_pending");
             const statusClass = STATUS_COLOR_MAP[status] || "status-pending";
             return (
-              <div key={o.id} className="bg-white border border-green-100 rounded-xl p-3">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-black">{t("checkout_success_order_no")} {o.id}</span>
+              <Link
+                key={o.id}
+                href={`/profile/orders/${o.id}`}
+                className="bg-white border border-green-100 rounded-xl p-3 flex items-center justify-between gap-2"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="font-bold text-black">{t("checkout_success_order_no")} {o.id}</span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusClass}`}>{statusLabel}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">{formatSeoulDateTime(o.created_at)}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-green-700 font-bold">{o.total.toLocaleString()}₩</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 6l6 6-6 6" />
+                  </svg>
                 </div>
-                <p className="text-xs text-gray-500 mb-2">{formatSeoulDateTime(o.created_at)}</p>
-                <div className="flex gap-2 mb-2">
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusClass}`}>{statusLabel}</span>
-                </div>
-                <p className="text-sm text-black whitespace-pre-line">{o.order_text}</p>
-                {status === "📦 Jo'natildi" && <OrderRating orderId={o.id} />}
-              </div>
+              </Link>
             );
           })}
         </div>

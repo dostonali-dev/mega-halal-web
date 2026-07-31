@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { useFavorites } from "@/lib/FavoritesContext";
@@ -136,6 +137,22 @@ export default function ProductDetailPage() {
             <p className="mt-1 text-xs text-gray-500">
               {t("product_stock_available")} {maxQty} {remaining === 0 && t("product_stock_all_in_cart")}
             </p>
+          )}
+
+          {product.category && (
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-gray-400">{t("product_category_label")}</span>
+              <Link
+                href={`/categories/${encodeURIComponent(product.category)}`}
+                className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: "#dcfce7", color: "#15803d" }}
+              >
+                {product.category}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m9 5 7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
           )}
 
           <div className="mt-4">
