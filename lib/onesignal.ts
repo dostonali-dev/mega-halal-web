@@ -20,7 +20,7 @@ export async function sendAdminPush(title: string, message: string) {
       body: JSON.stringify({
         app_id: appId,
         target_channel: "push",
-        included_segments: ["Subscribed Users"],
+        included_segments: ["Total Subscriptions"],
         headings: { en: title },
         contents: { en: message },
       }),
