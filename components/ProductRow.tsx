@@ -73,9 +73,14 @@ export default function ProductRow({
                   <button
                     onClick={() => addToCart(p.id)}
                     aria-label="Savatchaga qo'shish"
-                    className="w-full bg-green-600 text-white rounded-lg py-1.5 text-sm font-bold flex items-center justify-center"
+                    className="w-full rounded-lg py-2 flex items-center justify-center"
+                    style={{ backgroundColor: "#a7f3d0" }}
                   >
-                    🛒
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
+                      <circle cx="9" cy="20.5" r="1.4" fill="#000000" stroke="none" />
+                      <circle cx="18" cy="20.5" r="1.4" fill="#000000" stroke="none" />
+                    </svg>
                   </button>
                 ) : (
                   <div className="flex items-center justify-between bg-green-600 rounded-lg px-2 py-1">

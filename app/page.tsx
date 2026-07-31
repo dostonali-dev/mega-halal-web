@@ -106,9 +106,14 @@ function ProductStrip({
                   <button
                     onClick={() => addToCart(item.id)}
                     aria-label="Savatchaga qo'shish"
-                    className="w-full bg-green-600 text-white rounded-lg py-1 text-xs font-bold flex items-center justify-center"
+                    className="w-full rounded-lg py-1.5 flex items-center justify-center"
+                    style={{ backgroundColor: "#a7f3d0" }}
                   >
-                    🛒
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
+                      <circle cx="9" cy="20.5" r="1.4" fill="#000000" stroke="none" />
+                      <circle cx="18" cy="20.5" r="1.4" fill="#000000" stroke="none" />
+                    </svg>
                   </button>
                 ) : (
                   <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
@@ -387,17 +392,17 @@ export default function Home() {
                   <Link
                     key={cat.id}
                     href={`/categories/${encodeURIComponent(cat.name)}`}
-                    className="flex items-center gap-3 rounded-2xl shadow-sm p-3"
+                    className="flex items-center gap-3 rounded-2xl shadow-sm p-2.5"
                     style={{ backgroundColor: "#dcfce7", border: "1px solid #bbf7d0" }}
                   >
-                    <span className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
+                    <span className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
                       {cat.image_url ? (
                         <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
                       ) : (
                         cat.icon || "📦"
                       )}
                     </span>
-                    <span className="text-base font-extrabold leading-tight line-clamp-2" style={{ color: "#000000" }}>{cat.name}</span>
+                    <span className="text-sm font-extrabold leading-tight line-clamp-2" style={{ color: "#000000" }}>{cat.name}</span>
                   </Link>
                 ))}
               </div>

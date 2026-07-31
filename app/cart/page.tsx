@@ -9,16 +9,6 @@ import ProductRow from "@/components/ProductRow";
 import { DELIVERY_FEE, FREE_SHIPPING_THRESHOLD, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
 import { fetchUserPurchaseHistory } from "@/lib/salesStats";
 
-function CartIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
-      <circle cx="9" cy="20.5" r="1.4" fill="currentColor" stroke="none" />
-      <circle cx="18" cy="20.5" r="1.4" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
 export default function CartPage() {
   const router = useRouter();
   const { products, cart, addToCart, removeFromCart, setQty, total, itemCount } = useCart();
@@ -79,7 +69,13 @@ export default function CartPage() {
                 </div>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button onClick={() => removeFromCart(p.id)} className="bg-gray-200 text-black w-8 h-10 rounded-lg font-bold">−</button>
+                <button
+                  onClick={() => removeFromCart(p.id)}
+                  className="w-8 h-10 rounded-lg font-bold"
+                  style={{ backgroundColor: "#e5e5e5", color: "#000000" }}
+                >
+                  −
+                </button>
                 <input
                   type="number"
                   min={0}
@@ -87,8 +83,8 @@ export default function CartPage() {
                   onChange={(e) => setQty(p.id, Math.max(0, Number(e.target.value) || 0))}
                   className="w-12 text-center border rounded-lg text-black font-bold py-1.5"
                 />
-                <button onClick={() => addToCart(p.id)} aria-label="Savatchaga qo'shish" className="bg-green-600 text-white w-9 h-10 rounded-lg flex items-center justify-center">
-                  <CartIcon />
+                <button onClick={() => addToCart(p.id)} aria-label="Ko'paytirish" className="bg-green-600 text-white w-9 h-10 rounded-lg font-bold text-lg flex items-center justify-center">
+                  +
                 </button>
                 <button
                   onClick={() => setQty(p.id, 0)}
