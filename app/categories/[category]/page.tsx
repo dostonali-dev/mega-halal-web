@@ -23,17 +23,17 @@ export default function CategoryDetailPage() {
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-24">
       <PageHeader title={categoryName} />
 
-      {/* Kategoriya "hero" bannerini - nom + icon, to'q yashil fonda */}
+      {/* Kategoriya "hero" bannerini - nom + icon, och yashil fonda */}
       <div className="max-w-5xl mx-auto px-4 pt-3">
         <div
           className="rounded-2xl p-4 flex items-center gap-3"
-          style={{ backgroundColor: "#0f2e1e" }}
+          style={{ backgroundColor: "#dcfce7", border: "1px solid #bbf7d0" }}
         >
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: "#86efac" }}>
+            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: "#15803d" }}>
               {t("category_label")}
             </p>
-            <p className="text-2xl font-extrabold text-white mt-0.5 truncate">{categoryName}</p>
+            <p className="text-2xl font-extrabold mt-0.5 truncate" style={{ color: "#000000" }}>{categoryName}</p>
           </div>
           <span
             className="ml-auto w-16 h-16 rounded-2xl flex items-center justify-center text-3xl overflow-hidden flex-shrink-0"
