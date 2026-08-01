@@ -457,7 +457,7 @@ export default function Home() {
 
             <div className="mt-2 mb-8">
               <h2 className="text-xl font-bold mb-3">{t("best_selling_title")}</h2>
-              <div className="grid grid-cols-3 gap-2 md:gap-3">
+              <div className="flex gap-3 overflow-x-auto pb-1">
                 {bestSellingItems.map((item) => {
                   const qty = cart[item.id] || 0;
                   const outOfStock = item.in_stock === false;
@@ -466,7 +466,7 @@ export default function Home() {
                     ? Math.round((1 - (item.discount_price as number) / item.price) * 100)
                     : 0;
                   return (
-                    <div key={item.id} className={`relative bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}>
+                    <div key={item.id} className={`flex-shrink-0 w-32 relative bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}>
                       {hasDiscount && (
                         <span className="absolute top-1.5 left-1.5 z-10 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                           -{discountPct}%
@@ -501,9 +501,14 @@ export default function Home() {
                           <button
                             onClick={() => addToCart(item.id)}
                             aria-label="Savatchaga qo'shish"
-                            className="w-full bg-green-600 text-white rounded-lg py-1 text-xs font-bold flex items-center justify-center"
+                            className="w-full rounded-lg py-1.5 flex items-center justify-center"
+                            style={{ backgroundColor: "#a7f3d0" }}
                           >
-                            🛒
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
+                              <circle cx="9" cy="20.5" r="1.4" fill="#000000" stroke="none" />
+                              <circle cx="18" cy="20.5" r="1.4" fill="#000000" stroke="none" />
+                            </svg>
                           </button>
                         ) : (
                           <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
