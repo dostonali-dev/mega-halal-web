@@ -5,12 +5,25 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatSeoulDate, formatSeoulTime, seoulDateKey } from "@/lib/dateUtils";
+import ProductImage from "@/components/ProductImage";
+
+type OrderItemRow = {
+  id: number;
+  product_id: number | null;
+  product_name: string | null;
+  quantity: number;
+  price: number;
+  image?: string | null;
+};
 
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [checkedLogin, setCheckedLogin] = useState(false);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [detailOrder, setDetailOrder] = useState<any | null>(null);
+  const [detailItems, setDetailItems] = useState<OrderItemRow[]>([]);
+  const [detailReview, setDetailReview] = useState<{ rating: number; comment: string | null } | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -40,6 +53,37 @@ export default function OrdersPage() {
     }
 
     setOrders(data || []);
+  };
+
+  const openOrderDetail = async (order: any) => {
+    setDetailOrder(order);
+    setDetailItems([]);
+    setDetailReview(null);
+    setDetailLoading(true);
+
+    const [{ data: itemRows }, { data: reviewRow }] = await Promise.all([
+      supabase.from("order_items").select("id, product_id, product_name, quantity, price").eq("order_id", order.id),
+      supabase.from("order_reviews").select("rating, comment").eq("order_id", order.id).maybeSingle(),
+    ]);
+
+    if (itemRows && itemRows.length > 0) {
+      const productIds = itemRows.map((r) => r.product_id).filter((id): id is number => id != null);
+      let imageMap: Record<number, string | null> = {};
+      if (productIds.length > 0) {
+        const { data: productsData } = await supabase.from("products").select("id, image").in("id", productIds);
+        (productsData || []).forEach((p: any) => {
+          imageMap[p.id] = p.image;
+        });
+      }
+      setDetailItems(itemRows.map((r) => ({ ...r, image: r.product_id != null ? imageMap[r.product_id] : null })));
+    }
+    if (reviewRow) setDetailReview(reviewRow);
+    setDetailLoading(false);
+  };
+
+  const refreshDetailOrder = async (orderId: number) => {
+    const { data } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
+    if (data) setDetailOrder(data);
   };
 
   const statusColors: Record<string, string> = {
@@ -200,26 +244,24 @@ export default function OrdersPage() {
 
             <div className="space-y-3">
               {group.items.map((order) => {
-                const isOpen = expandedId === order.id;
                 const statusClass = statusColors[order.status] || "status-pending";
                 return (
-                  <div key={order.id} className="bg-white rounded-2xl shadow border">
-                    <div className="flex items-center">
-                      <label
-                        onClick={(e) => e.stopPropagation()}
-                        className="pl-4 flex-shrink-0 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(order.id)}
-                          onChange={() => toggleSelect(order.id)}
-                          className="w-5 h-5"
-                        />
-                      </label>
-                      <button
-                        onClick={() => setExpandedId(isOpen ? null : order.id)}
-                        className="flex-1 p-4 flex items-center justify-between text-left min-w-0"
-                      >
+                  <div key={order.id} className="bg-white rounded-2xl shadow border flex items-center">
+                    <label
+                      onClick={(e) => e.stopPropagation()}
+                      className="pl-4 flex-shrink-0 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(order.id)}
+                        onChange={() => toggleSelect(order.id)}
+                        className="w-5 h-5"
+                      />
+                    </label>
+                    <button
+                      onClick={() => openOrderDetail(order)}
+                      className="flex-1 p-4 flex items-center justify-between text-left min-w-0"
+                    >
                       <div className="flex items-center gap-3 min-w-0">
                         {order.receipt_image && (
                           <img src={order.receipt_image} alt="chek" className="w-10 h-10 object-cover rounded-lg border flex-shrink-0" />
@@ -234,88 +276,9 @@ export default function OrdersPage() {
                         <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusClass}`}>
                           {order.status || "⏳ Kutilmoqda"}
                         </span>
-                        <span className="text-gray-400">{isOpen ? "▲" : "▼"}</span>
+                        <span className="text-gray-400">›</span>
                       </div>
                     </button>
-                    </div>
-
-                    {isOpen && (
-                      <div className="px-4 pb-4 border-t pt-3">
-                        <p className="text-xs text-gray-400 mb-1">🕓 {formatSeoulDate(order.created_at)}, {formatSeoulTime(order.created_at)}</p>
-                        <p className="text-black">📍 {order.address}</p>
-                        {order.note && <p className="mt-1 text-gray-700">📝 {order.note}</p>}
-
-                        <div className="mt-3 p-3 bg-gray-100 rounded-xl">
-                          <p className="font-semibold text-black mb-2">🛒 Buyurtma:</p>
-                          <pre className="whitespace-pre-wrap text-sm text-black">{order.order_text}</pre>
-                        </div>
-
-                        {order.receipt_image && (
-                          <div className="mt-3">
-                            <p className="font-semibold text-black mb-2">📷 To'lov cheki (kattalashtirish uchun bosing)</p>
-                            <img
-                              src={order.receipt_image}
-                              alt="receipt"
-                              onClick={() => setZoomedImage(order.receipt_image)}
-                              className="max-w-[160px] rounded-xl border cursor-pointer"
-                            />
-                          </div>
-                        )}
-
-                        {order.status !== "📦 Jo'natildi" && order.status !== "❌ Bekor qilindi" && (
-                          <div className="flex gap-2 mt-4">
-                            <button
-                              onClick={async () => {
-                                await supabase.from("orders").update({ status: "✅ To'landi" }).eq("id", order.id);
-
-                                await fetch("/api/order/paid", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ orderNumber: order.id, status: "paid" }),
-                                });
-
-                                loadOrders();
-                              }}
-                              className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm"
-                            >
-                              ✅ To'landi
-                            </button>
-                            <button
-                              onClick={async () => {
-                                await supabase.from("orders").update({ status: "📦 Jo'natildi" }).eq("id", order.id);
-
-                                await fetch("/api/order/paid", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ orderNumber: order.id, status: "shipped" }),
-                                });
-
-                                loadOrders();
-                              }}
-                              className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm"
-                            >
-                              📦 Jo'natildi
-                            </button>
-                            <button
-                              onClick={async () => {
-                                await supabase.from("orders").update({ status: "❌ Bekor qilindi" }).eq("id", order.id);
-
-                                await fetch("/api/order/paid", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ orderNumber: order.id, status: "cancelled" }),
-                                });
-
-                                loadOrders();
-                              }}
-                              className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
-                            >
-                              ❌ Bekor qilindi
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -323,6 +286,133 @@ export default function OrdersPage() {
           </div>
         ))}
       </div>
+
+      {detailOrder && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex justify-end"
+          onClick={() => setDetailOrder(null)}
+        >
+          <div
+            className="bg-white w-full max-w-md h-full overflow-y-auto shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
+              <h2 className="font-bold text-lg text-black">№{detailOrder.id} · {detailOrder.customer_name}</h2>
+              <button onClick={() => setDetailOrder(null)} className="text-gray-400 text-2xl leading-none px-2">✕</button>
+            </div>
+
+            <div className="p-4">
+              <p className="text-xs text-gray-400 mb-1">🕓 {formatSeoulDate(detailOrder.created_at)}, {formatSeoulTime(detailOrder.created_at)}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-bold text-green-700 text-lg">{detailOrder.total?.toLocaleString()}₩</span>
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusColors[detailOrder.status] || "status-pending"}`}>
+                  {detailOrder.status || "⏳ Kutilmoqda"}
+                </span>
+              </div>
+              <p className="text-black">📍 {detailOrder.address}</p>
+              <p className="text-black">📞 {detailOrder.phone}</p>
+              {detailOrder.note && <p className="mt-1 text-gray-700">📝 {detailOrder.note}</p>}
+
+              <div className="mt-3 p-3 bg-gray-100 rounded-xl">
+                <p className="font-semibold text-black mb-2">🛒 Mahsulotlar:</p>
+                {detailLoading ? (
+                  <p className="text-sm text-gray-400">Yuklanmoqda...</p>
+                ) : detailItems.length > 0 ? (
+                  <div className="space-y-2">
+                    {detailItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
+                        <ProductImage image={item.image} alt={item.product_name || ""} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" compact />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-black truncate">{item.product_name}</p>
+                          <p className="text-xs text-gray-500">{item.quantity} x {item.price.toLocaleString()}₩</p>
+                        </div>
+                        <span className="text-sm font-bold text-black flex-shrink-0">
+                          {(item.quantity * item.price).toLocaleString()}₩
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <pre className="whitespace-pre-wrap text-sm text-black">{detailOrder.order_text}</pre>
+                )}
+              </div>
+
+              {detailOrder.receipt_image && (
+                <div className="mt-3">
+                  <p className="font-semibold text-black mb-2">📷 To'lov cheki (kattalashtirish uchun bosing)</p>
+                  <img
+                    src={detailOrder.receipt_image}
+                    alt="receipt"
+                    onClick={() => setZoomedImage(detailOrder.receipt_image)}
+                    className="max-w-[160px] rounded-xl border cursor-pointer"
+                  />
+                </div>
+              )}
+
+              {!detailLoading && detailReview && (
+                <div className="mt-3 p-3 rounded-xl" style={{ backgroundColor: "#fefce8", border: "1px solid #fef08a" }}>
+                  <p className="font-semibold text-black mb-1">
+                    ⭐ Mijoz bahosi: {"⭐".repeat(detailReview.rating)}
+                  </p>
+                  {detailReview.comment && (
+                    <p className="text-sm text-gray-700 whitespace-pre-line">💬 {detailReview.comment}</p>
+                  )}
+                </div>
+              )}
+
+              {detailOrder.status !== "📦 Jo'natildi" && detailOrder.status !== "❌ Bekor qilindi" && (
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={async () => {
+                      await supabase.from("orders").update({ status: "✅ To'landi" }).eq("id", detailOrder.id);
+                      await fetch("/api/order/paid", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "paid" }),
+                      });
+                      await refreshDetailOrder(detailOrder.id);
+                      loadOrders();
+                    }}
+                    className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm"
+                  >
+                    ✅ To'landi
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await supabase.from("orders").update({ status: "📦 Jo'natildi" }).eq("id", detailOrder.id);
+                      await fetch("/api/order/paid", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "shipped" }),
+                      });
+                      await refreshDetailOrder(detailOrder.id);
+                      loadOrders();
+                    }}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm"
+                  >
+                    📦 Jo'natildi
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await supabase.from("orders").update({ status: "❌ Bekor qilindi" }).eq("id", detailOrder.id);
+                      await fetch("/api/order/paid", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "cancelled" }),
+                      });
+                      await refreshDetailOrder(detailOrder.id);
+                      loadOrders();
+                    }}
+                    className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
+                  >
+                    ❌ Bekor qilindi
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {zoomedImage && (
         <div

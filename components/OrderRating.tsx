@@ -20,6 +20,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 export default function OrderRating({ orderId }: { orderId: number }) {
   const { t } = useLanguage();
   const [existingRating, setExistingRating] = useState<number | null>(null);
+  const [existingComment, setExistingComment] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -29,9 +30,12 @@ export default function OrderRating({ orderId }: { orderId: number }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.from("order_reviews").select("rating").eq("order_id", orderId).maybeSingle();
+      const { data } = await supabase.from("order_reviews").select("rating, comment").eq("order_id", orderId).maybeSingle();
       if (!cancelled) {
-        if (data) setExistingRating(data.rating);
+        if (data) {
+          setExistingRating(data.rating);
+          setExistingComment(data.comment);
+        }
         setLoaded(true);
       }
     })();
@@ -60,11 +64,15 @@ export default function OrderRating({ orderId }: { orderId: number }) {
 
   if (existingRating || done) {
     const shown = done ? rating : existingRating || 0;
+    const shownComment = done ? comment.trim() || null : existingComment;
     return (
       <div className="mt-2 pt-2 border-t">
         <p className="text-xs font-bold text-green-700">
           {t("rate_order_already")} {"⭐".repeat(shown)}
         </p>
+        {shownComment && (
+          <p className="text-xs text-gray-600 mt-1 whitespace-pre-line">💬 {shownComment}</p>
+        )}
       </div>
     );
   }

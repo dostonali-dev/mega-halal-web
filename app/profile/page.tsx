@@ -14,7 +14,6 @@ export default function ProfilePage() {
     { href: "/profile/orders", icon: "🧾", label: t("profile_menu_orders") },
     { href: "/profile/best-selling", icon: "🛒", label: t("profile_menu_best_selling") },
     { href: "/profile/contact", icon: "📞", label: t("profile_menu_contact") },
-    { href: "/profile/account", icon: "👤", label: t("profile_menu_my_account") },
   ];
 
   return (
@@ -39,10 +38,21 @@ export default function ProfilePage() {
             <div className="w-14 h-14 rounded-full bg-green-600 text-white flex items-center justify-center text-xl font-bold">
               {user?.name ? user.name.charAt(0).toUpperCase() : "?"}
             </div>
-            <div>
-              <p className="text-lg font-bold text-black">{user?.name}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-lg font-bold text-black truncate">{user?.name}</p>
               <p className="text-gray-500">{user?.phone}</p>
             </div>
+            <Link
+              href="/profile/account"
+              aria-label={t("profile_menu_my_account")}
+              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "#f3f4f6" }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </Link>
           </div>
         </div>
 
