@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "116273157542",
+    "project_id": "mega-halal-customer",
+    "storage_bucket": "mega-halal-customer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:116273157542:android:898691ce4ce74785436b67",
+        "android_client_info": {
+          "package_name": "com.megahalal.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACLb6ljc-RcbvPVAE9v-RcqDebqVjf36w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

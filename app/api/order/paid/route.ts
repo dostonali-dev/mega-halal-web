@@ -1,44 +1,40 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { sendCustomerPush } from "@/lib/onesignal";
 
-const BOT_TOKEN = "8798311944:AAHUBgMJ4OrKiy8qMUwx9bQFSNRJ-dRBCjg";
-const CHAT_ID = "-1004384813041";
-
-const MESSAGES: Record<string, (orderNumber: string | number) => string> = {
-  paid: (orderNumber) => `✅ To'lov muvaffaqiyatli qabul qilindi!
-
-📦 Buyurtma № ${orderNumber}
-
-🚚 Buyurtmani jo'natish uchun ruxsat!`,
-  shipped: (orderNumber) => `📦 Buyurtma jo'natildi!
-
-📦 Buyurtma № ${orderNumber}
-
-🚚 Mijozga yetkazib berilmoqda.`,
-  cancelled: (orderNumber) => `❌ Buyurtma bekor qilindi!
-
-📦 Buyurtma № ${orderNumber}`,
+// Admin panelda buyurtma holati o'zgartirilganda (✅ To'landi / 📦 Jo'natildi /
+// ❌ Bekor qilindi) mijozning o'ziga (agar ro'yxatdan o'tgan bo'lsa - userId
+// bor bo'lsa) push bildirishnoma yuboradi. REST API kalit shu yerda,
+// serverda ishlatiladi - brauzerga chiqmaydi.
+const STATUS_MESSAGES: Record<string, { title: string; message: string }> = {
+  paid: { title: "✅ Buyurtmangiz to'landi", message: "Buyurtmangiz to'lovi tasdiqlandi." },
+  shipped: { title: "📦 Buyurtmangiz jo'natildi", message: "Buyurtmangiz yo'lda - tez orada yetib boradi!" },
+  cancelled: { title: "❌ Buyurtmangiz bekor qilindi", message: "Afsuski, buyurtmangiz bekor qilindi." },
 };
 
-export async function POST(req: Request) {
-  const { orderNumber, status } = await req.json();
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { orderNumber, status, userId } = body as {
+      orderNumber?: number | string;
+      status?: string;
+      userId?: string | null;
+    };
 
-  const buildText = MESSAGES[status] || MESSAGES.paid;
-  const text = buildText(orderNumber);
-
-  const response = await fetch(
-    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text,
-      }),
+    if (!status || !STATUS_MESSAGES[status]) {
+      return NextResponse.json({ error: "Noto'g'ri status." }, { status: 400 });
     }
-  );
 
-  const result = await response.json();
-  console.log("TELEGRAM STATUS JAVOB:", result);
+    if (userId) {
+      const { title, message } = STATUS_MESSAGES[status];
+      await sendCustomerPush(`${title} №${orderNumber}`, message, {
+        url: `/profile/orders/${orderNumber}`,
+        externalUserId: userId,
+      });
+    }
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Kutilmagan xatolik." }, { status: 500 });
+  }
 }

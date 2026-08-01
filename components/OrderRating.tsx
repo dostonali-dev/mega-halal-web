@@ -17,10 +17,14 @@ import { useLanguage } from "@/lib/LanguageContext";
 //   created_at timestamptz default now()
 // );
 // create unique index if not exists order_reviews_order_id_idx on order_reviews(order_id);
+// -- Admin javob yozishi uchun (supabase_migration_reply_and_push.sql fayliga qarang):
+// alter table order_reviews add column if not exists reply text;
+// alter table order_reviews add column if not exists replied_at timestamptz;
 export default function OrderRating({ orderId }: { orderId: number }) {
   const { t } = useLanguage();
   const [existingRating, setExistingRating] = useState<number | null>(null);
   const [existingComment, setExistingComment] = useState<string | null>(null);
+  const [existingReply, setExistingReply] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -30,11 +34,12 @@ export default function OrderRating({ orderId }: { orderId: number }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.from("order_reviews").select("rating, comment").eq("order_id", orderId).maybeSingle();
+      const { data } = await supabase.from("order_reviews").select("rating, comment, reply").eq("order_id", orderId).maybeSingle();
       if (!cancelled) {
         if (data) {
           setExistingRating(data.rating);
           setExistingComment(data.comment);
+          setExistingReply(data.reply);
         }
         setLoaded(true);
       }
@@ -72,6 +77,12 @@ export default function OrderRating({ orderId }: { orderId: number }) {
         </p>
         {shownComment && (
           <p className="text-xs text-gray-600 mt-1 whitespace-pre-line">💬 {shownComment}</p>
+        )}
+        {existingReply && (
+          <div className="mt-2 pt-2 border-t">
+            <p className="text-xs font-bold text-green-700">🏪 Do'kondan javob:</p>
+            <p className="text-xs text-gray-600 whitespace-pre-line">{existingReply}</p>
+          </div>
         )}
       </div>
     );

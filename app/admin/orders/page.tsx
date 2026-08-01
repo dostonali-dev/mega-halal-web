@@ -22,8 +22,10 @@ export default function OrdersPage() {
   const [checkedLogin, setCheckedLogin] = useState(false);
   const [detailOrder, setDetailOrder] = useState<any | null>(null);
   const [detailItems, setDetailItems] = useState<OrderItemRow[]>([]);
-  const [detailReview, setDetailReview] = useState<{ rating: number; comment: string | null } | null>(null);
+  const [detailReview, setDetailReview] = useState<{ rating: number; comment: string | null; reply?: string | null } | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -59,11 +61,12 @@ export default function OrdersPage() {
     setDetailOrder(order);
     setDetailItems([]);
     setDetailReview(null);
+    setReplyText("");
     setDetailLoading(true);
 
     const [{ data: itemRows }, { data: reviewRow }] = await Promise.all([
       supabase.from("order_items").select("id, product_id, product_name, quantity, price").eq("order_id", order.id),
-      supabase.from("order_reviews").select("rating, comment").eq("order_id", order.id).maybeSingle(),
+      supabase.from("order_reviews").select("rating, comment, reply").eq("order_id", order.id).maybeSingle(),
     ]);
 
     if (itemRows && itemRows.length > 0) {
@@ -84,6 +87,39 @@ export default function OrdersPage() {
   const refreshDetailOrder = async (orderId: number) => {
     const { data } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
     if (data) setDetailOrder(data);
+  };
+
+  // Admin mijozning yozgan baho-izohiga javob yozganda: bazaga saqlaymiz va
+  // mijozga (agar ro'yxatdan o'tgan bo'lsa - user_id bor bo'lsa) push
+  // bildirishnoma yuboramiz. Push yuborish server tomonida (REST API kalit
+  // brauzerga chiqmasligi uchun) - shu sabab alohida API route chaqiriladi.
+  const sendReview = async (orderId: number, userId: string | null) => {
+    if (!replyText.trim()) return;
+    setSendingReply(true);
+    const { error } = await supabase
+      .from("order_reviews")
+      .update({ reply: replyText.trim(), replied_at: new Date().toISOString() })
+      .eq("order_id", orderId);
+
+    if (error) {
+      alert("Xatolik: " + error.message);
+      setSendingReply(false);
+      return;
+    }
+
+    setDetailReview((prev) => (prev ? { ...prev, reply: replyText.trim() } : prev));
+
+    try {
+      await fetch("/api/order/reply-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, userId, reply: replyText.trim() }),
+      });
+    } catch (e) {
+      console.error("Push yuborishda xatolik:", e);
+    }
+
+    setSendingReply(false);
   };
 
   const statusColors: Record<string, string> = {
@@ -296,9 +332,12 @@ export default function OrdersPage() {
             className="bg-white w-full max-w-md h-full overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
-              <h2 className="font-bold text-lg text-black">№{detailOrder.id} · {detailOrder.customer_name}</h2>
-              <button onClick={() => setDetailOrder(null)} className="text-gray-400 text-2xl leading-none px-2">✕</button>
+            <div
+              className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10"
+              style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
+            >
+              <h2 className="font-bold text-lg text-black truncate pr-2">№{detailOrder.id} · {detailOrder.customer_name}</h2>
+              <button onClick={() => setDetailOrder(null)} className="text-gray-400 text-2xl leading-none px-2 flex-shrink-0">✕</button>
             </div>
 
             <div className="p-4">
@@ -351,11 +390,36 @@ export default function OrdersPage() {
 
               {!detailLoading && detailReview && (
                 <div className="mt-3 p-3 rounded-xl" style={{ backgroundColor: "#fefce8", border: "1px solid #fef08a" }}>
-                  <p className="font-semibold text-black mb-1">
+                  <p className="font-semibold mb-1" style={{ color: "#000000" }}>
                     ⭐ Mijoz bahosi: {"⭐".repeat(detailReview.rating)}
                   </p>
                   {detailReview.comment && (
-                    <p className="text-sm text-gray-700 whitespace-pre-line">💬 {detailReview.comment}</p>
+                    <p className="text-sm whitespace-pre-line" style={{ color: "#374151" }}>💬 {detailReview.comment}</p>
+                  )}
+
+                  {detailReview.reply ? (
+                    <div className="mt-2 pt-2" style={{ borderTop: "1px solid #fde68a" }}>
+                      <p className="text-xs font-bold" style={{ color: "#166534" }}>🏪 Bizning javobimiz:</p>
+                      <p className="text-sm whitespace-pre-line" style={{ color: "#166534" }}>{detailReview.reply}</p>
+                    </div>
+                  ) : (
+                    <div className="mt-2 pt-2" style={{ borderTop: "1px solid #fde68a" }}>
+                      <textarea
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="Mijozga javob yozing..."
+                        className="w-full border rounded-lg p-2 text-sm mb-2"
+                        style={{ color: "#000000", backgroundColor: "#ffffff" }}
+                        rows={2}
+                      />
+                      <button
+                        onClick={() => sendReview(detailOrder.id, detailOrder.user_id)}
+                        disabled={sendingReply || !replyText.trim()}
+                        className="bg-green-600 disabled:opacity-60 text-white text-xs font-bold px-3 py-1.5 rounded-lg"
+                      >
+                        {sendingReply ? "..." : "Javobni yuborish"}
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -368,7 +432,7 @@ export default function OrdersPage() {
                       await fetch("/api/order/paid", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "paid" }),
+                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "paid", userId: detailOrder.user_id }),
                       });
                       await refreshDetailOrder(detailOrder.id);
                       loadOrders();
@@ -383,7 +447,7 @@ export default function OrdersPage() {
                       await fetch("/api/order/paid", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "shipped" }),
+                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "shipped", userId: detailOrder.user_id }),
                       });
                       await refreshDetailOrder(detailOrder.id);
                       loadOrders();
@@ -398,7 +462,7 @@ export default function OrdersPage() {
                       await fetch("/api/order/paid", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "cancelled" }),
+                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "cancelled", userId: detailOrder.user_id }),
                       });
                       await refreshDetailOrder(detailOrder.id);
                       loadOrders();

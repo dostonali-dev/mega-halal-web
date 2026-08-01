@@ -11,6 +11,7 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import AppUpdateChecker from "@/components/AppUpdateChecker";
 import BackButtonHandler from "@/components/BackButtonHandler";
 import StatusBarInit from "@/components/StatusBarInit";
+import CustomerPushInit from "@/components/CustomerPushInit";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default function RootLayout({
         <StatusBarInit />
         <LanguageProvider>
           <AuthProvider>
+            <CustomerPushInit />
             <CartProvider>
               <FavoritesProvider>
                 <RecentlyViewedProvider>

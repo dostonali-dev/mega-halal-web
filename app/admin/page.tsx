@@ -73,6 +73,7 @@ export default function AdminPage() {
     { href: "/admin/customers", icon: "👥", label: "Mijozlar", desc: "Ro'yxatdan o'tgan mijozlar ro'yhati" },
     { href: "/admin/banners", icon: "🖼️", label: "Bannerlar", desc: "Bosh sahifa bannerlari" },
     { href: "/admin/announcement", icon: "📢", label: "E'lon oynasi", desc: "Mijozlarga ko'rsatiladigan e'lon" },
+    { href: "/admin/push", icon: "📣", label: "Push xabar", desc: "Mijozlar ilovasiga push bildirishnoma yuborish" },
   ];
 
   return (
