@@ -55,14 +55,14 @@ export default function NotificationsPage() {
           <div className="space-y-3">
             {notifications.map((n) => {
               const card = (
-                <div className="bg-white border border-green-100 rounded-2xl p-4">
+                <div className="rounded-2xl p-4" style={{ backgroundColor: "#dcfce7", border: "1px solid #bbf7d0" }}>
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="font-bold" style={{ color: "#000000" }}>{n.title}</p>
-                    <p className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">
+                    <p className="text-xs whitespace-nowrap flex-shrink-0" style={{ color: "#4b5563" }}>
                       {formatSeoulDateTime(n.created_at)}
                     </p>
                   </div>
-                  <p className="text-sm whitespace-pre-line" style={{ color: "#374151" }}>{n.message}</p>
+                  <p className="text-sm whitespace-pre-line" style={{ color: "#1f2937" }}>{n.message}</p>
                 </div>
               );
               return n.url ? (
