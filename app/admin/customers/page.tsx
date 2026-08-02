@@ -12,6 +12,7 @@ type Profile = {
   phone: string;
   address?: string | null;
   address_detail?: string | null;
+  avatar_url?: string | null;
   created_at?: string;
 };
 
@@ -186,9 +187,17 @@ export default function CustomersPage() {
                 className="w-full p-4 flex items-center justify-between text-left gap-3"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-8 h-8 rounded-full bg-green-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">
-                    {index + 1}
-                  </span>
+                  {c.avatar_url ? (
+                    <img
+                      src={c.avatar_url}
+                      alt={c.name}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-green-100"
+                    />
+                  ) : (
+                    <span className="w-8 h-8 rounded-full bg-green-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">
+                      {index + 1}
+                    </span>
+                  )}
                   <div className="min-w-0">
                     <p className="font-bold text-black truncate">{c.name}</p>
                     <p className="text-xs text-gray-500 truncate">{c.phone}</p>
@@ -204,6 +213,13 @@ export default function CustomersPage() {
 
               {isOpen && (
                 <div className="px-4 pb-4 border-t pt-3">
+                  {c.avatar_url && (
+                    <img
+                      src={c.avatar_url}
+                      alt={c.name}
+                      className="w-16 h-16 rounded-full object-cover border border-green-100 mb-3"
+                    />
+                  )}
                   <p className="text-black text-sm">
                     📅 Ro'yxatdan o'tgan: {c.created_at ? formatSeoulDateTime(c.created_at) : "—"}
                   </p>
