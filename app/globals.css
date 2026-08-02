@@ -42,6 +42,14 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Admin sahifalarida (app/admin/layout.tsx) o'zining "sticky" (skroll
+   bilan surilmaydigan) safe-area paneli bor - shuning uchun bu yerda
+   body'ning yuqoridagi umumiy padding-top'i ortiqcha, ikkalasi qo'shilib
+   sahifa boshida qo'shimcha bo'sh joy hosil qilardi. */
+body:has(.admin-page-shell) {
+  padding-top: 0 !important;
+}
+
 /* ===== QORA MAVZU (dark theme) — butun sayt uchun ===== */
 body {
   background-color: #0a0a0a !important;

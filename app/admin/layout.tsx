@@ -23,7 +23,11 @@ export const viewport: Viewport = {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    // "admin-page-shell" klassi globals.css'da ishlatiladi - shu klass
+    // mavjud bo'lganda body'ning umumiy safe-area padding'i o'chiriladi
+    // (aks holda pastdagi "sticky" panel bilan ikkalasi qo'shilib,
+    // sahifa boshida ortiqcha bo'sh joy hosil bo'lardi).
+    <div className="admin-page-shell">
       <EdgeSwipeBack />
       <AdminPushInit />
       {/* Barcha admin sahifalarida iOS notch/status bar ostida matn
@@ -44,6 +48,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }}
       />
       {children}
-    </>
+    </div>
   );
 }
