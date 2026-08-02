@@ -387,7 +387,7 @@ function ProductRow({ p, selected, onToggleSelect, onDelete, onToggleStock, onTo
         <div className="w-14 h-14 rounded-lg border bg-gray-100 flex items-center justify-center text-gray-400 text-xs flex-shrink-0">Rasm yo'q</div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-black truncate">
+        <p className="font-bold text-black">
           {p.name} {p.hidden ? <span className="text-xs font-bold text-gray-400">🙈 berkitilgan</span> : null}
         </p>
         <p className="text-sm text-gray-500">
