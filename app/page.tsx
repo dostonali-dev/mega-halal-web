@@ -303,7 +303,22 @@ export default function Home() {
   const visibleCategories = showAllCategories ? categories : categories.slice(0, CATEGORIES_COLLAPSED_COUNT);
 
   return (
-    <main className="min-h-screen pb-24">
+    <main className="min-h-screen pb-24 home-page-shell">
+      {/* Notch/status-bar ustidagi tor joy skroll paytida hech narsa
+          bilan qoplanmasa, pastdagi kontent bir zumga o'sha yerdan
+          "ko'rinib" qolar edi - shuning uchun alohida, doim tepada
+          qotib turadigan qattiq fonli panel qo'yamiz (admin panelida
+          ishlatilgan yondashuv bilan bir xil). */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 40,
+          height: "env(safe-area-inset-top, 0px)",
+          backgroundColor: "#0a0a0a",
+        }}
+      />
       {/* Sarlavha + tavsif + qidiruv katagi - endi barchasi birgalikda
           "pin" bo'lib qoladi (pastga qancha tushilmasin, doim tepada
           turadi). Fon rangi qattiq qilingan - aks holda pastdagi kontent

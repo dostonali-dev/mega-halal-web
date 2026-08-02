@@ -50,6 +50,13 @@ body:has(.admin-page-shell) {
   padding-top: 0 !important;
 }
 
+/* Bosh sahifada (app/page.tsx) ham xuddi shunday - o'zining "sticky"
+   safe-area paneli bor, shuning uchun body'ning umumiy padding-top'i
+   bu yerda ham o'chiriladi (aks holda ikkalasi qo'shilib ketardi). */
+body:has(.home-page-shell) {
+  padding-top: 0 !important;
+}
+
 /* ===== QORA MAVZU (dark theme) — butun sayt uchun ===== */
 body {
   background-color: #0a0a0a !important;
