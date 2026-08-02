@@ -37,3 +37,23 @@ export function seoulDateKey(value: string | null | undefined): string {
   if (!d) return "unknown";
   return d.toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
 }
+
+// Bugungi kun - Koreya (Asia/Seoul) vaqti bo'yicha, "YYYY-MM-DD" ko'rinishida.
+export function todaySeoulDateKey(): string {
+  return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+}
+
+// Hisobot uchun: berilgan "YYYY-MM-DD" (Koreya kuni) ning aynan shu kun soat
+// 00:00 (Koreya vaqti) ga to'g'ri keladigan UTC ISO vaqtini qaytaradi -
+// Supabase so'rovlarida ".gte()"/".lt()" bilan sana oralig'ini filtrlash uchun.
+export function seoulDateToUTCISOStart(dateStr: string): string {
+  return new Date(`${dateStr}T00:00:00+09:00`).toISOString();
+}
+
+// Berilgan "YYYY-MM-DD" (Koreya kuni) ga N kun qo'shib/ayirib, natijani yana
+// "YYYY-MM-DD" (Koreya kuni) ko'rinishida qaytaradi.
+export function addSeoulDays(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T00:00:00+09:00`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+}
