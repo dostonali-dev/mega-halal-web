@@ -29,12 +29,17 @@ body {
 html {
   height: 100%;
   scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 60px);
+  /* Sahifani tepaga tortib "cho'zganda" (elastic/rubber-band overscroll)
+     butun body yuqoriga siljib, sarlavha notch/kamera ostiga kirib
+     ketmasligi uchun - iOS 16+ WKWebView'da tanib oladi. */
+  overscroll-behavior-y: none;
 }
 
 body {
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  overscroll-behavior-y: none;
 }
 
 /* ===== QORA MAVZU (dark theme) — butun sayt uchun ===== */
