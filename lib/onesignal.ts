@@ -1,3 +1,5 @@
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
 // Server tomonida (masalan yangi buyurtma kelganda) admin ilovasiga
 // push bildirishnoma yuborish uchun. Faqat backend/API route ichida
 // ishlatiladi - REST API kaliti hech qachon brauzerga chiqmasligi kerak.
@@ -56,6 +58,22 @@ export async function sendCustomerPush(
   message: string,
   opts?: { url?: string; externalUserId?: string | null }
 ): Promise<{ success: boolean; error?: string; details?: unknown }> {
+  // Xabarni "customer_notifications" jadvaliga yozib qo'yamiz - shunda
+  // mijoz ilovaning "Bildirishnomalar" bo'limida buni ko'ra oladi (push
+  // o'zi ba'zan qurilma sozlamalari sabab kelmasligi mumkin, lekin ilova
+  // ichidagi ro'yxatda xabar baribir saqlanib qoladi). target_user_id
+  // bo'sh bo'lsa - bu barcha mijozlarga umumiy e'lon degani.
+  try {
+    await supabaseAdmin.from("customer_notifications").insert({
+      title,
+      message,
+      url: opts?.url || null,
+      target_user_id: opts?.externalUserId || null,
+    });
+  } catch (e) {
+    console.error("customer_notifications'ga yozishda xatolik:", e);
+  }
+
   const appId = process.env.NEXT_PUBLIC_ONESIGNAL_CUSTOMER_APP_ID;
   const restApiKey = process.env.ONESIGNAL_CUSTOMER_REST_API_KEY;
 

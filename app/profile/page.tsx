@@ -9,6 +9,7 @@ export default function ProfilePage() {
   const { t } = useLanguage();
 
   const menuItems = [
+    { href: "/profile/notifications", icon: "🔔", label: "Bildirishnomalar" },
     { href: "/recently-viewed", icon: "🕓", label: t("profile_menu_recently_viewed") },
     { href: "/favorites", icon: "❤️", label: t("profile_menu_favorites") },
     { href: "/profile/orders", icon: "🧾", label: t("profile_menu_orders") },

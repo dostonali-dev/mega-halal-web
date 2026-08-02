@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/LanguageContext";
-import InstallPrompt from "@/components/InstallPrompt";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
 import ProductImage from "@/components/ProductImage";
 import { recordSearchQuery } from "@/lib/searchHistory";
@@ -305,62 +304,60 @@ export default function Home() {
 
   return (
     <main className="min-h-screen pb-24">
-      <div className="max-w-5xl mx-auto p-4 md:p-8 pb-0">
-        <div className="flex items-center justify-between gap-3 mb-1">
-          <h1 className="site-title text-2xl md:text-3xl font-extrabold">
-            Mega Halal Supermarket
-          </h1>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Link
-              href="/recently-viewed"
-              aria-label={t("recently_viewed_title")}
-              className="w-10 h-10 rounded-full border border-green-100 bg-white flex items-center justify-center text-green-600"
-            >
-              <RecentIcon />
-            </Link>
-            <Link
-              href="/favorites"
-              aria-label={t("favorites_title")}
-              className="w-10 h-10 rounded-full border border-green-100 bg-white flex items-center justify-center text-green-600"
-            >
-              <HeartIcon />
-            </Link>
-          </div>
-        </div>
-        <p className="text-center mt-2 text-lg mb-6">
-          {t("home_subtitle")}
-        </p>
-      </div>
-
-      {/* Qidiruv katagi banner tepasida, pastga tushgan sari tepada "pin" bo'lib
-          qoladi, shaffof. Faqat dumaloq katakchaning o'zi — atrofida
-          to'rtburchak ramka/fon yo'q. */}
+      {/* Sarlavha + tavsif + qidiruv katagi - endi barchasi birgalikda
+          "pin" bo'lib qoladi (pastga qancha tushilmasin, doim tepada
+          turadi). Fon rangi qattiq qilingan - aks holda pastdagi kontent
+          skroll paytida orqasidan ko'rinib qolardi. */}
       <div
-        className="sticky z-40 px-4 md:px-8 mb-6"
+        className="sticky z-40 pt-4 md:pt-8 px-4 md:px-8 pb-4"
         style={{
-          top: "calc(env(safe-area-inset-top, 0px) + 44px)",
-          scrollMarginTop: "calc(env(safe-area-inset-top, 0px) + 44px)",
+          top: "env(safe-area-inset-top, 0px)",
+          backgroundColor: "#0a0a0a",
         }}
       >
-        <div className="max-w-xl mx-auto relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ color: "rgba(255,255,255,0.65)" }}>
-            <SearchIcon />
-          </span>
-          <input
-            id="mhs-search-input"
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="search-transparent-input w-full rounded-full py-3 pl-11 pr-4 text-base border backdrop-blur-sm focus:outline-none"
-            style={{ scrollMarginTop: "calc(env(safe-area-inset-top, 0px) + 44px)" }}
-          />
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between gap-3 mb-1">
+            <h1 className="site-title text-2xl md:text-3xl font-extrabold">
+              Mega Halal Supermarket
+            </h1>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Link
+                href="/recently-viewed"
+                aria-label={t("recently_viewed_title")}
+                className="w-10 h-10 rounded-full border border-green-100 bg-white flex items-center justify-center text-green-600"
+              >
+                <RecentIcon />
+              </Link>
+              <Link
+                href="/favorites"
+                aria-label={t("favorites_title")}
+                className="w-10 h-10 rounded-full border border-green-100 bg-white flex items-center justify-center text-green-600"
+              >
+                <HeartIcon />
+              </Link>
+            </div>
+          </div>
+          <p className="text-center mt-2 text-lg mb-3">
+            {t("home_subtitle")}
+          </p>
+          <div className="max-w-xl mx-auto relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ color: "rgba(255,255,255,0.65)" }}>
+              <SearchIcon />
+            </span>
+            <input
+              id="mhs-search-input"
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="search-transparent-input w-full rounded-full py-3 pl-11 pr-4 text-base border backdrop-blur-sm focus:outline-none"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto p-4 md:p-8 pt-0">
+      <div className="max-w-5xl mx-auto p-4 md:p-8 pt-4">
         <div className="mb-6">
           <AnnouncementPopup />
-          <InstallPrompt />
           <BannerCarousel banners={banners} />
         </div>
         {query.trim() ? (
