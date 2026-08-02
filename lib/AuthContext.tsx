@@ -11,6 +11,7 @@ type Profile = {
   address?: string | null;
   addressDetail?: string | null;
   addressImage?: string | null;
+  avatar?: string | null;
 };
 
 type AuthContextType = {
@@ -27,6 +28,7 @@ type AuthContextType = {
   completeRegistration: (name: string, phone: string, password: string, verifyId: string) => Promise<string | null>;
   completePasswordReset: (phone: string, verifyId: string) => Promise<string | null>;
   updateAddress: (data: { address?: string | null; addressDetail?: string | null; addressImage?: string | null }) => Promise<string | null>;
+  updateAvatar: (avatarUrl: string | null) => Promise<string | null>;
   updatePassword: (newPassword: string) => Promise<string | null>;
   updatePhone: (newPhone: string) => Promise<string | null>;
   updateName: (newName: string) => Promise<string | null>;
@@ -65,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         address: data.address,
         addressDetail: data.address_detail,
         addressImage: data.address_image,
+        avatar: data.avatar_url,
       });
     }
   };
@@ -137,6 +140,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         address_detail: fields.addressDetail ?? null,
         address_image: fields.addressImage ?? null,
       })
+      .eq("id", user.id);
+    if (error) return error.message;
+    await loadProfile(user.id);
+    return null;
+  };
+
+  // Mijozning o'z profil rasmini o'rnatishi/o'zgartirishi uchun - rasm
+  // avval Supabase Storage'ga yuklanib, shu yerga faqat public URL beriladi
+  // (yoki o'chirish uchun null).
+  const updateAvatar = async (avatarUrl: string | null) => {
+    if (!user) return "Avval tizimga kiring.";
+    const { error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: avatarUrl })
       .eq("id", user.id);
     if (error) return error.message;
     await loadProfile(user.id);
@@ -293,6 +310,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         completeRegistration,
         completePasswordReset,
         updateAddress,
+        updateAvatar,
         updatePassword,
         updatePhone,
         updateName,

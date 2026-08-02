@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import ParentProductPicker from "@/components/ParentProductPicker";
 
 type Category = { id: number; name: string; icon: string | null };
 type ProductOption = { id: number; name: string };
@@ -136,16 +137,7 @@ export default function NewProductPage() {
 
         <div className="p-3 rounded-xl space-y-2" style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0" }}>
           <p className="text-sm font-bold" style={{ color: "#166534" }}>🍹 Variant (agar bu mahsulotning lazzat/turi bo'lsa)</p>
-          <select
-            value={parentProductId}
-            onChange={(e) => setParentProductId(e.target.value)}
-            className="w-full border p-3 rounded-xl bg-white text-black"
-          >
-            <option value="">Yo'q - mustaqil mahsulot</option>
-            {productOptions.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+          <ParentProductPicker options={productOptions} value={parentProductId} onChange={setParentProductId} />
           <input
             type="text"
             placeholder="Qisqa nomi (masalan: Lime, Qulupnay) - lazzat tanlash tugmasida shu ko'rinadi"

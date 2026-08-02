@@ -1,12 +1,41 @@
 "use client";
 
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
-  const { user, guestMode, exitGuest } = useAuth();
+  const { user, guestMode, exitGuest, updateAvatar } = useAuth();
   const { t } = useLanguage();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Mijoz o'z profil rasmini avatar doirasiga bosib tanlaydi - rasm
+  // Storage'ga yuklanadi, so'ng profilga (avatar_url) yoziladi.
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    setUploadingAvatar(true);
+    try {
+      const fileName = `avatar-${user.id}-${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, file);
+      if (uploadError) {
+        alert("Rasm yuklanmadi: " + uploadError.message);
+        setUploadingAvatar(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(fileName);
+      const err = await updateAvatar(urlData.publicUrl);
+      if (err) alert("Xatolik: " + err);
+    } catch (e) {
+      console.error(e);
+      alert("Xatolik yuz berdi.");
+    }
+    setUploadingAvatar(false);
+  };
 
   const menuItems = [
     { href: "/profile/notifications", icon: "🔔", label: "Bildirishnomalar" },
@@ -36,9 +65,35 @@ export default function ProfilePage() {
 
         <div className="bg-white border border-green-100 rounded-2xl p-6 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-green-600 text-white flex items-center justify-center text-xl font-bold">
-              {user?.name ? user.name.charAt(0).toUpperCase() : "?"}
-            </div>
+            <button
+              onClick={() => user && !uploadingAvatar && avatarInputRef.current?.click()}
+              aria-label="Profil rasmini o'zgartirish"
+              disabled={!user || uploadingAvatar}
+              className="relative w-14 h-14 rounded-full bg-green-600 text-white flex items-center justify-center text-xl font-bold flex-shrink-0 overflow-hidden"
+            >
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                user?.name ? user.name.charAt(0).toUpperCase() : "?"
+              )}
+              {user && (
+                <span
+                  className="absolute bottom-0 right-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
+                  style={{ backgroundColor: "#ffffff", border: "1px solid #d1d5db" }}
+                >
+                  {uploadingAvatar ? "…" : "📷"}
+                </span>
+              )}
+            </button>
+            {user && (
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-lg font-bold text-black truncate">{user?.name}</p>
               <p className="text-gray-500">{user?.phone}</p>
