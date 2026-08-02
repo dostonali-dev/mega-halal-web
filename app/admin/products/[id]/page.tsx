@@ -143,7 +143,11 @@ export default function AdminEditProductPage() {
   if (notFound) {
     return (
       <main className="p-6 md:p-10">
-        <Link href="/admin/products" className="text-green-700 font-semibold">← Mahsulotlar</Link>
+        <Link href="/admin/products" aria-label="Mahsulotlar" className="inline-flex items-center justify-center w-11 h-11 rounded-full flex-shrink-0" style={{ backgroundColor: "#dcfce7" }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </Link>
         <p className="mt-4 text-red-600 font-bold">Mahsulot topilmadi.</p>
       </main>
     );
@@ -151,7 +155,11 @@ export default function AdminEditProductPage() {
 
   return (
     <main className="p-6 md:p-10">
-      <Link href="/admin/products" className="text-green-700 font-semibold">← Mahsulotlar</Link>
+      <Link href="/admin/products" aria-label="Mahsulotlar" className="inline-flex items-center justify-center w-11 h-11 rounded-full flex-shrink-0" style={{ backgroundColor: "#dcfce7" }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </Link>
       <h1 className="text-3xl font-bold mt-3 mb-6">Mahsulotni tahrirlash</h1>
 
       <div className="max-w-md space-y-4 bg-gray-50 border rounded-xl p-4">

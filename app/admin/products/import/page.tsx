@@ -286,7 +286,11 @@ export default function ImportProductsPage() {
 
   return (
     <main className="p-6 md:p-10">
-      <Link href="/admin/products" className="text-green-700 font-semibold">← Mahsulotlar</Link>
+      <Link href="/admin/products" aria-label="Mahsulotlar" className="inline-flex items-center justify-center w-11 h-11 rounded-full flex-shrink-0" style={{ backgroundColor: "#dcfce7" }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </Link>
       <h1 className="text-3xl font-bold mt-3 mb-1">📥 Excel'dan import qilish</h1>
       <p className="text-gray-500 text-sm mb-6">Excel faylni yuklang va qaysi kategoriyaga qo'shishni tanlang.</p>
 

@@ -212,7 +212,11 @@ export default function AdminProductsPage() {
   return (
     <main className="p-6 md:p-10">
       <div className="flex items-center justify-between">
-        <Link href="/admin" className="text-green-700 font-semibold">← Menyu</Link>
+        <Link href="/admin" aria-label="Menyu" className="inline-flex items-center justify-center w-11 h-11 rounded-full flex-shrink-0" style={{ backgroundColor: "#dcfce7" }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </Link>
         <Link href="/admin/products/import" className="text-blue-600 text-sm font-bold underline">📥 Excel import</Link>
       </div>
       <h1 className="text-3xl font-bold mt-3 mb-1">Mahsulotlar</h1>
