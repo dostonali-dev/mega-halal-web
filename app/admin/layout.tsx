@@ -27,12 +27,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <EdgeSwipeBack />
       <AdminPushInit />
       {/* Barcha admin sahifalarida iOS notch/status bar ostida matn
-          qolib ketmasligi uchun xavfsiz zona (safe-area) bo'shlig'i -
-          PageHeader.tsx'da mijoz ilovasi uchun ishlatilgan yondashuv
-          bilan bir xil. */}
-      <div style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-        {children}
-      </div>
+          qolib ketmasligi uchun xavfsiz zona (safe-area). Oddiy padding
+          skroll paytida kontent bilan birga surilib, sarlavha notch
+          ustidan "o'tib" ko'rinib qolardi - shuning uchun bu blokni
+          "sticky top-0" qilib, qattiq fon rangi bilan qo'yamiz: u
+          qanchalik tez/qattiq skroll qilinmasin, doim notch ustida
+          qotib turadi va ostidan hech narsa ko'rinmaydi. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 40,
+          height: "env(safe-area-inset-top, 0px)",
+          backgroundColor: "#0a0a0a",
+        }}
+      />
+      {children}
     </>
   );
 }
