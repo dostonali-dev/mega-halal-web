@@ -8,7 +8,10 @@ import { useLanguage } from "@/lib/LanguageContext";
 // katalog ko'rinishida (icon + nomi) chiqadi - bosilganda o'sha
 // kategoriyaning to'liq sahifasiga o'tadi.
 export default function CategoriesPage() {
-  const { categories, products } = useCart();
+  const { categories, products: allProducts } = useCart();
+  // Faqat variant bo'lmagan mahsulotlar hisobga olinadi - aks holda faqat
+  // variantlardan iborat kategoriya "bo'sh emas" deb noto'g'ri ko'rinishi mumkin.
+  const products = allProducts.filter((p) => !p.parent_product_id);
   const { t } = useLanguage();
 
   return (

@@ -17,6 +17,8 @@ export type Product = {
   is_hot?: boolean | null;
   hidden?: boolean | null;
   keywords?: string | null;
+  parent_product_id?: number | null;
+  variant_name?: string | null;
 };
 export type Category = {
   id: number;

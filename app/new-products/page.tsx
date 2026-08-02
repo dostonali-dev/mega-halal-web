@@ -12,7 +12,7 @@ export default function NewProductsPage() {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
 
-  const items = [...products].sort((a, b) => b.id - a.id);
+  const items = products.filter((p) => !p.parent_product_id).sort((a, b) => b.id - a.id);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-24">

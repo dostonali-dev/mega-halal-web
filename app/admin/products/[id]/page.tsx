@@ -20,9 +20,12 @@ type Product = {
   hidden?: boolean | null;
   product_code?: string | null;
   keywords?: string | null;
+  parent_product_id?: number | null;
+  variant_name?: string | null;
 };
 
 type Category = { id: number; name: string; icon: string | null };
+type ProductOption = { id: number; name: string };
 
 export default function AdminEditProductPage() {
   const router = useRouter();
@@ -33,6 +36,7 @@ export default function AdminEditProductPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+  const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -44,6 +48,8 @@ export default function AdminEditProductPage() {
   const [discountPrice, setDiscountPrice] = useState("");
   const [productCode, setProductCode] = useState("");
   const [isHot, setIsHot] = useState(false);
+  const [parentProductId, setParentProductId] = useState("");
+  const [variantName, setVariantName] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [existingImage, setExistingImage] = useState("");
@@ -59,11 +65,15 @@ export default function AdminEditProductPage() {
     if (!checkedLogin || !productId) return;
     (async () => {
       setLoading(true);
-      const [{ data: product, error }, { data: cats }] = await Promise.all([
+      const [{ data: product, error }, { data: cats }, { data: allProducts }] = await Promise.all([
         supabase.from("products").select("*").eq("id", productId).single(),
         supabase.from("categories").select("*").order("name"),
+        supabase.from("products").select("id, name").order("name"),
       ]);
       setCategoriesList(cats || []);
+      // "Bosh mahsulot" tanlovida o'zini ko'rsatmaslik kerak (o'z-o'ziga
+      // variant bo'lib qolmasligi uchun).
+      setProductOptions((allProducts || []).filter((p) => p.id !== productId));
       if (error || !product) {
         setNotFound(true);
         setLoading(false);
@@ -80,6 +90,8 @@ export default function AdminEditProductPage() {
       setDiscountPrice(p.discount_price != null ? String(p.discount_price) : "");
       setProductCode(p.product_code || "");
       setIsHot(p.is_hot === true);
+      setParentProductId(p.parent_product_id != null ? String(p.parent_product_id) : "");
+      setVariantName(p.variant_name || "");
       setExistingImage(p.image || "");
       setLoading(false);
     })();
@@ -109,6 +121,8 @@ export default function AdminEditProductPage() {
         discount_price: discountPrice ? Number(discountPrice) : null,
         product_code: productCode.trim() || null,
         is_hot: isHot,
+        parent_product_id: parentProductId ? Number(parentProductId) : null,
+        variant_name: variantName.trim() || null,
       };
       const { error } = await supabase.from("products").update(payload).eq("id", productId);
       if (error) {
@@ -180,6 +194,30 @@ export default function AdminEditProductPage() {
         <input type="text" placeholder="Firma / yetkazib beruvchi (faqat siz ko'rasiz)" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="text" placeholder="Mahsulot kodi / barkod (faqat siz ko'rasiz, mijozga ko'rinmaydi)" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="number" placeholder="Chegirma narxi (ixtiyoriy)" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-orange-50 text-black" />
+
+        <div className="p-3 rounded-xl space-y-2" style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+          <p className="text-sm font-bold" style={{ color: "#166534" }}>🍹 Variant (agar bu mahsulotning lazzat/turi bo'lsa)</p>
+          <select
+            value={parentProductId}
+            onChange={(e) => setParentProductId(e.target.value)}
+            className="w-full border p-3 rounded-xl bg-white text-black"
+          >
+            <option value="">Yo'q - mustaqil mahsulot</option>
+            {productOptions.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Qisqa nomi (masalan: Lime, Qulupnay) - lazzat tanlash tugmasida shu ko'rinadi"
+            value={variantName}
+            onChange={(e) => setVariantName(e.target.value)}
+            className="w-full border p-3 rounded-xl bg-white text-black"
+          />
+          <p className="text-xs" style={{ color: "#166534" }}>
+            "Bosh mahsulot" tanlansa - bu mahsulot ro'yxatlarda alohida ko'rinmaydi, faqat tanlangan mahsulot sahifasida "lazzat tanlash" tugmasi sifatida chiqadi.
+          </p>
+        </div>
 
         <label
           className="flex items-center gap-2 p-3 rounded-xl"

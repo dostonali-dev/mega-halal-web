@@ -242,7 +242,11 @@ function ArrowUpIcon() {
 const CATEGORIES_COLLAPSED_COUNT = 8;
 
 export default function Home() {
-  const { products, categories, cart, addToCart, removeFromCart } = useCart();
+  const { products: allProducts, categories, cart, addToCart, removeFromCart } = useCart();
+  // Variantlar (masalan bitta ichimlikning lazzat turlari) ro'yxatlarda
+  // alohida ko'rinmasligi kerak - faqat "bosh mahsulot" sahifasida
+  // tanlash tugmasi sifatida chiqadi (app/products/[id]/page.tsx'ga qarang).
+  const products = allProducts.filter((p) => !p.parent_product_id);
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");

@@ -43,6 +43,17 @@ export default function ProductDetailPage() {
     );
   }
 
+  // Variantlar (masalan bitta ichimlikning lazzat turlari) - agar bu
+  // mahsulot boshqasining varianti bo'lsa yoki boshqa mahsulotlar buni
+  // "bosh mahsulot" qilib tanlagan bo'lsa, pastda lazzat tanlash
+  // tugmalari ko'rsatiladi. Tugma bosilganda shu variantning o'z
+  // sahifasiga o'tiladi (narx/rasm/ombor sonini o'sha sahifa ko'rsatadi).
+  const groupRootId = product.parent_product_id ?? product.id;
+  const variantGroup = products.filter(
+    (p) => p.id === groupRootId || p.parent_product_id === groupRootId
+  );
+  const hasVariants = variantGroup.length > 1;
+
   const maxQty = getMaxQty(product.id);
   const remaining = Math.max(0, maxQty - currentInCart);
   const outOfStock = product.in_stock === false || maxQty <= 0;
@@ -131,6 +142,32 @@ export default function ProductDetailPage() {
             <p className="mt-1 text-xs text-gray-500">
               {t("product_stock_available")} {maxQty} {remaining === 0 && t("product_stock_all_in_cart")}
             </p>
+          )}
+
+          {hasVariants && (
+            <div className="mt-4">
+              <p className="text-sm font-bold text-black mb-2">🍹 Lazzat/turini tanlang</p>
+              <div className="flex gap-2 flex-wrap">
+                {variantGroup.map((v) => {
+                  const label = v.variant_name || v.name;
+                  const isActive = v.id === product.id;
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => !isActive && router.push(`/products/${v.id}`)}
+                      className="px-4 py-2 rounded-full text-sm font-bold"
+                      style={
+                        isActive
+                          ? { backgroundColor: "#16a34a", color: "#ffffff" }
+                          : { backgroundColor: "#f3f4f6", color: "#000000" }
+                      }
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {product.category && (

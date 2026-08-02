@@ -82,7 +82,7 @@ export default function CartPage() {
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const recommended = products
-    .filter((p) => !(cart[p.id] > 0) && p.in_stock !== false)
+    .filter((p) => !(cart[p.id] > 0) && p.in_stock !== false && !p.parent_product_id)
     .sort((a, b) => {
       const aHot = (a as any).is_hot ? 1 : 0;
       const bHot = (b as any).is_hot ? 1 : 0;

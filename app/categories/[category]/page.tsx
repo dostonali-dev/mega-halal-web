@@ -10,14 +10,14 @@ import ProductImage from "@/components/ProductImage";
 
 export default function CategoryDetailPage() {
   const params = useParams();
-  const { products, categories, cart, addToCart, removeFromCart } = useCart();
+  const { products: allProducts, categories, cart, addToCart, removeFromCart } = useCart();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
 
   const categoryName = decodeURIComponent(params.category as string);
   const category = categories.find((c) => c.name === categoryName);
-  const items = products
-    .filter((p) => p.category === categoryName)
+  const items = allProducts
+    .filter((p) => p.category === categoryName && !p.parent_product_id)
     .sort((a, b) => a.name.localeCompare(b.name, "uz"));
 
   return (

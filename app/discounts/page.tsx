@@ -12,7 +12,7 @@ export default function DiscountsPage() {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
 
-  const items = products.filter((p) => p.discount_price != null && p.discount_price < p.price);
+  const items = products.filter((p) => p.discount_price != null && p.discount_price < p.price && !p.parent_product_id);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-24">

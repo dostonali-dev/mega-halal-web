@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 type Category = { id: number; name: string; icon: string | null };
+type ProductOption = { id: number; name: string };
 
 export default function NewProductPage() {
   const router = useRouter();
   const [checkedLogin, setCheckedLogin] = useState(false);
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+  const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -21,6 +23,8 @@ export default function NewProductPage() {
   const [stock, setStock] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
   const [isHot, setIsHot] = useState(false);
+  const [parentProductId, setParentProductId] = useState("");
+  const [variantName, setVariantName] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [saving, setSaving] = useState(false);
@@ -36,12 +40,19 @@ export default function NewProductPage() {
     supabase.from("categories").select("*").order("name").then(({ data }) => {
       if (data) setCategoriesList(data);
     });
+    // "Bosh mahsulot" tanlovi uchun - bu mahsulot boshqasining varianti
+    // (lazzat turi) bo'lsa, qaysi mahsulotga bog'lanishini shu ro'yxatdan
+    // tanlaydi.
+    supabase.from("products").select("id, name").order("name").then(({ data }) => {
+      if (data) setProductOptions(data);
+    });
   }, [checkedLogin]);
 
   const resetForm = () => {
     setName(""); setPrice(""); setCategory(""); setDescription("");
     setKeywords("");
     setSupplier(""); setStock(""); setDiscountPrice(""); setIsHot(false);
+    setParentProductId(""); setVariantName("");
     setImageFile(null); setImagePreview("");
   };
 
@@ -67,6 +78,8 @@ export default function NewProductPage() {
         discount_price: discountPrice ? Number(discountPrice) : null,
         is_hot: isHot,
         in_stock: true,
+        parent_product_id: parentProductId ? Number(parentProductId) : null,
+        variant_name: variantName.trim() || null,
       }]);
       if (error) {
         alert(
@@ -120,6 +133,30 @@ export default function NewProductPage() {
         </div>
         <input type="text" placeholder="Firma / yetkazib beruvchi (faqat siz ko'rasiz)" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="number" placeholder="Chegirma narxi (ixtiyoriy)" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-orange-50 text-black" />
+
+        <div className="p-3 rounded-xl space-y-2" style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+          <p className="text-sm font-bold" style={{ color: "#166534" }}>🍹 Variant (agar bu mahsulotning lazzat/turi bo'lsa)</p>
+          <select
+            value={parentProductId}
+            onChange={(e) => setParentProductId(e.target.value)}
+            className="w-full border p-3 rounded-xl bg-white text-black"
+          >
+            <option value="">Yo'q - mustaqil mahsulot</option>
+            {productOptions.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Qisqa nomi (masalan: Lime, Qulupnay) - lazzat tanlash tugmasida shu ko'rinadi"
+            value={variantName}
+            onChange={(e) => setVariantName(e.target.value)}
+            className="w-full border p-3 rounded-xl bg-white text-black"
+          />
+          <p className="text-xs" style={{ color: "#166534" }}>
+            "Bosh mahsulot" tanlansa - bu mahsulot ro'yxatlarda alohida ko'rinmaydi, faqat tanlangan mahsulot sahifasida "lazzat tanlash" tugmasi sifatida chiqadi.
+          </p>
+        </div>
 
         <label
           className="flex items-center gap-2 p-3 rounded-xl"

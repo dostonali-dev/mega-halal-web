@@ -33,7 +33,9 @@ export default function BestSellingPage() {
   );
 
   const globalBestSellers = useMemo(
-    () => buildGlobalBestSellers(products, globalSalesCounts, 12),
+    // Variantlar (lazzat turlari) umumiy "eng ko'p sotiladigan" ro'yxatida
+    // alohida ko'rinmasligi kerak - faqat bosh mahsulot ko'rinadi.
+    () => buildGlobalBestSellers(products.filter((p) => !p.parent_product_id), globalSalesCounts, 12),
     [products, globalSalesCounts]
   );
 

@@ -51,7 +51,7 @@ export default function SearchPage() {
     const seen = new Set<number>();
     const result: typeof products = [];
     for (const q of topQueries) {
-      const match = products.find((p) => !seen.has(p.id) && p.name.toLowerCase().includes(q));
+      const match = products.find((p) => !seen.has(p.id) && !p.parent_product_id && p.name.toLowerCase().includes(q));
       if (match) {
         seen.add(match.id);
         result.push(match);
@@ -60,11 +60,18 @@ export default function SearchPage() {
     return result;
   }, [topQueries, products]);
 
-  const mostBoughtProducts = useMemo(() => buildGlobalBestSellers(products, salesCounts, 12), [products, salesCounts]);
+  // "Qidiruv" bo'sh bo'lganda ko'rsatiladigan tavsiya bo'limlari - bu yerda
+  // ham variantlar (lazzat turlari) alohida ko'rinmasligi kerak. Lekin
+  // mijoz aniq nom yozib qidirsa (masalan "lime"), searchResults'da
+  // variant ham topilishi kerak - shuning uchun u yerga filtr qo'yilmadi.
+  const mostBoughtProducts = useMemo(
+    () => buildGlobalBestSellers(products.filter((p) => !p.parent_product_id), salesCounts, 12),
+    [products, salesCounts]
+  );
 
   const recommended = useMemo(() => {
     return [...products]
-      .filter((p) => p.in_stock !== false)
+      .filter((p) => p.in_stock !== false && !p.parent_product_id)
       .sort((a, b) => {
         const aHot = (a as any).is_hot ? 1 : 0;
         const bHot = (b as any).is_hot ? 1 : 0;
