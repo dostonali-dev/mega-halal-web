@@ -47,17 +47,22 @@ export async function sendAdminPush(title: string, message: string, url?: string
 // externalUserId berilsa - faqat o'sha bitta foydalanuvchiga (masalan
 // buyurtmasiga javob yozilganda) yuboriladi; berilmasa - barcha
 // obunachilarga (masalan admin panelidan yuboriladigan umumiy xabar uchun).
+// Natija qaytaradi - shunda uni chaqirgan API route xatolikni
+// (masalan env o'zgaruvchi yo'q yoki OneSignal rad etdi) mijozga/adminga
+// ko'rsata oladi, aks holda xatolik "yutilib" ketib, chaqiruvchi tomon
+// hech narsa bo'lmagandek "muvaffaqiyatli" deb o'ylayveradi.
 export async function sendCustomerPush(
   title: string,
   message: string,
   opts?: { url?: string; externalUserId?: string | null }
-) {
+): Promise<{ success: boolean; error?: string; details?: unknown }> {
   const appId = process.env.NEXT_PUBLIC_ONESIGNAL_CUSTOMER_APP_ID;
   const restApiKey = process.env.ONESIGNAL_CUSTOMER_REST_API_KEY;
 
   if (!appId || !restApiKey) {
-    console.error("OneSignal (mijoz) sozlanmagan - push yuborilmadi.");
-    return;
+    const msg = "OneSignal (mijoz) sozlanmagan - NEXT_PUBLIC_ONESIGNAL_CUSTOMER_APP_ID yoki ONESIGNAL_CUSTOMER_REST_API_KEY topilmadi (server muhitida).";
+    console.error(msg);
+    return { success: false, error: msg };
   }
 
   try {
@@ -82,8 +87,18 @@ export async function sendCustomerPush(
     const data = await res.json();
     if (!res.ok) {
       console.error("OneSignal (mijoz) push xatoligi:", data);
+      return { success: false, error: data?.errors?.[0] || JSON.stringify(data), details: data };
     }
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      // OneSignal ba'zan 200 qaytaradi, lekin "errors" massivida sabab bo'ladi
+      // (masalan "All included players are not subscribed").
+      console.error("OneSignal (mijoz) qisman xatolik:", data);
+      return { success: false, error: data.errors[0], details: data };
+    }
+    return { success: true, details: data };
   } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
     console.error("OneSignal (mijoz) push so'rovida xatolik:", e);
+    return { success: false, error: msg };
   }
 }

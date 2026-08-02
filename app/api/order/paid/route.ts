@@ -24,15 +24,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Noto'g'ri status." }, { status: 400 });
     }
 
+    let pushResult: { success: boolean; error?: string } | null = null;
     if (userId) {
       const { title, message } = STATUS_MESSAGES[status];
-      await sendCustomerPush(`${title} №${orderNumber}`, message, {
+      pushResult = await sendCustomerPush(`${title} №${orderNumber}`, message, {
         url: `/profile/orders/${orderNumber}`,
         externalUserId: userId,
       });
+      if (!pushResult.success) {
+        // Buyurtma holati baribir yangilangan bo'lishi kerak - shuning uchun
+        // bu yerda xatolikni faqat log qilamiz (Vercel > Deployments > Logs'da
+        // ko'rinadi), lekin javobni to'xtatmaymiz.
+        console.error("Push yuborilmadi (order/paid):", pushResult.error);
+      }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, pushResult });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Kutilmagan xatolik." }, { status: 500 });

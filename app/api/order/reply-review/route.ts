@@ -16,14 +16,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "orderId va reply kerak." }, { status: 400 });
     }
 
+    let pushResult: { success: boolean; error?: string } | null = null;
     if (userId) {
-      await sendCustomerPush("💬 Buyurtmangizga javob keldi", reply, {
+      pushResult = await sendCustomerPush("💬 Buyurtmangizga javob keldi", reply, {
         url: `/profile/orders/${orderId}`,
         externalUserId: userId,
       });
+      if (!pushResult.success) {
+        console.error("Push yuborilmadi (reply-review):", pushResult.error);
+      }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, pushResult });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Kutilmagan xatolik." }, { status: 500 });

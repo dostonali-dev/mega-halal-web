@@ -12,7 +12,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Sarlavha va matn kerak." }, { status: 400 });
     }
 
-    await sendCustomerPush(title.trim(), message.trim(), { url: url?.trim() || undefined });
+    const result = await sendCustomerPush(title.trim(), message.trim(), { url: url?.trim() || undefined });
+
+    if (!result.success) {
+      return NextResponse.json({ error: "OneSignal xatoligi: " + result.error }, { status: 502 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (e) {
