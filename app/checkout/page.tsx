@@ -6,6 +6,7 @@ import { useCart } from "@/lib/CartContext";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import { compressImage } from "@/lib/imageCompress";
 import { fetchAddresses, addAddress, type Address } from "@/lib/addresses";
 import { DELIVERY_FEE, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
 import AddressSearchModal from "@/components/AddressSearchModal";
@@ -121,7 +122,8 @@ export default function CheckoutPage() {
       if (selectedId === "new") {
         if (addressMode === "photo" && addressImageFile) {
           const fileName = `address-${Date.now()}.jpg`;
-          const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, addressImageFile);
+          const compressedAddressFile = await compressImage(addressImageFile);
+          const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, compressedAddressFile);
           if (uploadError) {
             alert(t("alert_generic_error") + ": " + uploadError.message);
             setSubmitting(false);
@@ -205,7 +207,10 @@ export default function CheckoutPage() {
       await decrementStock();
 
       const receiptFileName = `${orderId}-${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("receipts").upload(receiptFileName, receiptFile);
+      // Chek matnini o'qib bo'lish uchun receipt rasmini biroz kattaroq
+      // o'lchamda va yuqoriroq sifatda saqlaymiz (2000px, 90% sifat).
+      const compressedReceiptFile = await compressImage(receiptFile, { maxWidth: 2000, maxHeight: 2000, quality: 0.9 });
+      const { error: uploadError } = await supabase.storage.from("receipts").upload(receiptFileName, compressedReceiptFile);
       if (uploadError) {
         alert(t("alert_generic_error") + ": " + uploadError.message);
         setSubmitting(false);

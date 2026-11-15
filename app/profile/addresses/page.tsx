@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { compressImage } from "@/lib/imageCompress";
 import { fetchAddresses, addAddress, setDefaultAddress, deleteAddress, type Address } from "@/lib/addresses";
 import { useLanguage } from "@/lib/LanguageContext";
 import AddressSearchModal from "@/components/AddressSearchModal";
@@ -54,7 +55,8 @@ export default function AddressesPage() {
       let imageUrl: string | null = null;
       if (addressMode === "photo" && addressImageFile) {
         const fileName = `profile-address-${user.id}-${Date.now()}.jpg`;
-        const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, addressImageFile);
+        const compressedFile = await compressImage(addressImageFile);
+        const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, compressedFile);
         if (uploadError) {
           alert(t("alert_generic_error") + ": " + uploadError.message);
           setSaving(false);

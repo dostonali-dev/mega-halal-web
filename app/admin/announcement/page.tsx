@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { compressImage } from "@/lib/imageCompress";
 
 type Announcement = {
   id: number;
@@ -50,7 +51,8 @@ export default function AnnouncementAdminPage() {
       let imageUrl: string | null = null;
       if (imageFile) {
         const fileName = `${Date.now()}-${imageFile.name}`;
-        const { error: uploadError } = await supabase.storage.from("banners").upload(fileName, imageFile);
+        const compressedFile = await compressImage(imageFile, { maxWidth: 1200, maxHeight: 1200, quality: 0.82 });
+        const { error: uploadError } = await supabase.storage.from("banners").upload(fileName, compressedFile);
         if (uploadError) {
           alert("Rasm yuklanmadi: " + uploadError.message);
           setSaving(false);

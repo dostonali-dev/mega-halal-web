@@ -91,12 +91,16 @@ export default function ProductDetailPage() {
             {favoriteIds.has(product.id) ? "❤️" : "🤍"}
           </button>
           {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              onClick={() => setShowLightbox(true)}
-              className={`w-full h-80 object-cover cursor-zoom-in ${outOfStock ? "opacity-50 grayscale" : ""}`}
-            />
+            <div
+              className={`w-full h-80 bg-gray-50 flex items-center justify-center overflow-hidden ${outOfStock ? "opacity-50 grayscale" : ""}`}
+            >
+              <img
+                src={product.image}
+                alt={product.name}
+                onClick={() => setShowLightbox(true)}
+                className="max-w-full max-h-full object-contain cursor-zoom-in"
+              />
+            </div>
           ) : (
             <ProductImage image={null} alt={product.name} className="w-full h-80" />
           )}

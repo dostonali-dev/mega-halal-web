@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import { compressImage } from "@/lib/imageCompress";
 
 export default function ProfilePage() {
   const { user, guestMode, exitGuest, updateAvatar } = useAuth();
@@ -21,7 +22,10 @@ export default function ProfilePage() {
     setUploadingAvatar(true);
     try {
       const fileName = `avatar-${user.id}-${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, file);
+      // Avatar kichik doirada ko'rsatiladi, shuning uchun kichikroq
+      // o'lchamda saqlash yetarli (trafikni tejaydi).
+      const compressedFile = await compressImage(file, { maxWidth: 512, maxHeight: 512, quality: 0.85 });
+      const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, compressedFile);
       if (uploadError) {
         alert("Rasm yuklanmadi: " + uploadError.message);
         setUploadingAvatar(false);

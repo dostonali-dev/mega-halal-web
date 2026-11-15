@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { compressImage } from "@/lib/imageCompress";
 import ParentProductPicker from "@/components/ParentProductPicker";
 
 type Product = {
@@ -108,7 +109,8 @@ export default function AdminEditProductPage() {
       let imageUrl = existingImage;
       if (imageFile) {
         const fileName = `${Date.now()}-${imageFile.name}`;
-        const { error: uploadError } = await supabase.storage.from("products").upload(fileName, imageFile);
+        const compressedFile = await compressImage(imageFile, { maxWidth: 1200, maxHeight: 1200, quality: 0.82 });
+        const { error: uploadError } = await supabase.storage.from("products").upload(fileName, compressedFile);
         if (uploadError) { alert("Rasm yuklanmadi: " + uploadError.message); setSaving(false); return; }
         const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
