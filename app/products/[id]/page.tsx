@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { useRecentlyViewed } from "@/lib/RecentlyViewedContext";
 import { useBackButtonClose } from "@/lib/useBackButtonClose";
 import ProductImage from "@/components/ProductImage";
+import ProductRow from "@/components/ProductRow";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -53,6 +54,15 @@ export default function ProductDetailPage() {
     (p) => p.id === groupRootId || p.parent_product_id === groupRootId
   );
   const hasVariants = variantGroup.length > 1;
+
+  // "Shunga o'xshash mahsulotlar" - mahsulotni ko'rib bo'lgandan keyin
+  // pastda shu kategoriyadagi boshqa mahsulotlarni tavsiya qilish uchun.
+  // O'zini va uning lazzat/turi variantlarini (yuqorida alohida
+  // ko'rsatilgani uchun) chiqarib tashlaymiz.
+  const variantIds = new Set(variantGroup.map((v) => v.id));
+  const similarProducts = products
+    .filter((p) => p.category === product.category && !variantIds.has(p.id) && !p.hidden)
+    .slice(0, 12);
 
   const maxQty = getMaxQty(product.id);
   const remaining = Math.max(0, maxQty - currentInCart);
@@ -257,6 +267,12 @@ export default function ProductDetailPage() {
               </button>
             )}
           </div>
+
+          {similarProducts.length > 0 && (
+            <div className="mt-8">
+              <ProductRow title="Shunga o'xshash mahsulotlar" products={similarProducts} />
+            </div>
+          )}
         </div>
       </div>
     </main>
