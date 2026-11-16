@@ -396,13 +396,27 @@ function ProductRow({ p, selected, onToggleSelect, onDelete, onToggleStock, onTo
         </p>
         {p.expiry_date && (() => {
           const daysLeft = Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000);
-          const expired = daysLeft < 0;
-          const soon = !expired && daysLeft <= 7;
-          const color = expired ? "#ef4444" : soon ? "#f97316" : "#9ca3af";
+          // Muddat yaqinlashgan sari rang va matn tobora "jiddiylashib" boradi:
+          // 30 kun -> sariq, 15 kun -> to'q sariq, 7 kun -> qizil-sariq (har
+          // kuni hisoblanadi), 0 dan kichik -> muddati o'tgan (qizil).
+          let color = "#9ca3af";
+          let suffix = "";
+          if (daysLeft < 0) {
+            color = "#dc2626";
+            suffix = " — muddati o'tgan!";
+          } else if (daysLeft <= 7) {
+            color = "#ef4444";
+            suffix = ` — ${daysLeft === 0 ? "bugun tugaydi" : `${daysLeft} kunda tugaydi`}`;
+          } else if (daysLeft <= 15) {
+            color = "#f97316";
+            suffix = ` — ${daysLeft} kun qoldi`;
+          } else if (daysLeft <= 30) {
+            color = "#eab308";
+            suffix = ` — ${daysLeft} kun qoldi`;
+          }
           return (
             <p className="text-xs font-bold mt-0.5" style={{ color }}>
-              ⏳ Muddati: {p.expiry_date}
-              {expired ? " — muddati o'tgan!" : soon ? ` — ${daysLeft} kunda tugaydi` : ""}
+              ⏳ Muddati: {p.expiry_date}{suffix}
             </p>
           );
         })()}
