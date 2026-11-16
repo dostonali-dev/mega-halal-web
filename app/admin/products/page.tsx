@@ -398,8 +398,9 @@ function ProductRow({ p, selected, onToggleSelect, onDelete, onToggleStock, onTo
           const daysLeft = Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000);
           const expired = daysLeft < 0;
           const soon = !expired && daysLeft <= 7;
+          const color = expired ? "#ef4444" : soon ? "#f97316" : "#9ca3af";
           return (
-            <p className={`text-xs font-bold mt-0.5 ${expired ? "text-red-600" : soon ? "text-orange-500" : "text-gray-400"}`}>
+            <p className="text-xs font-bold mt-0.5" style={{ color }}>
               ⏳ Muddati: {p.expiry_date}
               {expired ? " — muddati o'tgan!" : soon ? ` — ${daysLeft} kunda tugaydi` : ""}
             </p>
