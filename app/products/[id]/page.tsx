@@ -134,6 +134,9 @@ export default function ProductDetailPage() {
             </span>
           )}
           <h1 className="text-2xl font-bold text-black">{product.name}</h1>
+          {product.gram != null && (
+            <p className="text-gray-400 text-sm font-semibold mt-1">{product.gram.toLocaleString()} gr</p>
+          )}
           <p className="text-green-700 font-extrabold text-3xl mt-2">{product.price.toLocaleString()}₩</p>
 
           {currentInCart > 0 && (
