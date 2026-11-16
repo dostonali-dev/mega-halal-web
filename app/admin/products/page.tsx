@@ -22,6 +22,7 @@ type Product = {
   hidden?: boolean | null;
   product_code?: string | null;
   keywords?: string | null;
+  expiry_date?: string | null;
 };
 
 type BulkAction = "" | "move" | "delete" | "in_stock" | "out_of_stock" | "hide" | "show";
@@ -393,6 +394,17 @@ function ProductRow({ p, selected, onToggleSelect, onDelete, onToggleStock, onTo
         <p className="text-sm text-gray-500">
           {p.price.toLocaleString()}₩ · Soni: {p.stock ?? 0}{p.supplier ? ` · 🏭 ${p.supplier}` : ""}{p.product_code ? ` · 🔖 ${p.product_code}` : ""}
         </p>
+        {p.expiry_date && (() => {
+          const daysLeft = Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000);
+          const expired = daysLeft < 0;
+          const soon = !expired && daysLeft <= 7;
+          return (
+            <p className={`text-xs font-bold mt-0.5 ${expired ? "text-red-600" : soon ? "text-orange-500" : "text-gray-400"}`}>
+              ⏳ Muddati: {p.expiry_date}
+              {expired ? " — muddati o'tgan!" : soon ? ` — ${daysLeft} kunda tugaydi` : ""}
+            </p>
+          );
+        })()}
       </div>
       <div className="flex flex-col items-end gap-2">
         <button onClick={() => onToggleStock(p)} className={`text-xs font-bold px-3 py-1 rounded-full ${p.in_stock === false ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"}`}>
