@@ -323,17 +323,10 @@ export default function Home() {
           backgroundColor: "#0a0a0a",
         }}
       />
-      {/* Sarlavha + tavsif + qidiruv katagi - endi barchasi birgalikda
-          "pin" bo'lib qoladi (pastga qancha tushilmasin, doim tepada
-          turadi). Fon rangi qattiq qilingan - aks holda pastdagi kontent
-          skroll paytida orqasidan ko'rinib qolardi. */}
-      <div
-        className="sticky z-40 pt-4 md:pt-8 px-4 md:px-8 pb-4"
-        style={{
-          top: "env(safe-area-inset-top, 0px)",
-          backgroundColor: "#0a0a0a",
-        }}
-      >
+      {/* Sarlavha + tavsif + qidiruv katagi - endi pin bo'lib turmaydi,
+          sahifaning qolgan qismi bilan birga oddiy skroll qilib yuqoriga
+          ketadi. */}
+      <div className="pt-4 md:pt-8 px-4 md:px-8 pb-4">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between gap-3 mb-1">
             <h1 className="site-title text-2xl md:text-3xl font-extrabold">
