@@ -21,6 +21,7 @@ type Product = {
   is_hot?: boolean | null;
   hidden?: boolean | null;
   product_code?: string | null;
+  manufacturer?: string | null;
   keywords?: string | null;
   parent_product_id?: number | null;
   variant_name?: string | null;
@@ -47,6 +48,7 @@ export default function AdminEditProductPage() {
   const [price, setPrice] = useState("");
   const [gram, setGram] = useState("");
   const [weightUnit, setWeightUnit] = useState("gr");
+  const [manufacturer, setManufacturer] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -92,6 +94,7 @@ export default function AdminEditProductPage() {
       setPrice(String(p.price));
       setGram(p.gram != null ? String(p.gram) : "");
       setWeightUnit(p.weight_unit || "gr");
+      setManufacturer(p.manufacturer || "");
       setExpiryDate(p.expiry_date || "");
       setCategory(p.category);
       setDescription(p.description || "");
@@ -125,7 +128,7 @@ export default function AdminEditProductPage() {
         imageUrl = urlData.publicUrl;
       }
       const payload = {
-        name, price: Number(price), gram: gram ? Number(gram) : null, weight_unit: gram ? weightUnit : null, expiry_date: expiryDate || null, category, image: imageUrl || null,
+        name, price: Number(price), gram: gram ? Number(gram) : null, weight_unit: gram ? weightUnit : null, manufacturer: manufacturer.trim() || null, expiry_date: expiryDate || null, category, image: imageUrl || null,
         description: description || null, keywords: keywords.trim() || null, supplier: supplier || null,
         // Bo'sh qoldirilsa -> null (soni kuzatilmayapti, cheklovsiz sotiladi).
         // Aniq son (0 ham) kiritilsa -> shu son qat'iy chegara bo'ladi.
@@ -190,6 +193,10 @@ export default function AdminEditProductPage() {
 
       <div className="max-w-md space-y-4 bg-gray-50 border rounded-xl p-4">
         <input type="text" placeholder="Mahsulot nomi" value={name} onChange={(e) => setName(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+        <div>
+          <input type="text" placeholder="Ishlab chiqaruvchi (ixtiyoriy)" value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+          <p className="text-xs text-gray-400 mt-1 px-1">Mijozga mahsulot kartasida ko'rinadi. Bo'sh qoldirilsa, hech narsa ko'rsatilmaydi.</p>
+        </div>
         <div className="relative">
           <input type="number" placeholder="Narxi" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-white text-black" />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>

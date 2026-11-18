@@ -11,6 +11,9 @@ type Product = {
   image?: string;
   discount_price?: number | null;
   in_stock?: boolean;
+  gram?: number | null;
+  weight_unit?: string | null;
+  manufacturer?: string | null;
 };
 
 export default function ProductRow({
@@ -54,13 +57,20 @@ export default function ProductRow({
                 <ProductImage image={p.image} alt={p.name} className={`w-full h-28 object-cover ${outOfStock ? "opacity-50 grayscale" : ""}`} />
               </Link>
               <div className="p-2">
+                <p className="font-bold text-sm leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{p.name}</p>
+                {(p.gram != null || p.manufacturer) && (
+                  <p className="text-gray-400 text-[10px] mb-1 truncate">
+                    {p.gram != null ? `${p.gram.toLocaleString()} ${p.weight_unit || "gr"}` : ""}
+                    {p.gram != null && p.manufacturer ? " · " : ""}
+                    {p.manufacturer || ""}
+                  </p>
+                )}
                 <p className={`text-gray-400 text-xs line-through ${hasDiscount ? "" : "invisible"}`}>
                   {p.price.toLocaleString()}₩
                 </p>
-                <p className={hasDiscount ? "text-red-500 font-bold text-sm" : "text-green-400 font-bold text-sm"}>
+                <p className={hasDiscount ? "text-red-500 font-extrabold text-base mb-2" : "text-green-400 font-extrabold text-base mb-2"}>
                   {(hasDiscount ? p.discount_price! : p.price).toLocaleString()}₩
                 </p>
-                <p className="text-xs font-semibold leading-tight line-clamp-2 mb-2 min-h-[2.5em]">{p.name}</p>
 
                 {outOfStock ? (
                   <span className="text-[10px] text-red-400 font-bold">Sotuvda yo'q</span>

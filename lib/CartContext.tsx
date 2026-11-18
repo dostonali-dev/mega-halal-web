@@ -21,6 +21,7 @@ export type Product = {
   variant_name?: string | null;
   gram?: number | null;
   weight_unit?: string | null;
+  manufacturer?: string | null;
   expiry_date?: string | null;
 };
 export type Category = {
