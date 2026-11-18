@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendCustomerPush } from "@/lib/onesignal";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // Admin panelda buyurtma holati o'zgartirilganda (✅ To'landi / 📦 Jo'natildi /
 // ❌ Bekor qilindi) mijozning o'ziga (agar ro'yxatdan o'tgan bo'lsa - userId
@@ -9,6 +10,18 @@ const STATUS_MESSAGES: Record<string, { title: string; message: string }> = {
   paid: { title: "✅ Buyurtmangiz to'landi", message: "Buyurtmangiz to'lovi tasdiqlandi." },
   shipped: { title: "📦 Buyurtmangiz jo'natildi", message: "Buyurtmangiz yo'lda - tez orada yetib boradi!" },
   cancelled: { title: "❌ Buyurtmangiz bekor qilindi", message: "Afsuski, buyurtmangiz bekor qilindi." },
+};
+
+// Yangi buyurtma kelganda qaysi Telegram guruhiga xabar yuborilgan bo'lsa
+// (app/api/order/route.ts), xuddi o'sha guruhga - holat o'zgarganda ham
+// (To'landi / Jo'natildi / Bekor qilindi) xabar yuborish uchun.
+const BOT_TOKEN = "8798311944:AAHUBgMJ4OrKiy8qMUwx9bQFSNRJ-dRBCjg";
+const CHAT_ID = "-1004384813041";
+
+const STATUS_TG_TITLE: Record<string, string> = {
+  paid: "✅ To'landi",
+  shipped: "📦 Jo'natildi",
+  cancelled: "❌ Bekor qilindi",
 };
 
 export async function POST(req: NextRequest) {
@@ -37,6 +50,34 @@ export async function POST(req: NextRequest) {
         // ko'rinadi), lekin javobni to'xtatmaymiz.
         console.error("Push yuborilmadi (order/paid):", pushResult.error);
       }
+    }
+
+    // Telegram guruhiga ham holat o'zgarishi haqida xabar yuboramiz - bu
+    // xatolik bersa ham, buyurtma holati baribir yangilangan bo'lishi kerak,
+    // shuning uchun xatolik faqat log qilinadi.
+    try {
+      const { data: order } = await supabaseAdmin
+        .from("orders")
+        .select("customer_name, phone, total")
+        .eq("id", orderNumber)
+        .maybeSingle();
+
+      const text =
+        `${STATUS_TG_TITLE[status] || status}\n\n` +
+        `📦 Buyurtma № ${orderNumber}\n` +
+        (order?.customer_name ? `👤 Ism: ${order.customer_name}\n` : "") +
+        (order?.phone ? `📞 Telefon: ${order.phone}\n` : "") +
+        (order?.total != null ? `💰 Jami: ${order.total.toLocaleString()}₩` : "");
+
+      const tgResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: CHAT_ID, text }),
+      });
+      const tgResult = await tgResponse.json();
+      console.log("TELEGRAM JAVOB (status o'zgarishi):", tgResult);
+    } catch (e) {
+      console.error("Telegramga yuborishda xatolik (order/paid):", e);
     }
 
     return NextResponse.json({ success: true, pushResult });

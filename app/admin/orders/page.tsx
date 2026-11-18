@@ -362,18 +362,34 @@ export default function OrdersPage() {
                   <p className="text-sm text-gray-400">Yuklanmoqda...</p>
                 ) : detailItems.length > 0 ? (
                   <div className="space-y-2">
-                    {detailItems.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
-                        <ProductImage image={item.image} alt={item.product_name || ""} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" compact />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-black truncate">{item.product_name}</p>
-                          <p className="text-xs text-gray-500">{item.quantity} x {item.price.toLocaleString()}₩</p>
+                    {detailItems.map((item) => {
+                      const content = (
+                        <>
+                          <ProductImage image={item.image} alt={item.product_name || ""} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-black truncate">{item.product_name}</p>
+                            <p className="text-xs text-gray-500">{item.quantity} x {item.price.toLocaleString()}₩</p>
+                          </div>
+                          <span className="text-sm font-bold text-black flex-shrink-0">
+                            {(item.quantity * item.price).toLocaleString()}₩
+                          </span>
+                          {item.product_id != null && <span className="text-gray-400 flex-shrink-0">›</span>}
+                        </>
+                      );
+                      return item.product_id != null ? (
+                        <Link
+                          key={item.id}
+                          href={`/admin/products/${item.product_id}`}
+                          className="flex items-center gap-3 border-b border-gray-200 pb-2 last:border-b-0 last:pb-0"
+                        >
+                          {content}
+                        </Link>
+                      ) : (
+                        <div key={item.id} className="flex items-center gap-3 border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
+                          {content}
                         </div>
-                        <span className="text-sm font-bold text-black flex-shrink-0">
-                          {(item.quantity * item.price).toLocaleString()}₩
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <pre className="whitespace-pre-wrap text-sm text-black">{detailOrder.order_text}</pre>
