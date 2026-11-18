@@ -80,16 +80,18 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-green-50 p-6 md:p-10">
-      <AdminNotificationBell />
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-700 shadow-lg flex items-center justify-center overflow-hidden p-1.5 flex-shrink-0">
-            <img src="/icons/icon-512.png" alt="Mega Halal Admin" className="w-full h-full object-cover rounded-xl" />
+        <div className="flex items-center gap-4 mb-8 justify-between">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-700 shadow-lg flex items-center justify-center overflow-hidden p-1.5 flex-shrink-0">
+              <img src="/icons/icon-512.png" alt="Mega Halal Admin" className="w-full h-full object-cover rounded-xl" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-3xl font-bold text-black mb-1 truncate">Mega Halal Admin</h1>
+              <p className="text-gray-500">Boshqarish paneli</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-black mb-1">Mega Halal Admin</h1>
-            <p className="text-gray-500">Boshqarish paneli</p>
-          </div>
+          <AdminNotificationBell />
         </div>
 
         <div className="grid grid-cols-2 gap-4">

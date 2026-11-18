@@ -91,12 +91,8 @@ export default function AdminNotificationBell() {
       <button
         onClick={openPanel}
         aria-label="Bildirishnomalar"
-        className="flex items-center justify-center w-11 h-11 rounded-full"
+        className="flex items-center justify-center w-11 h-11 rounded-full flex-shrink-0 relative"
         style={{
-          position: "fixed",
-          top: "calc(env(safe-area-inset-top, 0px) + 10px)",
-          right: "14px",
-          zIndex: 45,
           backgroundColor: "#16a34a",
           boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
         }}
