@@ -34,6 +34,18 @@ type Product = {
 type Category = { id: number; name: string; icon: string | null };
 type ProductOption = { id: number; name: string };
 
+// Kelgan narx asosida ustama foizini hisoblaydi (masalan kelgan narx 8000,
+// sotish narxi 9490 bo'lsa -> "18.6" qaytaradi). Kelgan narx bo'sh/0 bo'lsa
+// yoki narx raqam bo'lmasa, bo'sh qator qaytaradi (foiz ko'rsatilmaydi).
+function calcMarginPercent(cost: string, price: string): string {
+  const c = Number(cost);
+  const p = Number(price);
+  if (!c || c <= 0 || !Number.isFinite(p)) return "";
+  const pct = ((p - c) / c) * 100;
+  if (!Number.isFinite(pct)) return "";
+  return String(Math.round(pct * 10) / 10);
+}
+
 export default function AdminEditProductPage() {
   const router = useRouter();
   const params = useParams();
@@ -48,6 +60,7 @@ export default function AdminEditProductPage() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [costPrice, setCostPrice] = useState("");
+  const [marginPercent, setMarginPercent] = useState("");
   const [gram, setGram] = useState("");
   const [weightUnit, setWeightUnit] = useState("gr");
   const [manufacturer, setManufacturer] = useState("");
@@ -95,6 +108,7 @@ export default function AdminEditProductPage() {
       setName(p.name);
       setPrice(String(p.price));
       setCostPrice(p.cost_price != null ? String(p.cost_price) : "");
+      setMarginPercent(calcMarginPercent(p.cost_price != null ? String(p.cost_price) : "", String(p.price)));
       setGram(p.gram != null ? String(p.gram) : "");
       setWeightUnit(p.weight_unit || "gr");
       setManufacturer(p.manufacturer || "");
@@ -113,6 +127,25 @@ export default function AdminEditProductPage() {
       setLoading(false);
     })();
   }, [checkedLogin, productId]);
+
+  // Narx, kelgan narx va foiz - uchalasi bir-biriga bog'liq: qaysi
+  // birini o'zgartirsangiz, qolganlari mos ravishda yangilanadi.
+  const handlePriceChange = (val: string) => {
+    setPrice(val);
+    setMarginPercent(calcMarginPercent(costPrice, val));
+  };
+  const handleCostPriceChange = (val: string) => {
+    setCostPrice(val);
+    setMarginPercent(calcMarginPercent(val, price));
+  };
+  const handleMarginChange = (val: string) => {
+    setMarginPercent(val);
+    const cost = Number(costPrice);
+    const pct = Number(val);
+    if (cost > 0 && Number.isFinite(pct)) {
+      setPrice(String(Math.round(cost * (1 + pct / 100))));
+    }
+  };
 
   const handleSaveProduct = async () => {
     if (!name.trim() || !price || !category.trim()) {
@@ -201,12 +234,21 @@ export default function AdminEditProductPage() {
           <p className="text-xs text-gray-400 mt-1 px-1">Mijozga mahsulot kartasida ko'rinadi. Bo'sh qoldirilsa, hech narsa ko'rsatilmaydi.</p>
         </div>
         <div className="relative">
-          <input type="number" placeholder="Narxi" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-white text-black" />
+          <input type="number" placeholder="Narxi" value={price} onChange={(e) => handlePriceChange(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-white text-black" />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
         </div>
-        <div className="relative">
-          <input type="number" placeholder="Kelgan narxi (ixtiyoriy, faqat siz ko'rasiz)" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-yellow-50 text-black" />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
+        <div>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input type="number" placeholder="Kelgan narxi (ixtiyoriy)" value={costPrice} onChange={(e) => handleCostPriceChange(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-yellow-50 text-black" />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
+            </div>
+            <div className="relative" style={{ width: "88px" }}>
+              <input type="number" placeholder="Foiz" value={marginPercent} onChange={(e) => handleMarginChange(e.target.value)} className="w-full border p-3 pr-6 rounded-xl bg-yellow-50 text-black" />
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">%</span>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 mt-1 px-1">Faqat siz ko'rasiz. Foizni kiritsangiz - narxi avtomatik hisoblanadi; narxni o'zgartirsangiz - foiz o'zi yangilanadi.</p>
         </div>
         <div className="flex gap-2">
           <input type="number" step="0.01" placeholder="Og'irligi / hajmi (ixtiyoriy)" value={gram} onChange={(e) => setGram(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black" />
