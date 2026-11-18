@@ -102,17 +102,17 @@ export default function ProductDetailPage() {
           </button>
           {product.image ? (
             <div
-              className={`w-full h-80 bg-gray-50 flex items-center justify-center overflow-hidden ${outOfStock ? "opacity-50 grayscale" : ""}`}
+              className={`w-full aspect-square bg-gray-50 overflow-hidden ${outOfStock ? "opacity-50 grayscale" : ""}`}
             >
               <img
                 src={product.image}
                 alt={product.name}
                 onClick={() => setShowLightbox(true)}
-                className="max-w-full max-h-full object-contain cursor-zoom-in"
+                className="w-full h-full object-cover cursor-zoom-in"
               />
             </div>
           ) : (
-            <ProductImage image={null} alt={product.name} className="w-full h-80" />
+            <ProductImage image={null} alt={product.name} className="w-full aspect-square" />
           )}
         </div>
 
