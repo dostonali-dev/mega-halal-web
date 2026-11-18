@@ -7,39 +7,71 @@ export async function sendAdminPush(title: string, message: string, url?: string
   const appId = process.env.NEXT_PUBLIC_ONESIGNAL_ADMIN_APP_ID;
   const restApiKey = process.env.ONESIGNAL_ADMIN_REST_API_KEY;
 
+  let pushOk = false;
+  let pushError: string | null = null;
+
   if (!appId || !restApiKey) {
-    console.error("OneSignal (admin) sozlanmagan - push yuborilmadi.");
-    return;
-  }
+    pushError = "OneSignal (admin) sozlanmagan - NEXT_PUBLIC_ONESIGNAL_ADMIN_APP_ID yoki ONESIGNAL_ADMIN_REST_API_KEY topilmadi.";
+    console.error(pushError);
+  } else {
+    try {
+      const res = await fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          Authorization: `Key ${restApiKey}`,
+        },
+        body: JSON.stringify({
+          app_id: appId,
+          target_channel: "push",
+          included_segments: ["Total Subscriptions"],
+          headings: { en: title },
+          contents: { en: message },
+          // "url" - push bosilganda ochiladigan sahifa. Bu native ilova
+          // ichida (webview'da) o'sha sahifaga o'tkazadi.
+          ...(url ? { data: { url } } : {}),
+        }),
+      });
 
-  try {
-    const res = await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        Authorization: `Key ${restApiKey}`,
-      },
-      body: JSON.stringify({
-        app_id: appId,
-        target_channel: "push",
-        included_segments: ["Total Subscriptions"],
-        headings: { en: title },
-        contents: { en: message },
-        // "url" - push bosilganda ochiladigan sahifa. Bu native ilova
-        // ichida (webview'da) o'sha sahifaga o'tkazadi.
-        ...(url ? { data: { url } } : {}),
-      }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      console.error("OneSignal push xatoligi:", data);
+      const data = await res.json();
+      if (!res.ok) {
+        pushError = JSON.stringify(data);
+        console.error("OneSignal push xatoligi:", data);
+      } else if (Array.isArray(data?.errors) && data.errors.length > 0) {
+        pushError = JSON.stringify(data.errors);
+        console.error("OneSignal push qisman xatolik:", data);
+      } else if (data?.recipients === 0) {
+        // OneSignal 200 qaytarishi mumkin, lekin "recipients: 0" bo'lsa -
+        // hech qanday qurilmaga yetib bormagan degani (masalan qurilma
+        // push'ga obuna bo'lmay qolgan). Buni ham xatolik deb belgilaymiz,
+        // shunda 🔔 ro'yxatida "yetib bormagan" ko'rinadi.
+        pushError = "OneSignal: 0 ta qurilmaga yetib bordi (recipients: 0) - qurilma push'ga obuna bo'lmagan bo'lishi mumkin.";
+      } else {
+        pushOk = true;
+      }
+    } catch (e) {
+      pushError = e instanceof Error ? e.message : String(e);
+      console.error("OneSignal push so'rovida xatolik:", e);
     }
-  } catch (e) {
-    // Push yuborilmasa ham, buyurtmaning o'zi to'xtab qolmasligi kerak -
-    // shuning uchun xatolikni faqat log qilamiz, throw qilmaymiz.
-    console.error("OneSignal push so'rovida xatolik:", e);
   }
+
+  // Har safar (push yuborilgan yoki yuborilmagan bo'lsa ham) "admin_notifications"
+  // jadvaliga yozib qo'yamiz - shunda admin ilovasidagi 🔔 bo'limida bu tarix
+  // ko'rinadi, push o'zi kelmasa ham (masalan qurilma sozlamalari sabab) va
+  // keyingi safar push kelmay qolsa, sababini shu yerdan ko'rish mumkin.
+  try {
+    await supabaseAdmin.from("admin_notifications").insert({
+      title,
+      message,
+      url: url || null,
+      push_ok: pushOk,
+      push_error: pushError,
+    });
+  } catch (e) {
+    console.error("admin_notifications'ga yozishda xatolik:", e);
+  }
+
+  return { success: pushOk, error: pushError };
 }
 
 // Mijoz (customer) ilovasiga push yuborish uchun - alohida OneSignal

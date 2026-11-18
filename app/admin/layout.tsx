@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import EdgeSwipeBack from "@/components/EdgeSwipeBack";
 import AdminPushInit from "@/components/AdminPushInit";
+import AdminNotificationBell from "@/components/AdminNotificationBell";
 
 export const metadata: Metadata = {
   title: "Mega Halal Admin",
@@ -30,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="admin-page-shell">
       <EdgeSwipeBack />
       <AdminPushInit />
+      <AdminNotificationBell />
       {/* Barcha admin sahifalarida iOS notch/status bar ostida matn
           qolib ketmasligi uchun xavfsiz zona (safe-area). Oddiy padding
           skroll paytida kontent bilan birga surilib, sarlavha notch
