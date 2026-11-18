@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AdminNotificationBell from "@/components/AdminNotificationBell";
 
 export default function AdminPage() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -79,6 +80,7 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-green-50 p-6 md:p-10">
+      <AdminNotificationBell />
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-700 shadow-lg flex items-center justify-center overflow-hidden p-1.5 flex-shrink-0">
