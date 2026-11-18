@@ -14,6 +14,9 @@ type OrderItemRow = {
   quantity: number;
   price: number;
   image?: string | null;
+  manufacturer?: string | null;
+  supplier?: string | null;
+  product_code?: string | null;
 };
 
 export default function OrdersPage() {
@@ -27,6 +30,7 @@ export default function OrdersPage() {
   const [replyText, setReplyText] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [quickViewItem, setQuickViewItem] = useState<OrderItemRow | null>(null);
   const [exporting, setExporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
@@ -71,14 +75,28 @@ export default function OrdersPage() {
 
     if (itemRows && itemRows.length > 0) {
       const productIds = itemRows.map((r) => r.product_id).filter((id): id is number => id != null);
-      let imageMap: Record<number, string | null> = {};
+      let infoMap: Record<number, { image: string | null; manufacturer: string | null; supplier: string | null; product_code: string | null }> = {};
       if (productIds.length > 0) {
-        const { data: productsData } = await supabase.from("products").select("id, image").in("id", productIds);
+        const { data: productsData } = await supabase
+          .from("products")
+          .select("id, image, manufacturer, supplier, product_code")
+          .in("id", productIds);
         (productsData || []).forEach((p: any) => {
-          imageMap[p.id] = p.image;
+          infoMap[p.id] = { image: p.image, manufacturer: p.manufacturer, supplier: p.supplier, product_code: p.product_code };
         });
       }
-      setDetailItems(itemRows.map((r) => ({ ...r, image: r.product_id != null ? imageMap[r.product_id] : null })));
+      setDetailItems(
+        itemRows.map((r) => {
+          const info = r.product_id != null ? infoMap[r.product_id] : null;
+          return {
+            ...r,
+            image: info?.image ?? null,
+            manufacturer: info?.manufacturer ?? null,
+            supplier: info?.supplier ?? null,
+            product_code: info?.product_code ?? null,
+          };
+        })
+      );
     }
     if (reviewRow) setDetailReview(reviewRow);
     setDetailLoading(false);
@@ -362,34 +380,22 @@ export default function OrdersPage() {
                   <p className="text-sm text-gray-400">Yuklanmoqda...</p>
                 ) : detailItems.length > 0 ? (
                   <div className="space-y-2">
-                    {detailItems.map((item) => {
-                      const content = (
-                        <>
-                          <ProductImage image={item.image} alt={item.product_name || ""} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-black truncate">{item.product_name}</p>
-                            <p className="text-xs text-gray-500">{item.quantity} x {item.price.toLocaleString()}₩</p>
-                          </div>
-                          <span className="text-sm font-bold text-black flex-shrink-0">
-                            {(item.quantity * item.price).toLocaleString()}₩
-                          </span>
-                          {item.product_id != null && <span className="text-gray-400 flex-shrink-0">›</span>}
-                        </>
-                      );
-                      return item.product_id != null ? (
-                        <Link
-                          key={item.id}
-                          href={`/admin/products/${item.product_id}`}
-                          className="flex items-center gap-3 border-b border-gray-200 pb-2 last:border-b-0 last:pb-0"
-                        >
-                          {content}
-                        </Link>
-                      ) : (
-                        <div key={item.id} className="flex items-center gap-3 border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
-                          {content}
+                    {detailItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setQuickViewItem(item)}
+                        className="w-full flex items-center gap-3 border-b border-gray-200 pb-2 last:border-b-0 last:pb-0 text-left"
+                      >
+                        <ProductImage image={item.image} alt={item.product_name || ""} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-black truncate">{item.product_name}</p>
+                          <p className="text-xs text-gray-500">{item.quantity} x {item.price.toLocaleString()}₩</p>
                         </div>
-                      );
-                    })}
+                        <span className="text-sm font-bold text-black flex-shrink-0">
+                          {(item.quantity * item.price).toLocaleString()}₩
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 ) : (
                   <pre className="whitespace-pre-wrap text-sm text-black">{detailOrder.order_text}</pre>
@@ -504,6 +510,44 @@ export default function OrdersPage() {
           onClick={() => setZoomedImage(null)}
         >
           <img src={zoomedImage} alt="chek katta" className="max-w-full max-h-full rounded-xl" />
+        </div>
+      )}
+
+      {quickViewItem && (
+        <div
+          className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"
+          onClick={() => setQuickViewItem(null)}
+        >
+          <div
+            className="bg-white rounded-2xl overflow-hidden w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
+              <ProductImage image={quickViewItem.image} alt={quickViewItem.product_name || ""} className="w-full aspect-square object-cover" />
+              <button
+                onClick={() => setQuickViewItem(null)}
+                aria-label="Yopish"
+                className="absolute top-3 right-3 bg-white/90 rounded-full w-9 h-9 flex items-center justify-center text-black text-xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4">
+              <p className="text-xl font-bold text-black leading-tight">{quickViewItem.product_name}</p>
+              {quickViewItem.manufacturer && (
+                <p className="text-sm text-gray-500 mt-1">🏭 Ishlab chiqaruvchi: {quickViewItem.manufacturer}</p>
+              )}
+              {quickViewItem.supplier && (
+                <p className="text-sm text-gray-500 mt-1">🚚 Firma: {quickViewItem.supplier}</p>
+              )}
+              {quickViewItem.product_code && (
+                <p className="text-sm text-gray-500 mt-1 font-mono">🏷️ BA kod: {quickViewItem.product_code}</p>
+              )}
+              <p className="text-lg font-extrabold text-green-700 mt-3">
+                {quickViewItem.quantity} x {quickViewItem.price.toLocaleString()}₩ = {(quickViewItem.quantity * quickViewItem.price).toLocaleString()}₩
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </main>
