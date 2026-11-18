@@ -445,7 +445,8 @@ export default function AdminProductsPage() {
             <button
               onClick={() => setShowFilterSheet(true)}
               aria-label="Qo'shimcha filtrlar"
-              className={`relative w-10 h-10 rounded-lg flex items-center justify-center text-lg ${hasActiveFilters ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"}`}
+              className={`relative w-10 h-10 rounded-lg flex items-center justify-center text-lg ${hasActiveFilters ? "bg-blue-600 text-white" : ""}`}
+              style={!hasActiveFilters ? { backgroundColor: "#2a2a2a", color: "#ffffff" } : undefined}
             >
               ⚙️
               {hasActiveFilters && (
@@ -578,7 +579,11 @@ export default function AdminProductsPage() {
               </div>
 
               <div className="flex gap-2 mt-5">
-                <button onClick={clearAdvancedFilters} className="flex-1 bg-gray-200 text-black font-bold py-3 rounded-xl">
+                <button
+                  onClick={clearAdvancedFilters}
+                  className="flex-1 font-bold py-3 rounded-xl"
+                  style={{ backgroundColor: "#2a2a2a", color: "#ffffff" }}
+                >
                   Tozalash
                 </button>
                 <button onClick={() => setShowFilterSheet(false)} className="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl">
@@ -641,7 +646,11 @@ export default function AdminProductsPage() {
               {bulkBusy ? "Bajarilmoqda..." : "✅ Bajarish"}
             </button>
             {selectedIds.size > 0 && (
-              <button onClick={clearSelection} className="px-4 bg-gray-200 text-black text-sm font-bold rounded-xl">
+              <button
+                onClick={clearSelection}
+                className="px-4 text-sm font-bold rounded-xl"
+                style={{ backgroundColor: "#2a2a2a", color: "#ffffff" }}
+              >
                 Bekor qilish
               </button>
             )}
