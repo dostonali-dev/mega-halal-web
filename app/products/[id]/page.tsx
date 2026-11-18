@@ -229,36 +229,41 @@ export default function ProductDetailPage() {
             ) : (
               <>
                 <p className="text-sm font-bold text-black mb-2">{t("product_choose_qty")}</p>
-                <div className="flex items-center gap-3 bg-gray-100 rounded-2xl px-4 py-3 mb-4">
-                  <button
-                    onClick={() => setLocalQty((q) => clampLocalQty(q - 1))}
-                    className="bg-white border-2 border-green-600 text-green-700 text-2xl font-bold w-10 h-10 rounded-xl"
+                <div className="flex items-stretch gap-3 mb-4">
+                  <div
+                    className="flex items-center gap-1.5 bg-gray-100 rounded-2xl px-2 py-3 flex-shrink-0"
+                    style={{ width: "30%" }}
                   >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min={1}
-                    max={remaining}
-                    value={localQty}
-                    onChange={(e) => setLocalQty(clampLocalQty(Number(e.target.value) || 1))}
-                    className="flex-1 text-center border-2 border-green-600 rounded-xl text-black font-bold py-2 bg-white text-lg"
-                  />
+                    <button
+                      onClick={() => setLocalQty((q) => clampLocalQty(q - 1))}
+                      className="bg-white border-2 border-green-600 text-green-700 text-lg font-bold w-8 h-8 rounded-lg flex-shrink-0"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={remaining}
+                      value={localQty}
+                      onChange={(e) => setLocalQty(clampLocalQty(Number(e.target.value) || 1))}
+                      className="flex-1 min-w-0 text-center border-2 border-green-600 rounded-lg text-black font-bold py-1.5 bg-white text-base"
+                    />
+                    <button
+                      onClick={() => setLocalQty((q) => clampLocalQty(q + 1))}
+                      disabled={localQty >= remaining}
+                      className="bg-white border-2 border-green-600 text-green-700 text-lg font-bold w-8 h-8 rounded-lg disabled:opacity-40 flex-shrink-0"
+                    >
+                      +
+                    </button>
+                  </div>
+
                   <button
-                    onClick={() => setLocalQty((q) => clampLocalQty(q + 1))}
-                    disabled={localQty >= remaining}
-                    className="bg-white border-2 border-green-600 text-green-700 text-2xl font-bold w-10 h-10 rounded-xl disabled:opacity-40"
+                    onClick={handleConfirm}
+                    className={`flex-1 py-5 rounded-2xl font-bold text-xl text-white ${justAdded ? "bg-green-800" : "bg-green-600 hover:bg-green-700"}`}
                   >
-                    +
+                    {justAdded ? t("product_added") : t("product_add_to_cart")}
                   </button>
                 </div>
-
-                <button
-                  onClick={handleConfirm}
-                  className={`w-full py-5 rounded-2xl font-bold text-xl text-white ${justAdded ? "bg-green-800" : "bg-green-600 hover:bg-green-700"}`}
-                >
-                  {justAdded ? t("product_added") : t("product_add_to_cart")}
-                </button>
               </>
             )}
 
