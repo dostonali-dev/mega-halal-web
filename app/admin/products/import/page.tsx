@@ -18,11 +18,12 @@ import { supabase } from "@/lib/supabase";
 
 type Category = { id: number; name: string };
 
-type FieldKey = "name" | "price" | "description" | "image" | "stock" | "productCode" | "keywords" | "supplier";
+type FieldKey = "name" | "price" | "costPrice" | "description" | "image" | "stock" | "productCode" | "keywords" | "supplier";
 
 const FIELD_DEFS: { key: FieldKey; label: string; required?: boolean; hint?: string }[] = [
   { key: "name", label: "Mahsulot nomi", required: true },
   { key: "price", label: "Narxi", required: true },
+  { key: "costPrice", label: "Kelgan narxi (ixtiyoriy)", hint: "Faqat siz ko'rasiz, mijozga ko'rinmaydi (masalan 원가, 매입가 ustuni)" },
   { key: "description", label: "Tavsif (masalan, 원산지 ustuni)", hint: "Bu ustundagi matn mahsulot tavsifiga yoziladi" },
   { key: "image", label: "Rasm URL", hint: "Faylda tayyor rasm havolasi bo'lsa" },
   { key: "stock", label: "Soni (ombordagi miqdor)" },
@@ -83,7 +84,7 @@ export default function ImportProductsPage() {
   // ba'zi fayllarda ustun sarlavhalari bo'sh yoki bir xil bo'lib chiqishi
   // mumkin, shu sabab matn bo'yicha moslashtirish xato bo'lishi mumkin edi.
   const [mapping, setMapping] = useState<Record<FieldKey, string>>({
-    name: "", price: "", description: "", image: "", stock: "", productCode: "", keywords: "", supplier: "",
+    name: "", price: "", costPrice: "", description: "", image: "", stock: "", productCode: "", keywords: "", supplier: "",
   });
   // "Firma / yetkazib beruvchi" ustundan olinishi shart emas — butun fayl
   // bitta firmadan bo'lsa, shu yerga bir marta qo'lda yozib qo'yish mumkin,
@@ -145,6 +146,7 @@ export default function ImportProductsPage() {
       setMapping({
         name: guess(["nomi", "name", "상품명", "제품명", "품명"]),
         price: guess(["narx", "price", "판매가", "가격", "단가"]),
+        costPrice: guess(["kelgan", "tannarx", "cost", "원가", "매입가"]),
         description: guess(["원산지", "tavsif", "description", "origin"]),
         image: guess(["rasm", "image", "이미지", "사진"]),
         stock: guess(["soni", "stock", "수량", "재고"]),
@@ -223,6 +225,7 @@ export default function ImportProductsPage() {
       // 3) Qatorlarni mahsulot obyektlariga aylantirish.
       const nameIdx = colIndex("name");
       const priceIdx = colIndex("price");
+      const costPriceIdx = colIndex("costPrice");
       const descIdx = colIndex("description");
       const imageIdx = colIndex("image");
       const stockIdx = colIndex("stock");
@@ -233,6 +236,7 @@ export default function ImportProductsPage() {
       const products = goodRows.map((r) => ({
         name: cellToStr(r[nameIdx]),
         price: parsePrice(r[priceIdx]),
+        cost_price: costPriceIdx >= 0 && cellToStr(r[costPriceIdx]) !== "" ? parsePrice(r[costPriceIdx]) : null,
         category,
         description: descIdx >= 0 ? cellToStr(r[descIdx]) || null : null,
         image: imageIdx >= 0 ? cellToStr(r[imageIdx]) || null : null,

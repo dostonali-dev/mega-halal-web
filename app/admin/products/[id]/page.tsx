@@ -22,6 +22,7 @@ type Product = {
   hidden?: boolean | null;
   product_code?: string | null;
   manufacturer?: string | null;
+  cost_price?: number | null;
   keywords?: string | null;
   parent_product_id?: number | null;
   variant_name?: string | null;
@@ -46,6 +47,7 @@ export default function AdminEditProductPage() {
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [costPrice, setCostPrice] = useState("");
   const [gram, setGram] = useState("");
   const [weightUnit, setWeightUnit] = useState("gr");
   const [manufacturer, setManufacturer] = useState("");
@@ -92,6 +94,7 @@ export default function AdminEditProductPage() {
       const p = product as Product;
       setName(p.name);
       setPrice(String(p.price));
+      setCostPrice(p.cost_price != null ? String(p.cost_price) : "");
       setGram(p.gram != null ? String(p.gram) : "");
       setWeightUnit(p.weight_unit || "gr");
       setManufacturer(p.manufacturer || "");
@@ -128,7 +131,7 @@ export default function AdminEditProductPage() {
         imageUrl = urlData.publicUrl;
       }
       const payload = {
-        name, price: Number(price), gram: gram ? Number(gram) : null, weight_unit: gram ? weightUnit : null, manufacturer: manufacturer.trim() || null, expiry_date: expiryDate || null, category, image: imageUrl || null,
+        name, price: Number(price), cost_price: costPrice ? Number(costPrice) : null, gram: gram ? Number(gram) : null, weight_unit: gram ? weightUnit : null, manufacturer: manufacturer.trim() || null, expiry_date: expiryDate || null, category, image: imageUrl || null,
         description: description || null, keywords: keywords.trim() || null, supplier: supplier || null,
         // Bo'sh qoldirilsa -> null (soni kuzatilmayapti, cheklovsiz sotiladi).
         // Aniq son (0 ham) kiritilsa -> shu son qat'iy chegara bo'ladi.
@@ -199,6 +202,10 @@ export default function AdminEditProductPage() {
         </div>
         <div className="relative">
           <input type="number" placeholder="Narxi" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-white text-black" />
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
+        </div>
+        <div className="relative">
+          <input type="number" placeholder="Kelgan narxi (ixtiyoriy, faqat siz ko'rasiz)" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-yellow-50 text-black" />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
         </div>
         <div className="flex gap-2">
