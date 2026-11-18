@@ -23,14 +23,18 @@ type Product = {
   product_code?: string | null;
   keywords?: string | null;
   expiry_date?: string | null;
+  created_at?: string | null;
 };
 
-type BulkAction = "" | "move" | "delete" | "in_stock" | "out_of_stock" | "hide" | "show";
+type BulkAction = "" | "move" | "delete" | "in_stock" | "out_of_stock" | "hide" | "show" | "discount" | "remove_discount";
+
+type SortBy = "" | "price_asc" | "price_desc" | "sales_desc" | "newest" | "expiry_asc";
 
 type Category = { id: number; name: string; icon: string | null };
 
 const OPEN_GROUP_KEY = "admin_products_open_group";
 const SCROLL_Y_KEY = "admin_products_scroll_y";
+const DAY_MS = 86400000;
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -48,9 +52,32 @@ export default function AdminProductsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkAction, setBulkAction] = useState<BulkAction>("");
   const [bulkTargetCategory, setBulkTargetCategory] = useState("");
+  const [bulkDiscountPercent, setBulkDiscountPercent] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loadError, setLoadError] = useState("");
+
+  // Tez-tez ishlatiladigan chiplar (qidiruv tagidagi gorizontal qator).
+  const [activeChips, setActiveChips] = useState<Set<string>>(new Set());
+
+  // "⚙️" tugmasi bilan ochiladigan qo'shimcha filtrlar (bottom sheet).
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [filterSupplier, setFilterSupplier] = useState("");
+  const [filterStockMin, setFilterStockMin] = useState("");
+  const [filterStockMax, setFilterStockMax] = useState("");
+  const [filterZeroStock, setFilterZeroStock] = useState(false);
+  const [filterNotSelling, setFilterNotSelling] = useState(false);
+  const [filterNoImage, setFilterNoImage] = useState(false);
+  const [filterNoDescription, setFilterNoDescription] = useState(false);
+  const [filterNoBarcode, setFilterNoBarcode] = useState(false);
+  const [filterHiddenOnly, setFilterHiddenOnly] = useState(false);
+  const [filterNewOnly, setFilterNewOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<SortBy>("");
+
+  // Sotuv statistikasi ("eng ko'p sotilgan" va "30 kunda sotilmagan"
+  // filtrlari uchun) - order_items jadvalidan bir marta yuklab olinadi.
+  const [salesCounts, setSalesCounts] = useState<Record<number, number>>({});
+  const [lastSaleAt, setLastSaleAt] = useState<Record<number, number>>({});
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -84,10 +111,31 @@ export default function AdminProductsPage() {
     if (!error) setCategoriesList(data || []);
   };
 
+  // "Eng ko'p sotilgan" va "30 kunda sotilmagan" filtrlari uchun har bir
+  // mahsulotning jami sotilgan soni va oxirgi sotilgan sanasini hisoblaymiz.
+  const loadSalesData = async () => {
+    try {
+      const rows = await fetchAllRows<any>("order_items", "id", false);
+      const counts: Record<number, number> = {};
+      const last: Record<number, number> = {};
+      for (const r of rows) {
+        if (r.product_id == null) continue;
+        counts[r.product_id] = (counts[r.product_id] || 0) + (r.quantity || 0);
+        const t = r.created_at ? new Date(r.created_at).getTime() : 0;
+        if (t && (!last[r.product_id] || t > last[r.product_id])) last[r.product_id] = t;
+      }
+      setSalesCounts(counts);
+      setLastSaleAt(last);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     if (checkedLogin) {
       loadProducts();
       loadCategories();
+      loadSalesData();
     }
   }, [checkedLogin]);
 
@@ -151,6 +199,7 @@ export default function AdminProductsPage() {
     setSelectedIds(new Set());
     setBulkAction("");
     setBulkTargetCategory("");
+    setBulkDiscountPercent("");
   };
 
   const applyBulkAction = async () => {
@@ -187,26 +236,177 @@ export default function AdminProductsPage() {
         );
         return;
       }
+    } else if (bulkAction === "discount") {
+      const percent = Number(bulkDiscountPercent);
+      if (!percent || percent <= 0 || percent >= 100) { alert("Chegirma foizini to'g'ri kiriting (masalan 30)."); return; }
+      if (!confirm(`${ids.length} ta mahsulotga ${percent}% chegirma qo'ymoqchimisiz?`)) return;
+      setBulkBusy(true);
+      const targets = products.filter((p) => ids.includes(p.id));
+      for (const p of targets) {
+        const newDiscount = Math.max(0, Math.round(p.price * (1 - percent / 100)));
+        await supabase.from("products").update({ discount_price: newDiscount }).eq("id", p.id);
+      }
+      setBulkBusy(false);
+    } else if (bulkAction === "remove_discount") {
+      setBulkBusy(true);
+      const { error } = await supabase.from("products").update({ discount_price: null }).in("id", ids);
+      setBulkBusy(false);
+      if (error) { alert("Xatolik: " + error.message); return; }
     }
 
     clearSelection();
     await loadProducts();
   };
 
-  const filteredProducts = products.filter((p) => {
+  // Eng ko'p sotilgan top-30 mahsulot (sotuv soni bo'yicha) - "⭐ Top" chip
+  // shu ro'yxatga kiruvchilarnigina ko'rsatadi.
+  const topSellingIds = new Set(
+    Object.entries(salesCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 30)
+      .map(([id]) => Number(id))
+  );
+
+  const supplierOptions = [...new Set(
+    products.map((p) => (p.supplier || "").trim()).filter((s) => s !== "")
+  )].sort();
+
+  const toggleChip = (key: string) => {
+    setActiveChips((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const now = Date.now();
+
+  const matchesFilters = (p: Product) => {
+    // Tez chiplar - bir nechtasi yoqilsa, hammasi bajarilishi kerak (AND).
+    if (activeChips.has("hot") && !p.is_hot) return false;
+    if (activeChips.has("discount") && !(p.discount_price != null && p.discount_price > 0 && p.discount_price < p.price)) return false;
+    if (activeChips.has("expiry")) {
+      if (!p.expiry_date) return false;
+      const days = Math.ceil((new Date(p.expiry_date).getTime() - now) / DAY_MS);
+      if (days > 30) return false;
+    }
+    if (activeChips.has("lowstock")) {
+      if (p.stock == null || p.stock <= 0 || p.stock > 10) return false;
+    }
+    if (activeChips.has("topselling") && !topSellingIds.has(p.id)) return false;
+
+    // Qo'shimcha filtrlar (⚙️ oynasi).
+    if (filterSupplier && (p.supplier || "").trim() !== filterSupplier) return false;
+    if (filterStockMin !== "" && (p.stock ?? 0) < Number(filterStockMin)) return false;
+    if (filterStockMax !== "" && (p.stock ?? 0) > Number(filterStockMax)) return false;
+    if (filterZeroStock && p.stock !== 0) return false;
+    if (filterNotSelling) {
+      const createdAt = p.created_at ? new Date(p.created_at).getTime() : 0;
+      const createdRecently = createdAt > 0 && now - createdAt < 30 * DAY_MS;
+      if (createdRecently) return false; // yangi mahsulotga adolatsiz bo'lmasin
+      const last = lastSaleAt[p.id];
+      if (last && now - last < 30 * DAY_MS) return false;
+    }
+    if (filterNoImage && p.image) return false;
+    if (filterNoDescription && p.description && p.description.trim() !== "") return false;
+    if (filterNoBarcode && p.product_code && p.product_code.trim() !== "") return false;
+    if (filterHiddenOnly && p.hidden !== true) return false;
+    if (filterNewOnly) {
+      const createdAt = p.created_at ? new Date(p.created_at).getTime() : 0;
+      if (!createdAt || now - createdAt > 7 * DAY_MS) return false;
+    }
+    return true;
+  };
+
+  const hasActiveFilters =
+    activeChips.size > 0 ||
+    filterSupplier !== "" ||
+    filterStockMin !== "" ||
+    filterStockMax !== "" ||
+    filterZeroStock ||
+    filterNotSelling ||
+    filterNoImage ||
+    filterNoDescription ||
+    filterNoBarcode ||
+    filterHiddenOnly ||
+    filterNewOnly;
+
+  const searchedProducts = products.filter((p) => {
     const q = adminSearch.toLowerCase();
-    return (
+    const textOk = !q ||
       p.name.toLowerCase().includes(q) ||
       (p.product_code || "").toLowerCase().includes(q) ||
       (p.description || "").toLowerCase().includes(q) ||
-      (p.keywords || "").toLowerCase().includes(q)
-    );
+      (p.keywords || "").toLowerCase().includes(q);
+    return textOk && matchesFilters(p);
   });
+
+  let filteredProducts = searchedProducts;
+  if (sortBy) {
+    filteredProducts = [...filteredProducts].sort((a, b) => {
+      if (sortBy === "price_asc") return a.price - b.price;
+      if (sortBy === "price_desc") return b.price - a.price;
+      if (sortBy === "sales_desc") return (salesCounts[b.id] || 0) - (salesCounts[a.id] || 0);
+      if (sortBy === "newest") {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return tb - ta;
+      }
+      if (sortBy === "expiry_asc") {
+        const ea = a.expiry_date ? new Date(a.expiry_date).getTime() : Infinity;
+        const eb = b.expiry_date ? new Date(b.expiry_date).getTime() : Infinity;
+        return ea - eb;
+      }
+      return 0;
+    });
+  }
+
+  const showFlatList = adminSearch.trim() !== "" || hasActiveFilters || sortBy !== "";
+
+  const clearAdvancedFilters = () => {
+    setFilterSupplier("");
+    setFilterStockMin("");
+    setFilterStockMax("");
+    setFilterZeroStock(false);
+    setFilterNotSelling(false);
+    setFilterNoImage(false);
+    setFilterNoDescription(false);
+    setFilterNoBarcode(false);
+    setFilterHiddenOnly(false);
+    setFilterNewOnly(false);
+    setSortBy("");
+  };
+
+  const clearAllFilters = () => {
+    setAdminSearch("");
+    setActiveChips(new Set());
+    clearAdvancedFilters();
+  };
+
   const knownCategoryNames = categoriesList.map((c) => c.name);
   const orphanCategories = [...new Set(products.map((p) => p.category))].filter(
     (name) => !knownCategoryNames.includes(name)
   );
   const productGroups = [...knownCategoryNames, ...orphanCategories];
+
+  const QUICK_CHIPS: { key: string; label: string }[] = [
+    { key: "hot", label: "🔥 Hot" },
+    { key: "discount", label: "% Chegirma" },
+    { key: "expiry", label: "⏰ Muddati oz qolgan" },
+    { key: "lowstock", label: "📦 Kam qoldiq" },
+    { key: "topselling", label: "⭐ Eng ko'p sotilgan" },
+  ];
+
+  const ADVANCED_TOGGLES: { key: string; label: string; value: boolean; set: (v: boolean) => void }[] = [
+    { key: "zeroStock", label: "🚫 Qoldiq tugagan (0)", value: filterZeroStock, set: setFilterZeroStock },
+    { key: "notSelling", label: "💤 30 kunda sotilmagan", value: filterNotSelling, set: setFilterNotSelling },
+    { key: "noImage", label: "🖼️ Rasmsiz", value: filterNoImage, set: setFilterNoImage },
+    { key: "noDescription", label: "📝 Tavsifsiz", value: filterNoDescription, set: setFilterNoDescription },
+    { key: "noBarcode", label: "🔖 Shtrix-kodsiz", value: filterNoBarcode, set: setFilterNoBarcode },
+    { key: "hiddenOnly", label: "🙈 Yashirin/nofaol", value: filterHiddenOnly, set: setFilterHiddenOnly },
+    { key: "newOnly", label: "🆕 Yangi qo'shilgan (7 kun)", value: filterNewOnly, set: setFilterNewOnly },
+  ];
 
   if (!checkedLogin) return null;
 
@@ -233,22 +433,60 @@ export default function AdminProductsPage() {
       )}
 
       <div className="max-w-2xl">
-        <div className="relative mb-4">
+        <div className="relative mb-2">
           <input
             type="text"
             placeholder="🔎 Mahsulot nomi yoki kodi bo'yicha qidirish..."
             value={adminSearch}
             onChange={(e) => setAdminSearch(e.target.value)}
-            className="w-full border p-3 pr-14 rounded-xl bg-white text-black"
+            className="w-full border p-3 pr-24 rounded-xl bg-white text-black"
           />
-          <button
-            onClick={() => setShowScanner(true)}
-            aria-label="Barkodni kamera bilan skanerlash"
-            className="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 rounded-lg bg-green-600 text-white flex items-center justify-center text-lg"
-          >
-            📷
-          </button>
+          <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-1.5">
+            <button
+              onClick={() => setShowFilterSheet(true)}
+              aria-label="Qo'shimcha filtrlar"
+              className={`relative w-10 h-10 rounded-lg flex items-center justify-center text-lg ${hasActiveFilters ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"}`}
+            >
+              ⚙️
+              {hasActiveFilters && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
+                  •
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setShowScanner(true)}
+              aria-label="Barkodni kamera bilan skanerlash"
+              className="w-10 h-10 rounded-lg bg-green-600 text-white flex items-center justify-center text-lg"
+            >
+              📷
+            </button>
+          </div>
         </div>
+
+        {/* Tez-tez ishlatiladigan chiplar - bitta bosishda yoqiladi/o'chadi. */}
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-3 -mx-1 px-1">
+          {QUICK_CHIPS.map((chip) => (
+            <button
+              key={chip.key}
+              onClick={() => toggleChip(chip.key)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-colors ${
+                activeChips.has(chip.key)
+                  ? "bg-green-600 text-white border-green-600"
+                  : "bg-white text-gray-600 border-gray-300"
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
+        {showFlatList && (
+          <div className="flex items-center justify-between mb-3 px-1">
+            <p className="text-xs font-bold text-gray-500">Topildi: {filteredProducts.length}</p>
+            <button onClick={clearAllFilters} className="text-xs font-bold text-red-500">✕ Tozalash</button>
+          </div>
+        )}
 
         {showScanner && (
           <BarcodeScannerModal
@@ -258,6 +496,97 @@ export default function AdminProductsPage() {
             }}
             onClose={() => setShowScanner(false)}
           />
+        )}
+
+        {showFilterSheet && (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center"
+            style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+            onClick={() => setShowFilterSheet(false)}
+          >
+            <div
+              className="bg-white w-full max-w-2xl rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-black">Qo'shimcha filtrlar</h2>
+                <button onClick={() => setShowFilterSheet(false)} className="text-gray-400 text-2xl leading-none">✕</button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 px-1">🏭 Firma</label>
+                  <select
+                    value={filterSupplier}
+                    onChange={(e) => setFilterSupplier(e.target.value)}
+                    className="w-full border p-3 rounded-xl bg-white text-black mt-1"
+                  >
+                    <option value="">Barchasi</option>
+                    {supplierOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-gray-500 px-1">📦 Qoldiq oralig'i</label>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={filterStockMin}
+                      onChange={(e) => setFilterStockMin(e.target.value)}
+                      className="w-full border p-3 rounded-xl bg-white text-black"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={filterStockMax}
+                      onChange={(e) => setFilterStockMax(e.target.value)}
+                      className="w-full border p-3 rounded-xl bg-white text-black"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-gray-500 px-1">↕️ Saralash</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortBy)}
+                    className="w-full border p-3 rounded-xl bg-white text-black mt-1"
+                  >
+                    <option value="">Standart</option>
+                    <option value="price_asc">Narx: arzondan qimmatga</option>
+                    <option value="price_desc">Narx: qimmatdan arzonga</option>
+                    <option value="sales_desc">Eng ko'p sotilgan</option>
+                    <option value="newest">Yangi qo'shilgan</option>
+                    <option value="expiry_asc">Muddati yaqin</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t">
+                  {ADVANCED_TOGGLES.map((item) => (
+                    <label key={item.key} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={item.value}
+                        onChange={(e) => item.set(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-semibold text-black">{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-5">
+                <button onClick={clearAdvancedFilters} className="flex-1 bg-gray-200 text-black font-bold py-3 rounded-xl">
+                  Tozalash
+                </button>
+                <button onClick={() => setShowFilterSheet(false)} className="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl">
+                  Qo'llash ({filteredProducts.length})
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         <div
@@ -279,6 +608,8 @@ export default function AdminProductsPage() {
               <option value="out_of_stock">🚫 Sotuvda yo'q qilish</option>
               <option value="hide">🙈 Berkitish (mijozlarga ko'rinmasin)</option>
               <option value="show">👁️ Ochish (mijozlarga ko'rinsin)</option>
+              <option value="discount">💸 Chegirma qo'yish (%)</option>
+              <option value="remove_discount">♻️ Chegirmani olib tashlash</option>
               <option value="delete">🗑️ O'chirish</option>
             </select>
             {bulkAction === "move" && (
@@ -290,6 +621,15 @@ export default function AdminProductsPage() {
                 <option value="">Qaysi kategoriyaga?</option>
                 {categoriesList.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
+            )}
+            {bulkAction === "discount" && (
+              <input
+                type="number"
+                placeholder="Chegirma foizi (masalan 30)"
+                value={bulkDiscountPercent}
+                onChange={(e) => setBulkDiscountPercent(e.target.value)}
+                className="flex-1 border p-2.5 rounded-xl bg-white text-black text-sm"
+              />
             )}
           </div>
           <div className="flex gap-2">
@@ -308,7 +648,7 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {adminSearch.trim() ? (
+        {showFlatList ? (
           <div className="space-y-3">
             <label className="flex items-center gap-2 text-xs font-bold text-gray-500 px-1">
               <input
@@ -316,7 +656,7 @@ export default function AdminProductsPage() {
                 checked={filteredProducts.length > 0 && filteredProducts.every((p) => selectedIds.has(p.id))}
                 onChange={() => toggleSelectGroup(filteredProducts)}
               />
-              Qidiruv natijalarining barchasini belgilash
+              Filtr natijalarining barchasini belgilash
             </label>
             {filteredProducts.map((p) => (
               <ProductRow key={p.id} p={p} selected={selectedIds.has(p.id)} onToggleSelect={toggleSelect} onDelete={handleDeleteProduct} onToggleStock={toggleInStock} onToggleHot={toggleHot} />
