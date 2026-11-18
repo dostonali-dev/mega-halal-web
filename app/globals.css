@@ -119,9 +119,10 @@ input::placeholder, textarea::placeholder {
   color: rgba(255, 255, 255, 0.55) !important;
 }
 
-/* Sarlavha (Mega Halal Supermarket) — och yashil */
+/* Sarlavha (Mega Halal Supermarket) — to'q yashil (butun saytdagi asosiy
+   yashil rang bilan bir xil, masalan savatcha tugmasi) */
 h1.site-title {
-  color: #86efac !important;
+  color: #16a34a !important;
 }
 
 /* Pastki menyu (BottomNav) fonini ham moslashtiramiz */

@@ -103,18 +103,24 @@ function ProductStrip({
                     onClick={() => addToCart(item.id)}
                     aria-label="Savatchaga qo'shish"
                     className="w-full rounded-lg py-1.5 flex items-center justify-center"
-                    style={{ backgroundColor: "#a7f3d0" }}
+                    style={{ backgroundColor: "#16a34a" }}
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
-                      <circle cx="9" cy="20.5" r="1.4" fill="#000000" stroke="none" />
-                      <circle cx="18" cy="20.5" r="1.4" fill="#000000" stroke="none" />
+                      <circle cx="9" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
+                      <circle cx="18" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
                     </svg>
                   </button>
                 ) : (
                   <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
-                    <button onClick={() => removeFromCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
-                      {qty === 1 ? "🗑" : "−"}
+                    <button onClick={() => removeFromCart(item.id)} aria-label={qty === 1 ? "O'chirish" : "Kamaytirish"} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
+                      {qty === 1 ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 7h16" />
+                          <path d="M6 7l1 13a2 2 0 0 0 2 1.9h6a2 2 0 0 0 2-1.9L18 7" />
+                          <path d="M9.5 7V4.8A1 1 0 0 1 10.5 3.8h3a1 1 0 0 1 1 1V7" />
+                        </svg>
+                      ) : "−"}
                     </button>
                     <span className="text-white font-bold text-xs">{qty}</span>
                     <button onClick={() => addToCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
@@ -511,18 +517,24 @@ export default function Home() {
                             onClick={() => addToCart(item.id)}
                             aria-label="Savatchaga qo'shish"
                             className="w-full rounded-lg py-1.5 flex items-center justify-center"
-                            style={{ backgroundColor: "#a7f3d0" }}
+                            style={{ backgroundColor: "#16a34a" }}
                           >
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
-                              <circle cx="9" cy="20.5" r="1.4" fill="#000000" stroke="none" />
-                              <circle cx="18" cy="20.5" r="1.4" fill="#000000" stroke="none" />
+                              <circle cx="9" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
+                              <circle cx="18" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
                             </svg>
                           </button>
                         ) : (
                           <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
-                            <button onClick={() => removeFromCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
-                              {qty === 1 ? "🗑" : "−"}
+                            <button onClick={() => removeFromCart(item.id)} aria-label={qty === 1 ? "O'chirish" : "Kamaytirish"} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
+                              {qty === 1 ? (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M4 7h16" />
+                                  <path d="M6 7l1 13a2 2 0 0 0 2 1.9h6a2 2 0 0 0 2-1.9L18 7" />
+                                  <path d="M9.5 7V4.8A1 1 0 0 1 10.5 3.8h3a1 1 0 0 1 1 1V7" />
+                                </svg>
+                              ) : "−"}
                             </button>
                             <span className="text-white font-bold text-xs">{qty}</span>
                             <button onClick={() => addToCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
