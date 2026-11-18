@@ -88,20 +88,20 @@ function ProductStrip({
               </Link>
               <div className="p-2">
                 <Link href={`/products/${item.id}`}>
-                  <p className="font-bold text-sm leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
+                  <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                 </Link>
                 {(item.gram != null || item.manufacturer) && (
-                  <p className="text-gray-400 text-[10px] mb-1 truncate">
+                  <p className="text-gray-400 text-xs mb-1 truncate">
                     {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
                     {item.gram != null && item.manufacturer ? " · " : ""}
                     {item.manufacturer || ""}
                   </p>
                 )}
                 <div className="mb-1.5">
-                  <p className="text-green-400 font-extrabold text-sm">
+                  <p className="text-green-400 font-extrabold text-base">
                     {(hasDiscount ? item.discount_price! : item.price).toLocaleString()}₩
                   </p>
-                  <p className={`text-gray-400 text-[10px] line-through ${hasDiscount ? "" : "invisible"}`}>
+                  <p className={`text-gray-400 text-xs line-through ${hasDiscount ? "" : "invisible"}`}>
                     {item.price.toLocaleString()}₩
                   </p>
                 </div>
@@ -509,20 +509,20 @@ export default function Home() {
                       </Link>
                       <div className="p-2">
                         <Link href={`/products/${item.id}`}>
-                          <p className="font-bold text-sm leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
+                          <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                         </Link>
                         {(item.gram != null || item.manufacturer) && (
-                          <p className="text-gray-400 text-[10px] mb-1 truncate">
+                          <p className="text-gray-400 text-xs mb-1 truncate">
                             {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
                             {item.gram != null && item.manufacturer ? " · " : ""}
                             {item.manufacturer || ""}
                           </p>
                         )}
                         <div className="mb-1.5">
-                          <p className="text-green-400 font-extrabold text-sm">
+                          <p className="text-green-400 font-extrabold text-base">
                             {(hasDiscount ? item.discount_price! : item.price).toLocaleString()}₩
                           </p>
-                          <p className={`text-gray-400 text-[10px] line-through ${hasDiscount ? "" : "invisible"}`}>
+                          <p className={`text-gray-400 text-xs line-through ${hasDiscount ? "" : "invisible"}`}>
                             {item.price.toLocaleString()}₩
                           </p>
                         </div>
