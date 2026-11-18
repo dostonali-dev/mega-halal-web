@@ -25,6 +25,7 @@ type Product = {
   parent_product_id?: number | null;
   variant_name?: string | null;
   gram?: number | null;
+  weight_unit?: string | null;
   expiry_date?: string | null;
 };
 
@@ -45,6 +46,7 @@ export default function AdminEditProductPage() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [gram, setGram] = useState("");
+  const [weightUnit, setWeightUnit] = useState("gr");
   const [expiryDate, setExpiryDate] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -89,6 +91,7 @@ export default function AdminEditProductPage() {
       setName(p.name);
       setPrice(String(p.price));
       setGram(p.gram != null ? String(p.gram) : "");
+      setWeightUnit(p.weight_unit || "gr");
       setExpiryDate(p.expiry_date || "");
       setCategory(p.category);
       setDescription(p.description || "");
@@ -122,7 +125,7 @@ export default function AdminEditProductPage() {
         imageUrl = urlData.publicUrl;
       }
       const payload = {
-        name, price: Number(price), gram: gram ? Number(gram) : null, expiry_date: expiryDate || null, category, image: imageUrl || null,
+        name, price: Number(price), gram: gram ? Number(gram) : null, weight_unit: gram ? weightUnit : null, expiry_date: expiryDate || null, category, image: imageUrl || null,
         description: description || null, keywords: keywords.trim() || null, supplier: supplier || null,
         // Bo'sh qoldirilsa -> null (soni kuzatilmayapti, cheklovsiz sotiladi).
         // Aniq son (0 ham) kiritilsa -> shu son qat'iy chegara bo'ladi.
@@ -191,9 +194,13 @@ export default function AdminEditProductPage() {
           <input type="number" placeholder="Narxi" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-white text-black" />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
         </div>
-        <div className="relative">
-          <input type="number" placeholder="Og'irligi (ixtiyoriy)" value={gram} onChange={(e) => setGram(e.target.value)} className="w-full border p-3 pr-12 rounded-xl bg-white text-black" />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">gr</span>
+        <div className="flex gap-2">
+          <input type="number" step="0.01" placeholder="Og'irligi / hajmi (ixtiyoriy)" value={gram} onChange={(e) => setGram(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black" />
+          <select value={weightUnit} onChange={(e) => setWeightUnit(e.target.value)} className="border p-3 rounded-xl bg-white text-black">
+            <option value="gr">gr</option>
+            <option value="kg">kg</option>
+            <option value="L">L</option>
+          </select>
         </div>
         <input type="number" placeholder="Soni (bo'sh = cheklovsiz, 0 = sotuvda yo'q)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
 

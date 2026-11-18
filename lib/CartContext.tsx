@@ -20,6 +20,7 @@ export type Product = {
   parent_product_id?: number | null;
   variant_name?: string | null;
   gram?: number | null;
+  weight_unit?: string | null;
   expiry_date?: string | null;
 };
 export type Category = {

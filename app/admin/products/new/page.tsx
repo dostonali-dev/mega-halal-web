@@ -19,6 +19,8 @@ export default function NewProductPage() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [gram, setGram] = useState("");
+  const [weightUnit, setWeightUnit] = useState("gr");
+  const [productCode, setProductCode] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -53,7 +55,7 @@ export default function NewProductPage() {
   }, [checkedLogin]);
 
   const resetForm = () => {
-    setName(""); setPrice(""); setGram(""); setExpiryDate(""); setCategory(""); setDescription("");
+    setName(""); setPrice(""); setGram(""); setWeightUnit("gr"); setProductCode(""); setExpiryDate(""); setCategory(""); setDescription("");
     setKeywords("");
     setSupplier(""); setStock(""); setDiscountPrice(""); setIsHot(false);
     setParentProductId(""); setVariantName("");
@@ -77,7 +79,7 @@ export default function NewProductPage() {
         imageUrl = urlData.publicUrl;
       }
       const { error } = await supabase.from("products").insert([{
-        name, price: Number(price), gram: gram ? Number(gram) : null, expiry_date: expiryDate || null, category, image: imageUrl || null,
+        name, price: Number(price), gram: gram ? Number(gram) : null, weight_unit: gram ? weightUnit : null, product_code: productCode.trim() || null, expiry_date: expiryDate || null, category, image: imageUrl || null,
         description: description || null, keywords: keywords.trim() || null, supplier: supplier || null,
         stock: stock ? Number(stock) : 0,
         discount_price: discountPrice ? Number(discountPrice) : null,
@@ -122,10 +124,15 @@ export default function NewProductPage() {
           <input type="number" placeholder="Narxi" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-white text-black" />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
         </div>
-        <div className="relative">
-          <input type="number" placeholder="Og'irligi (ixtiyoriy)" value={gram} onChange={(e) => setGram(e.target.value)} className="w-full border p-3 pr-12 rounded-xl bg-white text-black" />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">gr</span>
+        <div className="flex gap-2">
+          <input type="number" step="0.01" placeholder="Og'irligi / hajmi (ixtiyoriy)" value={gram} onChange={(e) => setGram(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black" />
+          <select value={weightUnit} onChange={(e) => setWeightUnit(e.target.value)} className="border p-3 rounded-xl bg-white text-black">
+            <option value="gr">gr</option>
+            <option value="kg">kg</option>
+            <option value="L">L</option>
+          </select>
         </div>
+        <input type="text" placeholder="Mahsulot kodi / barkod (faqat siz ko'rasiz, mijozga ko'rinmaydi)" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="number" placeholder="Soni (ombordagi miqdor)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
 
         <div>
