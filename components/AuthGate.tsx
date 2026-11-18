@@ -27,7 +27,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (showIntroVideo || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#000000" }}>
+      <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "#000000" }}>
         {showIntroVideo ? (
           <video
             src="/videos/mega-intro.mp4"
@@ -36,7 +36,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
             playsInline
             onEnded={() => setVideoDone(true)}
             onError={() => setVideoFailed(true)}
-            className="w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
           <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "#86efac" }}>
