@@ -516,23 +516,29 @@ export default function OrdersPage() {
                     />
                   </div>
                   <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={async () => {
-                        if (!confirm("Rostdan ham to'lov tasdiqlandimi?")) return;
-                        const ok = await updateOrderStatus(detailOrder.id, "✅ To'lov tasdiqlandi");
-                        if (!ok) return;
-                        await fetch("/api/order/paid", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ orderNumber: detailOrder.id, status: "paid", userId: detailOrder.user_id }),
-                        });
-                        await refreshDetailOrder(detailOrder.id);
-                        loadOrders();
-                      }}
-                      className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm"
-                    >
-                      ✅ To'lovni tasdiqlash
-                    </button>
+                    {/* To'lov allaqachon tasdiqlangan bo'lsa, shu tugmani
+                        umuman ko'rsatmaymiz - aks holda admin uni yana
+                        bosib, "hech narsa o'zgarmadi" deb o'ylab qolardi,
+                        holbuki yuqoridagi ⚪ belgisi allaqachon o'zgargan edi. */}
+                    {detailOrder.status !== "✅ To'lov tasdiqlandi" && detailOrder.status !== "✅ To'landi" && (
+                      <button
+                        onClick={async () => {
+                          if (!confirm("Rostdan ham to'lov tasdiqlandimi?")) return;
+                          const ok = await updateOrderStatus(detailOrder.id, "✅ To'lov tasdiqlandi");
+                          if (!ok) return;
+                          await fetch("/api/order/paid", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ orderNumber: detailOrder.id, status: "paid", userId: detailOrder.user_id }),
+                          });
+                          await refreshDetailOrder(detailOrder.id);
+                          loadOrders();
+                        }}
+                        className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm"
+                      >
+                        ✅ To'lovni tasdiqlash
+                      </button>
+                    )}
                     <button
                       onClick={async () => {
                         if (!confirm("Rostdan ham mahsulot jo'natildimi?")) return;
