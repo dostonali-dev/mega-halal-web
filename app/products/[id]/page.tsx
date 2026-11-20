@@ -227,44 +227,41 @@ export default function ProductDetailPage() {
                 {t("product_max_in_cart")}
               </div>
             ) : (
-              <>
-                <p className="text-sm font-bold text-black mb-2">{t("product_choose_qty")}</p>
-                <div className="flex items-stretch gap-3 mb-4">
-                  <div
-                    className="flex items-stretch gap-1.5 bg-gray-100 rounded-2xl p-1.5 flex-shrink-0"
-                    style={{ width: "40%" }}
-                  >
-                    <button
-                      onClick={() => setLocalQty((q) => clampLocalQty(q - 1))}
-                      className="flex-1 h-11 flex items-center justify-center bg-white border-2 border-green-600 text-green-700 text-xl font-bold rounded-xl"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      max={remaining}
-                      value={localQty}
-                      onChange={(e) => setLocalQty(clampLocalQty(Number(e.target.value) || 1))}
-                      className="flex-1 h-11 min-w-0 text-center border-2 border-green-600 rounded-xl text-black font-extrabold text-xl bg-white"
-                    />
-                    <button
-                      onClick={() => setLocalQty((q) => clampLocalQty(q + 1))}
-                      disabled={localQty >= remaining}
-                      className="flex-1 h-11 flex items-center justify-center bg-white border-2 border-green-600 text-green-700 text-xl font-bold rounded-xl disabled:opacity-40"
-                    >
-                      +
-                    </button>
-                  </div>
-
+              <div className="flex items-stretch gap-3 mb-4" style={{ height: "4.5rem" }}>
+                <div
+                  className="flex items-stretch gap-1.5 bg-gray-100 rounded-2xl p-1.5 flex-shrink-0"
+                  style={{ width: "40%" }}
+                >
                   <button
-                    onClick={handleConfirm}
-                    className={`flex-1 py-5 rounded-2xl font-bold text-xl text-white ${justAdded ? "bg-green-800" : "bg-green-600 hover:bg-green-700"}`}
+                    onClick={() => setLocalQty((q) => clampLocalQty(q - 1))}
+                    className="flex-1 flex items-center justify-center bg-white border-2 border-green-600 text-green-700 text-xl font-bold rounded-xl"
                   >
-                    {justAdded ? t("product_added") : t("product_add_to_cart")}
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={remaining}
+                    value={localQty}
+                    onChange={(e) => setLocalQty(clampLocalQty(Number(e.target.value) || 1))}
+                    className="flex-[1.5] min-w-0 w-full text-center border-2 border-green-600 rounded-xl text-black font-extrabold text-lg bg-white px-0.5"
+                  />
+                  <button
+                    onClick={() => setLocalQty((q) => clampLocalQty(q + 1))}
+                    disabled={localQty >= remaining}
+                    className="flex-1 flex items-center justify-center bg-white border-2 border-green-600 text-green-700 text-xl font-bold rounded-xl disabled:opacity-40"
+                  >
+                    +
                   </button>
                 </div>
-              </>
+
+                <button
+                  onClick={handleConfirm}
+                  className={`flex-1 rounded-2xl font-bold text-xl text-white ${justAdded ? "bg-green-800" : "bg-green-600 hover:bg-green-700"}`}
+                >
+                  {justAdded ? t("product_added") : t("product_add_to_cart")}
+                </button>
+              </div>
             )}
 
             {currentInCart > 0 && (
