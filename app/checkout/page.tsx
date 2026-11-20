@@ -213,12 +213,15 @@ export default function CheckoutPage() {
 
       // Bonusdan foydalanilgan bo'lsa, mijozning bonus balansidan shu
       // miqdorni ayirib qo'yamiz (buyurtma allaqachon shu bonusni hisobga
-      // olib yaratildi).
+      // olib yaratildi). Atomik RPC orqali - "avval o'qib, keyin yozish"
+      // usulida balansni noto'g'ri qiymat bilan ustidan yozib yuborish
+      // xavfi bo'lmasligi uchun (bu haqiqiy xato sababi edi).
       if (user && finalBonusUsed > 0) {
-        await supabase
-          .from("profiles")
-          .update({ bonus_balance: availableBonus - finalBonusUsed })
-          .eq("id", user.id);
+        const { error: bonusError } = await supabase.rpc("increment_bonus_balance", {
+          p_user_id: user.id,
+          p_delta: -finalBonusUsed,
+        });
+        if (bonusError) console.error("Bonusni yechishda xatolik:", bonusError);
         await refreshProfile();
       }
 
@@ -330,51 +333,6 @@ export default function CheckoutPage() {
             </p>
           )}
 
-          {user && availableBonus > 0 && (
-            <div className="mt-2 pt-2 border-t">
-              <label className="flex items-center justify-between gap-2 cursor-pointer">
-                <span className="text-sm font-semibold text-black">
-                  🎁 Bonusdan foydalanasizmi? (Mavjud: {availableBonus.toLocaleString()}₩)
-                </span>
-                <input
-                  type="checkbox"
-                  checked={useBonus}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setUseBonus(checked);
-                    setBonusAmountText(checked ? String(maxBonusUsable) : "");
-                  }}
-                  className="w-5 h-5 flex-shrink-0"
-                />
-              </label>
-              {useBonus && (
-                <div className="mt-2 flex items-center gap-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="0"
-                    value={bonusAmountText}
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/[^0-9]/g, "");
-                      if (digits === "") {
-                        setBonusAmountText("");
-                        return;
-                      }
-                      // Boshidagi ortiqcha nollarni olib tashlaymiz (masalan
-                      // "0010" -> "10") va mavjud bonusdan oshib ketmasligini
-                      // ta'minlaymiz.
-                      const normalized = Math.min(Number(digits), maxBonusUsable);
-                      setBonusAmountText(String(normalized));
-                    }}
-                    className="flex-1 border rounded-xl p-3 text-black"
-                  />
-                  <span className="font-bold text-black">₩</span>
-                </div>
-              )}
-            </div>
-          )}
-
           <div className="flex justify-between items-center font-bold text-green-700 mt-2 pt-2 border-t text-lg">
             <span>{t("cart_total")}</span>
             <span>
@@ -394,6 +352,60 @@ export default function CheckoutPage() {
             </p>
           )}
         </div>
+
+        {user && availableBonus > 0 && (
+          <div
+            className="rounded-2xl p-4 mb-4"
+            style={{ backgroundColor: "#f0fdf4", border: "2px solid #86efac" }}
+          >
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <div className="min-w-0">
+                <p className="font-bold text-black">🎁 Bonusdan foydalanasizmi?</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Mavjud bonus: <span className="font-bold text-green-700">{availableBonus.toLocaleString()}₩</span>
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={useBonus}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setUseBonus(checked);
+                  setBonusAmountText(checked ? String(maxBonusUsable) : "");
+                }}
+                className="w-6 h-6 flex-shrink-0 accent-green-600"
+              />
+            </label>
+            {useBonus && (
+              <div className="mt-3 pt-3" style={{ borderTop: "1px solid #bbf7d0" }}>
+                <p className="text-xs font-semibold text-gray-600 mb-2">Ishlatmoqchi bo'lgan bonus miqdori:</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="0"
+                    value={bonusAmountText}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/[^0-9]/g, "");
+                      if (digits === "") {
+                        setBonusAmountText("");
+                        return;
+                      }
+                      // Boshidagi ortiqcha nollarni olib tashlaymiz (masalan
+                      // "0010" -> "10") va mavjud bonusdan oshib ketmasligini
+                      // ta'minlaymiz.
+                      const normalized = Math.min(Number(digits), maxBonusUsable);
+                      setBonusAmountText(String(normalized));
+                    }}
+                    className="flex-1 border-2 border-green-600 rounded-xl p-3 text-black font-bold bg-white"
+                  />
+                  <span className="font-bold text-black text-lg">₩</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4 space-y-3">
           <h2 className="font-bold text-black">{t("checkout_recipient")}</h2>

@@ -34,15 +34,33 @@ type Category = { id: number; name: string; icon: string | null };
 
 const OPEN_GROUP_KEY = "admin_products_open_group";
 const SCROLL_Y_KEY = "admin_products_scroll_y";
+const FILTERS_KEY = "admin_products_filters";
 const DAY_MS = 86400000;
+
+// Admin filtrlab (qidiruv, chiplar, qo'shimcha filtrlar, saralash) mahsulot
+// topib, uni tahrirlashga kirib chiqqanda - "orqaga" router.back() orqali
+// shu sahifaga qaytadi, lekin Next.js ba'zan (masalan tahrirlash biroz uzoq
+// davom etsa) sahifani qaytadan "yangi holatda" qurib qo'yishi mumkin.
+// Shuning uchun filtr holatini sessionStorage'da ham saqlaymiz - sahifa
+// qanday qaytgan bo'lishidan qat'iy nazar, filtrlar har doim tiklanadi.
+function loadSavedFilters(): Record<string, any> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(FILTERS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function AdminProductsPage() {
   const router = useRouter();
   const [checkedLogin, setCheckedLogin] = useState(false);
+  const savedFilters = loadSavedFilters();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
-  const [adminSearch, setAdminSearch] = useState("");
+  const [adminSearch, setAdminSearch] = useState(savedFilters?.adminSearch || "");
   const [showScanner, setShowScanner] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
@@ -58,21 +76,61 @@ export default function AdminProductsPage() {
   const [loadError, setLoadError] = useState("");
 
   // Tez-tez ishlatiladigan chiplar (qidiruv tagidagi gorizontal qator).
-  const [activeChips, setActiveChips] = useState<Set<string>>(new Set());
+  const [activeChips, setActiveChips] = useState<Set<string>>(new Set(savedFilters?.activeChips || []));
 
   // "⚙️" tugmasi bilan ochiladigan qo'shimcha filtrlar (bottom sheet).
   const [showFilterSheet, setShowFilterSheet] = useState(false);
-  const [filterSupplier, setFilterSupplier] = useState("");
-  const [filterStockMin, setFilterStockMin] = useState("");
-  const [filterStockMax, setFilterStockMax] = useState("");
-  const [filterZeroStock, setFilterZeroStock] = useState(false);
-  const [filterNotSelling, setFilterNotSelling] = useState(false);
-  const [filterNoImage, setFilterNoImage] = useState(false);
-  const [filterNoDescription, setFilterNoDescription] = useState(false);
-  const [filterNoBarcode, setFilterNoBarcode] = useState(false);
-  const [filterHiddenOnly, setFilterHiddenOnly] = useState(false);
-  const [filterNewOnly, setFilterNewOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<SortBy>("");
+  const [filterSupplier, setFilterSupplier] = useState(savedFilters?.filterSupplier || "");
+  const [filterStockMin, setFilterStockMin] = useState(savedFilters?.filterStockMin || "");
+  const [filterStockMax, setFilterStockMax] = useState(savedFilters?.filterStockMax || "");
+  const [filterZeroStock, setFilterZeroStock] = useState(savedFilters?.filterZeroStock || false);
+  const [filterNotSelling, setFilterNotSelling] = useState(savedFilters?.filterNotSelling || false);
+  const [filterNoImage, setFilterNoImage] = useState(savedFilters?.filterNoImage || false);
+  const [filterNoDescription, setFilterNoDescription] = useState(savedFilters?.filterNoDescription || false);
+  const [filterNoBarcode, setFilterNoBarcode] = useState(savedFilters?.filterNoBarcode || false);
+  const [filterHiddenOnly, setFilterHiddenOnly] = useState(savedFilters?.filterHiddenOnly || false);
+  const [filterNewOnly, setFilterNewOnly] = useState(savedFilters?.filterNewOnly || false);
+  const [sortBy, setSortBy] = useState<SortBy>(savedFilters?.sortBy || "");
+
+  // Yuqoridagi barcha filtr/qidiruv/saralash holatini sessionStorage'ga
+  // yozib boramiz - tahrirlashdan qaytganda (yoki sahifa boshqa sabab bilan
+  // qayta qurilganda ham) filtrlar yo'qolmasin.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        FILTERS_KEY,
+        JSON.stringify({
+          adminSearch,
+          activeChips: Array.from(activeChips),
+          filterSupplier,
+          filterStockMin,
+          filterStockMax,
+          filterZeroStock,
+          filterNotSelling,
+          filterNoImage,
+          filterNoDescription,
+          filterNoBarcode,
+          filterHiddenOnly,
+          filterNewOnly,
+          sortBy,
+        })
+      );
+    } catch {}
+  }, [
+    adminSearch,
+    activeChips,
+    filterSupplier,
+    filterStockMin,
+    filterStockMax,
+    filterZeroStock,
+    filterNotSelling,
+    filterNoImage,
+    filterNoDescription,
+    filterNoBarcode,
+    filterHiddenOnly,
+    filterNewOnly,
+    sortBy,
+  ]);
 
   // Sotuv statistikasi ("eng ko'p sotilgan" va "30 kunda sotilmagan"
   // filtrlari uchun) - order_items jadvalidan bir marta yuklab olinadi.

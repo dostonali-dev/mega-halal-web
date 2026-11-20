@@ -132,12 +132,20 @@ export default function CustomersPage() {
     if (!confirm(`${c.name} (${c.phone})ga ${amount.toLocaleString()}₩ bonus berilsinmi?`)) return;
     setGrantingId(c.id);
     try {
-      const newBalance = (c.bonus_balance || 0) + amount;
-      const { error } = await supabase.from("profiles").update({ bonus_balance: newBalance }).eq("id", c.id);
+      // Atomik RPC orqali qo'shamiz (joriy balansni o'qib, ustiga qo'shib,
+      // qaytadan yozish o'rniga) - shu bilan eski (mahalliy) balans
+      // ma'lumoti eskirgan bo'lsa ham, haqiqiy balansni noto'g'ri qiymat
+      // bilan ustidan yozib yuborish xavfi bo'lmaydi.
+      const { data: newBalance, error } = await supabase.rpc("increment_bonus_balance", {
+        p_user_id: c.id,
+        p_delta: amount,
+      });
       if (error) {
         alert("Xatolik: " + error.message);
       } else {
-        setCustomers((prev) => prev.map((x) => (x.id === c.id ? { ...x, bonus_balance: newBalance } : x)));
+        setCustomers((prev) =>
+          prev.map((x) => (x.id === c.id ? { ...x, bonus_balance: newBalance ?? (x.bonus_balance || 0) + amount } : x))
+        );
         setBonusInputs((prev) => ({ ...prev, [c.id]: "" }));
       }
     } catch (e) {

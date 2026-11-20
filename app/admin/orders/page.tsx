@@ -112,6 +112,13 @@ export default function OrdersPage() {
   // Buyurtma "Jo'natildi" deb belgilanganda (pul qabul qilib, tovar
   // jo'natilgan payt), admin ixtiyoriy ravishda mijozga bonus taqdim
   // qilishi mumkin - shu miqdor mijozning bonus balansiga qo'shiladi.
+  //
+  // MUHIM: avval balansni o'qib, ustiga qo'shib, qaytadan yozar edik -
+  // agar o'sha o'qish biror sababga ko'ra muvaffaqiyatsiz/bo'sh natija
+  // qaytarsa, mijozning haqiqiy (masalan 30,000) balansi noto'g'ri kichik
+  // qiymat (masalan shunchaki berilgan 4,000) bilan BUTUNLAY ustidan
+  // yozilib ketar edi. Shuning uchun endi bitta atomik RPC chaqiramiz -
+  // oraliqda noto'g'ri qiymat o'qib qolish xavfi umuman yo'q.
   const grantShipBonus = async (userId: string | null) => {
     const amount = Number(shipBonusAmount);
     if (!amount || amount <= 0) return;
@@ -119,9 +126,11 @@ export default function OrdersPage() {
       alert("Diqqat: bu mijoz ro'yxatdan o'tmagan (mehmon sifatida buyurtma bergan), shuning uchun bonus berib bo'lmadi.");
       return;
     }
-    const { data: profileRow } = await supabase.from("profiles").select("bonus_balance").eq("id", userId).maybeSingle();
-    const newBalance = (profileRow?.bonus_balance || 0) + amount;
-    await supabase.from("profiles").update({ bonus_balance: newBalance }).eq("id", userId);
+    const { error } = await supabase.rpc("increment_bonus_balance", { p_user_id: userId, p_delta: amount });
+    if (error) {
+      console.error("Bonus berishda xatolik:", error);
+      alert("Bonus berishda xatolik yuz berdi: " + error.message);
+    }
   };
 
   // Admin mijozning yozgan baho-izohiga javob yozganda: bazaga saqlaymiz va
