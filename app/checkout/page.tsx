@@ -360,9 +360,19 @@ export default function CheckoutPage() {
           >
             <label className="flex items-center justify-between gap-3 cursor-pointer">
               <div className="min-w-0">
-                <p className="font-bold text-black">🎁 Bonusdan foydalanasizmi?</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Mavjud bonus: <span className="font-bold text-green-700">{availableBonus.toLocaleString()}₩</span>
+                {/* MUHIM: bu karta oq/och-yashil fonda qoladi (inline style
+                    bilan berilgan), lekin saytning umumiy "qora mavzu"
+                    CSS qoidasi (`.text-black`, va h1/p/span/label uchun)
+                    matn rangini majburan oqqa aylantiradi - shu sabab bu
+                    yerda "text-black" kabi klasslar ISHLATILMAYDI, rang
+                    faqat inline style orqali beriladi (aks holda oq
+                    matn och-yashil fonda butunlay ko'rinmay qolgan edi). */}
+                <p className="font-bold" style={{ color: "#14532d" }}>🎁 Bonusdan foydalanasizmi?</p>
+                <p className="text-xs mt-0.5" style={{ color: "#166534" }}>
+                  Mavjud bonus:{" "}
+                  <span className="font-bold" style={{ color: "#15803d" }}>
+                    {availableBonus.toLocaleString()}₩
+                  </span>
                 </p>
               </div>
               <input
@@ -378,7 +388,9 @@ export default function CheckoutPage() {
             </label>
             {useBonus && (
               <div className="mt-3 pt-3" style={{ borderTop: "1px solid #bbf7d0" }}>
-                <p className="text-xs font-semibold text-gray-600 mb-2">Ishlatmoqchi bo'lgan bonus miqdori:</p>
+                <p className="text-xs font-semibold mb-2" style={{ color: "#166534" }}>
+                  Ishlatmoqchi bo'lgan bonus miqdori:
+                </p>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -398,9 +410,9 @@ export default function CheckoutPage() {
                       const normalized = Math.min(Number(digits), maxBonusUsable);
                       setBonusAmountText(String(normalized));
                     }}
-                    className="flex-1 border-2 border-green-600 rounded-xl p-3 text-black font-bold bg-white"
+                    className="flex-1 border-2 border-green-600 rounded-xl p-3 font-bold"
                   />
-                  <span className="font-bold text-black text-lg">₩</span>
+                  <span className="font-bold text-lg" style={{ color: "#14532d" }}>₩</span>
                 </div>
               </div>
             )}
