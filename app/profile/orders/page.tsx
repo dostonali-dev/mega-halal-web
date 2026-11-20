@@ -8,11 +8,13 @@ import { formatSeoulDateTime } from "@/lib/dateUtils";
 import PageHeader from "@/components/PageHeader";
 
 const STATUS_KEY_MAP: Record<string, "order_status_paid" | "order_status_shipped" | "order_status_cancelled"> = {
-  "✅ To'landi": "order_status_paid",
+  "✅ To'lov tasdiqlandi": "order_status_paid",
+  "✅ To'landi": "order_status_paid", // eski buyurtmalar shu matn bilan saqlangan bo'lishi mumkin
   "📦 Jo'natildi": "order_status_shipped",
   "❌ Bekor qilindi": "order_status_cancelled",
 };
 const STATUS_COLOR_MAP: Record<string, string> = {
+  "✅ To'lov tasdiqlandi": "status-paid",
   "✅ To'landi": "status-paid",
   "📦 Jo'natildi": "status-shipped",
   "❌ Bekor qilindi": "status-cancelled",

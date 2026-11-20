@@ -63,7 +63,7 @@ export default function CategoryDetailPage() {
             return (
               <div
                 key={item.id}
-                className={`relative bg-white border border-green-100 rounded-xl overflow-hidden ${outOfStock ? "opacity-60" : ""}`}
+                className={`relative bg-white border border-green-100 rounded-xl overflow-hidden flex flex-col ${outOfStock ? "opacity-60" : ""}`}
               >
                 {hasDiscount && (
                   <span className="absolute top-1.5 left-1.5 z-10 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
@@ -80,7 +80,7 @@ export default function CategoryDetailPage() {
                 <Link href={`/products/${item.id}`}>
                   <ProductImage image={item.image} alt={item.name} className="w-full aspect-square object-cover" />
                 </Link>
-                <div className="p-2">
+                <div className="p-2 flex flex-col flex-1">
                   <Link href={`/products/${item.id}`}>
                     <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                   </Link>
@@ -100,38 +100,40 @@ export default function CategoryDetailPage() {
                     </p>
                   </div>
 
-                  {outOfStock ? (
-                    <span className="text-[10px] text-red-400 font-bold">{t("out_of_stock_label")}</span>
-                  ) : qty === 0 ? (
-                    <button
-                      onClick={() => addToCart(item.id)}
-                      aria-label="Savatchaga qo'shish"
-                      className="w-full rounded-lg py-1.5 flex items-center justify-center"
-                      style={{ backgroundColor: "#16a34a" }}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
-                        <circle cx="9" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
-                        <circle cx="18" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
-                      </svg>
-                    </button>
-                  ) : (
-                    <div className="flex items-center justify-between bg-green-600 rounded-lg px-1.5 py-1">
-                      <button onClick={() => removeFromCart(item.id)} aria-label={qty === 1 ? "O'chirish" : "Kamaytirish"} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
-                        {qty === 1 ? (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M4 7h16" />
-                            <path d="M6 7l1 13a2 2 0 0 0 2 1.9h6a2 2 0 0 0 2-1.9L18 7" />
-                            <path d="M9.5 7V4.8A1 1 0 0 1 10.5 3.8h3a1 1 0 0 1 1 1V7" />
-                          </svg>
-                        ) : "−"}
+                  <div className="mt-auto">
+                    {outOfStock ? (
+                      <span className="text-[10px] text-red-400 font-bold">{t("out_of_stock_label")}</span>
+                    ) : qty === 0 ? (
+                      <button
+                        onClick={() => addToCart(item.id)}
+                        aria-label="Savatchaga qo'shish"
+                        className="w-full rounded-lg py-2.5 flex items-center justify-center"
+                        style={{ backgroundColor: "#16a34a" }}
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
+                          <circle cx="9" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
+                          <circle cx="18" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
+                        </svg>
                       </button>
-                      <span className="text-white font-bold text-xs">{qty}</span>
-                      <button onClick={() => addToCart(item.id)} className="text-white font-bold w-5 h-5 flex items-center justify-center text-xs">
-                        +
-                      </button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex items-center justify-between bg-green-600 rounded-lg px-2 py-1.5">
+                        <button onClick={() => removeFromCart(item.id)} aria-label={qty === 1 ? "O'chirish" : "Kamaytirish"} className="text-white font-bold w-6 h-6 flex items-center justify-center">
+                          {qty === 1 ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 7h16" />
+                              <path d="M6 7l1 13a2 2 0 0 0 2 1.9h6a2 2 0 0 0 2-1.9L18 7" />
+                              <path d="M9.5 7V4.8A1 1 0 0 1 10.5 3.8h3a1 1 0 0 1 1 1V7" />
+                            </svg>
+                          ) : "−"}
+                        </button>
+                        <span className="text-white font-bold text-sm">{qty}</span>
+                        <button onClick={() => addToCart(item.id)} className="text-white font-bold w-6 h-6 flex items-center justify-center">
+                          +
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );

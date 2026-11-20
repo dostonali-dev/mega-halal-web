@@ -158,7 +158,7 @@ export const translations = {
     orders_loading: "Yuklanmoqda...",
     orders_empty: "Hali buyurtma yo'q",
     order_status_pending: "⏳ Kutilmoqda",
-    order_status_paid: "✅ To'landi",
+    order_status_paid: "✅ To'lov tasdiqlandi",
     order_status_shipped: "📦 Jo'natildi",
     order_status_cancelled: "❌ Bekor qilindi",
     confirm_delete_address: "Bu manzilni o'chirmoqchimisiz?",
@@ -197,7 +197,7 @@ export const translations = {
 
     profile_menu_recently_viewed: "Oxirgi ko'rilganlar",
     profile_menu_favorites: "Sevimlilar",
-    profile_menu_best_selling: "Eng ko'p sotib olingan mahsulotlar",
+    profile_menu_best_selling: "Eng ko'p sotib olgan mahsulotlarim",
     profile_menu_my_account: "Mening akkountim",
 
     my_account_title: "Mening akkountim",

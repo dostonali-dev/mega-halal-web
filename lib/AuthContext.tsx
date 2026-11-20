@@ -12,6 +12,7 @@ type Profile = {
   addressDetail?: string | null;
   addressImage?: string | null;
   avatar?: string | null;
+  bonusBalance?: number | null;
 };
 
 type AuthContextType = {
@@ -33,6 +34,7 @@ type AuthContextType = {
   updatePhone: (newPhone: string) => Promise<string | null>;
   updateName: (newName: string) => Promise<string | null>;
   deleteAccount: () => Promise<string | null>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -68,8 +70,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         addressDetail: data.address_detail,
         addressImage: data.address_image,
         avatar: data.avatar_url,
+        bonusBalance: data.bonus_balance ?? 0,
       });
     }
+  };
+
+  // Bonus balansi kabi, boshqa joyda (masalan checkout sahifasida bonus
+  // ishlatilgandan keyin) o'zgargan profil ma'lumotlarini qayta yuklab,
+  // kontekstdagi `user`ni yangilash uchun.
+  const refreshProfile = async () => {
+    if (!user) return;
+    await loadProfile(user.id);
   };
 
   useEffect(() => {
@@ -315,6 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updatePhone,
         updateName,
         deleteAccount,
+        refreshProfile,
       }}
     >
       {children}

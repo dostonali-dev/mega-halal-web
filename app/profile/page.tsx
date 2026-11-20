@@ -116,6 +116,23 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {user && (
+          <div
+            className="rounded-2xl p-4 mb-6 flex items-center justify-between gap-3"
+            style={{ backgroundColor: "#dcfce7", border: "1px solid #bbf7d0" }}
+          >
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: "#15803d" }}>
+                💰 Mening bonuslarim
+              </p>
+              <p className="text-2xl font-extrabold mt-0.5 truncate" style={{ color: "#000000" }}>
+                {(user.bonusBalance || 0).toLocaleString()}₩
+              </p>
+            </div>
+            <span className="text-3xl flex-shrink-0">🎁</span>
+          </div>
+        )}
+
         <div className="bg-white border border-green-100 rounded-2xl overflow-hidden mb-6">
           {menuItems.map((item, i) => (
             <Link

@@ -187,7 +187,11 @@ export default function AdminEditProductPage() {
         return;
       }
       alert("Mahsulot yangilandi ✅");
-      router.push("/admin/products");
+      // "/admin/products"ga router.push qilsak, filtrlar/chiplar tiklanган
+      // yangi sahifa ochiladi (filtr holati yo'qoladi). router.back() esa
+      // admin filtrlab kirgan sahifaga, o'sha holatida (filtrlari bilan)
+      // qaytaradi.
+      router.back();
     } catch (e) {
       console.error(e);
       alert("Xatolik yuz berdi.");
@@ -220,11 +224,11 @@ export default function AdminEditProductPage() {
 
   return (
     <main className="p-6 md:p-10">
-      <Link href="/admin/products" aria-label="Mahsulotlar" className="inline-flex items-center justify-center w-11 h-11 rounded-full flex-shrink-0" style={{ backgroundColor: "#dcfce7" }}>
+      <button onClick={() => router.back()} aria-label="Orqaga" className="inline-flex items-center justify-center w-11 h-11 rounded-full flex-shrink-0" style={{ backgroundColor: "#dcfce7" }}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M15 18l-6-6 6-6" />
         </svg>
-      </Link>
+      </button>
       <h1 className="text-3xl font-bold mt-3 mb-6">Mahsulotni tahrirlash</h1>
 
       <div className="max-w-md space-y-4 bg-gray-50 border rounded-xl p-4">
@@ -321,9 +325,9 @@ export default function AdminEditProductPage() {
           <button onClick={handleSaveProduct} disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-3 rounded-xl">
             {saving ? "Saqlanmoqda..." : "Yangilash"}
           </button>
-          <Link href="/admin/products" className="px-4 bg-gray-200 text-black rounded-xl font-bold flex items-center justify-center">
+          <button onClick={() => router.back()} className="px-4 bg-gray-200 text-black rounded-xl font-bold flex items-center justify-center">
             Bekor qilish
-          </Link>
+          </button>
         </div>
       </div>
     </main>

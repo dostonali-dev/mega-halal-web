@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 // bor bo'lsa) push bildirishnoma yuboradi. REST API kalit shu yerda,
 // serverda ishlatiladi - brauzerga chiqmaydi.
 const STATUS_MESSAGES: Record<string, { title: string; message: string }> = {
-  paid: { title: "✅ Buyurtmangiz to'landi", message: "Buyurtmangiz to'lovi tasdiqlandi." },
+  paid: { title: "✅ To'lovingiz tasdiqlandi", message: "Buyurtmangiz to'lovi tasdiqlandi." },
   shipped: { title: "📦 Buyurtmangiz jo'natildi", message: "Buyurtmangiz yo'lda - tez orada yetib boradi!" },
   cancelled: { title: "❌ Buyurtmangiz bekor qilindi", message: "Afsuski, buyurtmangiz bekor qilindi." },
 };
@@ -19,7 +19,7 @@ const BOT_TOKEN = "8798311944:AAHUBgMJ4OrKiy8qMUwx9bQFSNRJ-dRBCjg";
 const CHAT_ID = "-1004384813041";
 
 const STATUS_TG_TITLE: Record<string, string> = {
-  paid: "✅ To'landi",
+  paid: "✅ To'lov tasdiqlandi",
   shipped: "📦 Jo'natildi",
   cancelled: "❌ Bekor qilindi",
 };

@@ -19,12 +19,20 @@ const BANK_HOLDER = "MUKHTAROV";
 export default function CheckoutPage() {
   const router = useRouter();
   const { products, cart, total, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { t } = useLanguage();
   const items = products.filter((p) => (cart[p.id] || 0) > 0);
   const deliveryFee = getDeliveryFee(total);
   const freeShippingRemaining = getFreeShippingRemaining(total);
   const grandTotal = total + deliveryFee;
+
+  // Mijozning bonus balansidan buyurtma uchun qisman yoki to'liq
+  // foydalanish imkoniyati - "to'lanadigan summa"ni shu miqdorga kamaytiradi.
+  const availableBonus = user?.bonusBalance || 0;
+  const maxBonusUsable = Math.min(availableBonus, grandTotal);
+  const [useBonus, setUseBonus] = useState(false);
+  const [bonusAmount, setBonusAmount] = useState(0);
+  const payableTotal = grandTotal - bonusAmount;
 
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -111,6 +119,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Yuborishdan oldin bonusni yana bir bor chegaralaymiz - foydalanuvchi
+    // kiritgandan keyin savatcha o'zgargan yoki boshqa sabab bilan
+    // balansdan oshib ketmasligi uchun.
+    const finalBonusUsed = useBonus ? Math.min(bonusAmount, availableBonus, grandTotal) : 0;
+    const finalPayableTotal = grandTotal - finalBonusUsed;
+
     try {
       const orderText = items.map((p) => `${p.name} x ${cart[p.id]} = ${p.price * (cart[p.id] || 0)}₩`).join("\n");
 
@@ -177,7 +191,8 @@ export default function CheckoutPage() {
           address_image: addressImageUrl,
           note,
           order_text: orderText,
-          total: grandTotal,
+          total: finalPayableTotal,
+          bonus_used: finalBonusUsed,
         }])
         .select()
         .single();
@@ -189,6 +204,17 @@ export default function CheckoutPage() {
       }
 
       const orderId = orderData.id;
+
+      // Bonusdan foydalanilgan bo'lsa, mijozning bonus balansidan shu
+      // miqdorni ayirib qo'yamiz (buyurtma allaqachon shu bonusni hisobga
+      // olib yaratildi).
+      if (user && finalBonusUsed > 0) {
+        await supabase
+          .from("profiles")
+          .update({ bonus_balance: availableBonus - finalBonusUsed })
+          .eq("id", user.id);
+        await refreshProfile();
+      }
 
       // "Eng ko'p sotiladigan" / "eng ko'p sotib olingan" statistikasi uchun
       // har bir mahsulotni alohida qatorlarga yozib boramiz. Bu xatolik
@@ -227,7 +253,8 @@ export default function CheckoutPage() {
           order: orderText,
           itemsTotal: total,
           deliveryFee,
-          total: grandTotal,
+          total: finalPayableTotal,
+          bonusUsed: finalBonusUsed,
           customerName,
           phone,
           address: fullAddress + (addressImageUrl ? ` (rasm: ${addressImageUrl})` : ""),
@@ -296,9 +323,61 @@ export default function CheckoutPage() {
               {t("free_shipping_progress").replace("{amount}", `${freeShippingRemaining.toLocaleString()}₩`)}
             </p>
           )}
-          <div className="flex justify-between font-bold text-green-700 mt-2 pt-2 border-t text-lg">
-            <span>{t("cart_total")}</span><span>{grandTotal.toLocaleString()}₩</span>
+
+          {user && availableBonus > 0 && (
+            <div className="mt-2 pt-2 border-t">
+              <label className="flex items-center justify-between gap-2 cursor-pointer">
+                <span className="text-sm font-semibold text-black">
+                  🎁 Bonusdan foydalanasizmi? (Mavjud: {availableBonus.toLocaleString()}₩)
+                </span>
+                <input
+                  type="checkbox"
+                  checked={useBonus}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setUseBonus(checked);
+                    setBonusAmount(checked ? maxBonusUsable : 0);
+                  }}
+                  className="w-5 h-5 flex-shrink-0"
+                />
+              </label>
+              {useBonus && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={maxBonusUsable}
+                    value={bonusAmount}
+                    onChange={(e) => {
+                      const val = Number(e.target.value) || 0;
+                      setBonusAmount(Math.min(Math.max(0, val), maxBonusUsable));
+                    }}
+                    className="flex-1 border rounded-xl p-3 text-black"
+                  />
+                  <span className="font-bold text-black">₩</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-between items-center font-bold text-green-700 mt-2 pt-2 border-t text-lg">
+            <span>{t("cart_total")}</span>
+            <span>
+              {bonusAmount > 0 ? (
+                <>
+                  <span className="line-through text-gray-300 text-sm mr-1">{grandTotal.toLocaleString()}₩</span>
+                  {payableTotal.toLocaleString()}₩
+                </>
+              ) : (
+                `${grandTotal.toLocaleString()}₩`
+              )}
+            </span>
           </div>
+          {bonusAmount > 0 && (
+            <p className="text-xs text-green-700 font-semibold text-right mt-1">
+              🎁 {bonusAmount.toLocaleString()}₩ bonus ishlatildi
+            </p>
+          )}
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4 space-y-3">

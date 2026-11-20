@@ -14,6 +14,7 @@ type Profile = {
   address_detail?: string | null;
   avatar_url?: string | null;
   created_at?: string;
+  bonus_balance?: number | null;
 };
 
 type Order = {
@@ -32,7 +33,8 @@ type Customer = Profile & {
 const statusColors: Record<string, string> = {
   "❌ Bekor qilindi": "status-cancelled",
   "📦 Jo'natildi": "status-shipped",
-  "✅ To'landi": "status-paid",
+  "✅ To'lov tasdiqlandi": "status-paid",
+  "✅ To'landi": "status-paid", // eski buyurtmalar shu matn bilan saqlangan bo'lishi mumkin
 };
 
 export default function CustomersPage() {
@@ -45,6 +47,8 @@ export default function CustomersPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [newPasswords, setNewPasswords] = useState<Record<string, string>>({});
+  const [bonusInputs, setBonusInputs] = useState<Record<string, string>>({});
+  const [grantingId, setGrantingId] = useState<string | null>(null);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -112,6 +116,35 @@ export default function CustomersPage() {
       alert("Xatolik yuz berdi.");
     } finally {
       setResettingId(null);
+    }
+  };
+
+  // Mijozga qo'lda bonus taqdim qilish (masalan telefon orqali murojaat
+  // qilganda yoki boshqa sabab bilan) - kiritilgan miqdor mavjud balansga
+  // qo'shiladi (o'rniga qo'yilmaydi).
+  const handleGrantBonus = async (c: Customer) => {
+    const raw = bonusInputs[c.id];
+    const amount = Number(raw);
+    if (!raw || !amount || amount <= 0) {
+      alert("Bonus miqdorini to'g'ri kiriting.");
+      return;
+    }
+    if (!confirm(`${c.name} (${c.phone})ga ${amount.toLocaleString()}₩ bonus berilsinmi?`)) return;
+    setGrantingId(c.id);
+    try {
+      const newBalance = (c.bonus_balance || 0) + amount;
+      const { error } = await supabase.from("profiles").update({ bonus_balance: newBalance }).eq("id", c.id);
+      if (error) {
+        alert("Xatolik: " + error.message);
+      } else {
+        setCustomers((prev) => prev.map((x) => (x.id === c.id ? { ...x, bonus_balance: newBalance } : x)));
+        setBonusInputs((prev) => ({ ...prev, [c.id]: "" }));
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Xatolik yuz berdi.");
+    } finally {
+      setGrantingId(null);
     }
   };
 
@@ -259,6 +292,30 @@ export default function CustomersPage() {
                         {resettingId === c.id ? "Yaratilmoqda..." : "🔑 Yangi parol yaratish"}
                       </button>
                     )}
+                  </div>
+
+                  <div className="mt-3 bg-green-50 border border-green-200 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-2">
+                      🎁 Mijozga bonus taqdim qilish. Mavjud bonus:{" "}
+                      <span className="font-bold text-green-700">{(c.bonus_balance || 0).toLocaleString()}₩</span>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="Masalan: 10000"
+                        value={bonusInputs[c.id] || ""}
+                        onChange={(e) => setBonusInputs((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                        className="flex-1 border rounded-xl p-2 text-black"
+                      />
+                      <button
+                        onClick={() => handleGrantBonus(c)}
+                        disabled={grantingId === c.id}
+                        className="bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-bold px-4 py-2 rounded-xl whitespace-nowrap"
+                      >
+                        {grantingId === c.id ? "..." : "🎁 Bonus berish"}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-3">

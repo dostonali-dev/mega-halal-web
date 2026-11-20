@@ -31,6 +31,7 @@ export default function OrdersPage() {
   const [sendingReply, setSendingReply] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [quickViewItem, setQuickViewItem] = useState<OrderItemRow | null>(null);
+  const [shipBonusAmount, setShipBonusAmount] = useState("");
   const [exporting, setExporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
@@ -66,6 +67,7 @@ export default function OrdersPage() {
     setDetailItems([]);
     setDetailReview(null);
     setReplyText("");
+    setShipBonusAmount("");
     setDetailLoading(true);
 
     const [{ data: itemRows }, { data: reviewRow }] = await Promise.all([
@@ -107,6 +109,21 @@ export default function OrdersPage() {
     if (data) setDetailOrder(data);
   };
 
+  // Buyurtma "Jo'natildi" deb belgilanganda (pul qabul qilib, tovar
+  // jo'natilgan payt), admin ixtiyoriy ravishda mijozga bonus taqdim
+  // qilishi mumkin - shu miqdor mijozning bonus balansiga qo'shiladi.
+  const grantShipBonus = async (userId: string | null) => {
+    const amount = Number(shipBonusAmount);
+    if (!amount || amount <= 0) return;
+    if (!userId) {
+      alert("Diqqat: bu mijoz ro'yxatdan o'tmagan (mehmon sifatida buyurtma bergan), shuning uchun bonus berib bo'lmadi.");
+      return;
+    }
+    const { data: profileRow } = await supabase.from("profiles").select("bonus_balance").eq("id", userId).maybeSingle();
+    const newBalance = (profileRow?.bonus_balance || 0) + amount;
+    await supabase.from("profiles").update({ bonus_balance: newBalance }).eq("id", userId);
+  };
+
   // Admin mijozning yozgan baho-izohiga javob yozganda: bazaga saqlaymiz va
   // mijozga (agar ro'yxatdan o'tgan bo'lsa - user_id bor bo'lsa) push
   // bildirishnoma yuboramiz. Push yuborish server tomonida (REST API kalit
@@ -143,7 +160,8 @@ export default function OrdersPage() {
   const statusColors: Record<string, string> = {
     "❌ Bekor qilindi": "status-cancelled",
     "📦 Jo'natildi": "status-shipped",
-    "✅ To'landi": "status-paid",
+    "✅ To'lov tasdiqlandi": "status-paid",
+    "✅ To'landi": "status-paid", // eski buyurtmalar shu matn bilan saqlangan bo'lishi mumkin
   };
 
   const toggleSelect = (id: number) => {
@@ -173,6 +191,7 @@ export default function OrdersPage() {
 
   // Lotte Tekpe uchun — status matnlari koreyschaga o'giriladi
   const STATUS_KO: Record<string, string> = {
+    "✅ To'lov tasdiqlandi": "결제완료",
     "✅ To'landi": "결제완료",
     "📦 Jo'natildi": "배송완료",
     "❌ Bekor qilindi": "취소됨",
@@ -451,53 +470,70 @@ export default function OrdersPage() {
               )}
 
               {detailOrder.status !== "📦 Jo'natildi" && detailOrder.status !== "❌ Bekor qilindi" && (
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={async () => {
-                      await supabase.from("orders").update({ status: "✅ To'landi" }).eq("id", detailOrder.id);
-                      await fetch("/api/order/paid", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "paid", userId: detailOrder.user_id }),
-                      });
-                      await refreshDetailOrder(detailOrder.id);
-                      loadOrders();
-                    }}
-                    className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm"
-                  >
-                    ✅ To'landi
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await supabase.from("orders").update({ status: "📦 Jo'natildi" }).eq("id", detailOrder.id);
-                      await fetch("/api/order/paid", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "shipped", userId: detailOrder.user_id }),
-                      });
-                      await refreshDetailOrder(detailOrder.id);
-                      loadOrders();
-                    }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm"
-                  >
-                    📦 Jo'natildi
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await supabase.from("orders").update({ status: "❌ Bekor qilindi" }).eq("id", detailOrder.id);
-                      await fetch("/api/order/paid", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ orderNumber: detailOrder.id, status: "cancelled", userId: detailOrder.user_id }),
-                      });
-                      await refreshDetailOrder(detailOrder.id);
-                      loadOrders();
-                    }}
-                    className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
-                  >
-                    ❌ Bekor qilindi
-                  </button>
-                </div>
+                <>
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+                    <p className="text-xs text-gray-500 mb-2">
+                      🎁 "Jo'natildi" bosilganda mijozga bonus berish (ixtiyoriy, ro'yxatdan o'tgan mijozlar uchun):
+                    </p>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="Masalan: 5000"
+                      value={shipBonusAmount}
+                      onChange={(e) => setShipBonusAmount(e.target.value)}
+                      className="w-full border rounded-xl p-2 text-black"
+                    />
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={async () => {
+                        await supabase.from("orders").update({ status: "✅ To'lov tasdiqlandi" }).eq("id", detailOrder.id);
+                        await fetch("/api/order/paid", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ orderNumber: detailOrder.id, status: "paid", userId: detailOrder.user_id }),
+                        });
+                        await refreshDetailOrder(detailOrder.id);
+                        loadOrders();
+                      }}
+                      className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm"
+                    >
+                      ✅ To'lovni tasdiqlash
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await supabase.from("orders").update({ status: "📦 Jo'natildi" }).eq("id", detailOrder.id);
+                        await grantShipBonus(detailOrder.user_id);
+                        await fetch("/api/order/paid", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ orderNumber: detailOrder.id, status: "shipped", userId: detailOrder.user_id }),
+                        });
+                        setShipBonusAmount("");
+                        await refreshDetailOrder(detailOrder.id);
+                        loadOrders();
+                      }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm"
+                    >
+                      📦 Jo'natildi
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await supabase.from("orders").update({ status: "❌ Bekor qilindi" }).eq("id", detailOrder.id);
+                        await fetch("/api/order/paid", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ orderNumber: detailOrder.id, status: "cancelled", userId: detailOrder.user_id }),
+                        });
+                        await refreshDetailOrder(detailOrder.id);
+                        loadOrders();
+                      }}
+                      className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
+                    >
+                      ❌ Bekor qilindi
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>
