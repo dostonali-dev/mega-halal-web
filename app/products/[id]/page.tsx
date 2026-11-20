@@ -24,6 +24,12 @@ export default function ProductDetailPage() {
 
   const currentInCart = cart[productId] || 0;
   const [localQty, setLocalQty] = useState(1);
+  // Miqdor maydonini matn sifatida ham saqlaymiz - aks holda foydalanuvchi
+  // "1"ni o'chirib, yangi son yozmoqchi bo'lganda, qiymat doim "1"ga qaytib
+  // kelib, yozishga imkon bermas edi (bonus maydonidagi xuddi shunday xato
+  // bilan bir xil sabab: bo'sh holatni ham "1" deb hisoblab, darhol qayta
+  // yozib yuborardi).
+  const [qtyText, setQtyText] = useState("1");
   const [justAdded, setJustAdded] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
 
@@ -77,6 +83,7 @@ export default function ProductDetailPage() {
     setQty(product.id, currentInCart + localQty);
     setJustAdded(true);
     setLocalQty(1);
+    setQtyText("1");
     setTimeout(() => setJustAdded(false), 2000);
   };
 
@@ -233,21 +240,49 @@ export default function ProductDetailPage() {
                   style={{ width: "40%" }}
                 >
                   <button
-                    onClick={() => setLocalQty((q) => clampLocalQty(q - 1))}
+                    onClick={() => {
+                      const next = clampLocalQty(localQty - 1);
+                      setLocalQty(next);
+                      setQtyText(String(next));
+                    }}
                     className="flex-1 flex items-center justify-center bg-white border-2 border-green-600 text-green-700 text-xl font-bold rounded-xl"
                   >
                     −
                   </button>
                   <input
-                    type="number"
-                    min={1}
-                    max={remaining}
-                    value={localQty}
-                    onChange={(e) => setLocalQty(clampLocalQty(Number(e.target.value) || 1))}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={qtyText}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/[^0-9]/g, "");
+                      if (digits === "") {
+                        // Maydon bo'sh qoldirilganda darhol "1"ga qaytarib
+                        // qo'ymaymiz - aks holda foydalanuvchi butunlay
+                        // tozalab, yangi son yoza olmay qolaveradi.
+                        setQtyText("");
+                        return;
+                      }
+                      const capped = remaining > 0 ? Math.min(Number(digits), remaining) : Number(digits);
+                      setQtyText(String(capped));
+                      setLocalQty(Math.max(1, capped));
+                    }}
+                    onBlur={() => {
+                      // Maydondan chiqishda bo'sh yoki 0 qolgan bo'lsa,
+                      // faqat shu payt "1"ga tiklaymiz.
+                      if (qtyText === "" || Number(qtyText) < 1) {
+                        setQtyText("1");
+                        setLocalQty(1);
+                      }
+                    }}
                     className="flex-[1.5] min-w-0 w-full text-center border-2 border-green-600 rounded-xl text-black font-extrabold text-lg bg-white px-0.5"
                   />
                   <button
-                    onClick={() => setLocalQty((q) => clampLocalQty(q + 1))}
+                    onClick={() => {
+                      const next = clampLocalQty(localQty + 1);
+                      setLocalQty(next);
+                      setQtyText(String(next));
+                    }}
                     disabled={localQty >= remaining}
                     className="flex-1 flex items-center justify-center bg-white border-2 border-green-600 text-green-700 text-xl font-bold rounded-xl disabled:opacity-40"
                   >
