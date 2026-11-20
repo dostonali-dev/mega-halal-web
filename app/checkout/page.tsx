@@ -31,7 +31,13 @@ export default function CheckoutPage() {
   const availableBonus = user?.bonusBalance || 0;
   const maxBonusUsable = Math.min(availableBonus, grandTotal);
   const [useBonus, setUseBonus] = useState(false);
-  const [bonusAmount, setBonusAmount] = useState(0);
+  // Miqdorni matn sifatida saqlaymiz (son emas) - aks holda foydalanuvchi
+  // maydonni butunlay tozalab, yangi raqam yozmoqchi bo'lganda, "0" doim
+  // qaytib kelib, oldiga yopishib qolar edi (klassik controlled-number-input
+  // xatosi). Bo'sh qator "0" bilan bir xil ma'noni bildiradi, lekin
+  // ekranda ko'rsatilmaydi.
+  const [bonusAmountText, setBonusAmountText] = useState("");
+  const bonusAmount = bonusAmountText === "" ? 0 : Math.min(Number(bonusAmountText) || 0, maxBonusUsable);
   const payableTotal = grandTotal - bonusAmount;
 
   const [customerName, setCustomerName] = useState("");
@@ -336,7 +342,7 @@ export default function CheckoutPage() {
                   onChange={(e) => {
                     const checked = e.target.checked;
                     setUseBonus(checked);
-                    setBonusAmount(checked ? maxBonusUsable : 0);
+                    setBonusAmountText(checked ? String(maxBonusUsable) : "");
                   }}
                   className="w-5 h-5 flex-shrink-0"
                 />
@@ -344,13 +350,22 @@ export default function CheckoutPage() {
               {useBonus && (
                 <div className="mt-2 flex items-center gap-2">
                   <input
-                    type="number"
-                    min={0}
-                    max={maxBonusUsable}
-                    value={bonusAmount}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="0"
+                    value={bonusAmountText}
                     onChange={(e) => {
-                      const val = Number(e.target.value) || 0;
-                      setBonusAmount(Math.min(Math.max(0, val), maxBonusUsable));
+                      const digits = e.target.value.replace(/[^0-9]/g, "");
+                      if (digits === "") {
+                        setBonusAmountText("");
+                        return;
+                      }
+                      // Boshidagi ortiqcha nollarni olib tashlaymiz (masalan
+                      // "0010" -> "10") va mavjud bonusdan oshib ketmasligini
+                      // ta'minlaymiz.
+                      const normalized = Math.min(Number(digits), maxBonusUsable);
+                      setBonusAmountText(String(normalized));
                     }}
                     className="flex-1 border rounded-xl p-3 text-black"
                   />
