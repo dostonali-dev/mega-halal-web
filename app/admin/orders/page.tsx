@@ -496,7 +496,15 @@ export default function OrdersPage() {
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={async () => {
-                        await supabase.from("orders").update({ status: "✅ To'lov tasdiqlandi" }).eq("id", detailOrder.id);
+                        if (!confirm("Rostdan ham to'lov tasdiqlandimi?")) return;
+                        const { error } = await supabase.from("orders").update({ status: "✅ To'lov tasdiqlandi" }).eq("id", detailOrder.id);
+                        if (error) {
+                          alert(
+                            "Xatolik: holat saqlanmadi — " + error.message +
+                            "\n\nEslatma: agar \"orders\" jadvalida RLS (Row Level Security) yoqilgan bo'lsa, shu sabab bo'lishi mumkin. Supabase SQL Editor'da:\nALTER TABLE orders DISABLE ROW LEVEL SECURITY;"
+                          );
+                          return;
+                        }
                         await fetch("/api/order/paid", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
@@ -511,7 +519,15 @@ export default function OrdersPage() {
                     </button>
                     <button
                       onClick={async () => {
-                        await supabase.from("orders").update({ status: "📦 Jo'natildi" }).eq("id", detailOrder.id);
+                        if (!confirm("Rostdan ham mahsulot jo'natildimi?")) return;
+                        const { error } = await supabase.from("orders").update({ status: "📦 Jo'natildi" }).eq("id", detailOrder.id);
+                        if (error) {
+                          alert(
+                            "Xatolik: holat saqlanmadi — " + error.message +
+                            "\n\nEslatma: agar \"orders\" jadvalida RLS (Row Level Security) yoqilgan bo'lsa, shu sabab bo'lishi mumkin. Supabase SQL Editor'da:\nALTER TABLE orders DISABLE ROW LEVEL SECURITY;"
+                          );
+                          return;
+                        }
                         await grantShipBonus(detailOrder.user_id);
                         await fetch("/api/order/paid", {
                           method: "POST",
@@ -528,7 +544,15 @@ export default function OrdersPage() {
                     </button>
                     <button
                       onClick={async () => {
-                        await supabase.from("orders").update({ status: "❌ Bekor qilindi" }).eq("id", detailOrder.id);
+                        if (!confirm("Rostdan ham bu buyurtma bekor qilinsinmi?")) return;
+                        const { error } = await supabase.from("orders").update({ status: "❌ Bekor qilindi" }).eq("id", detailOrder.id);
+                        if (error) {
+                          alert(
+                            "Xatolik: holat saqlanmadi — " + error.message +
+                            "\n\nEslatma: agar \"orders\" jadvalida RLS (Row Level Security) yoqilgan bo'lsa, shu sabab bo'lishi mumkin. Supabase SQL Editor'da:\nALTER TABLE orders DISABLE ROW LEVEL SECURITY;"
+                          );
+                          return;
+                        }
                         await fetch("/api/order/paid", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
