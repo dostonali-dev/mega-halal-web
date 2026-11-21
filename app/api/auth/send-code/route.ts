@@ -78,9 +78,21 @@ export async function POST(req: NextRequest) {
         digits,
         `[Mega Halal Supermarket] Tasdiqlash kodingiz: ${code}. Kod ${CODE_TTL_MINUTES} daqiqa amal qiladi.`
       );
-    } catch (smsError) {
+    } catch (smsError: any) {
       console.error("SMS yuborishda xatolik:", smsError);
-      return NextResponse.json({ error: "SMS yuborishda xatolik yuz berdi." }, { status: 500 });
+      // Haqiqiy sababni (Solapi'dan kelgan xabarni) ham qaytaramiz - aks
+      // holda faqat umumiy "xatolik" matni ko'rinadi va asl sababni
+      // (balans tugagan, jo'natuvchi raqam ro'yxatdan o'tmagan va h.k.)
+      // Vercel loglarisiz bilib bo'lmaydi.
+      const detail =
+        smsError?.response?.data?.errorMessage ||
+        smsError?.errorMessage ||
+        smsError?.message ||
+        (typeof smsError === "string" ? smsError : "");
+      return NextResponse.json(
+        { error: "SMS yuborishda xatolik yuz berdi." + (detail ? ` Sabab: ${detail}` : "") },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true });
