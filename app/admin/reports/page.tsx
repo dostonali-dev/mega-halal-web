@@ -22,6 +22,16 @@ type OrderRow = {
   created_at: string;
 };
 
+type BonusGrantRow = {
+  id: number;
+  user_id: string | null;
+  amount: number;
+  comment: string | null;
+  created_at: string;
+  customerName: string;
+  customerPhone: string;
+};
+
 // Admin uchun kunlik savdo hisoboti: tanlangan sana oralig'ida har kuni
 // qancha savdo bo'lgani, nechta buyurtma tushgani, nechta (noyob) mijoz
 // buyurtma bergani va nechta mahsulot sotilgani ko'rsatiladi.
@@ -35,6 +45,7 @@ export default function AdminReportsPage() {
   const [endDate, setEndDate] = useState(() => todaySeoulDateKey());
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [qtyByOrder, setQtyByOrder] = useState<Record<number, number>>({});
+  const [bonusGrants, setBonusGrants] = useState<BonusGrantRow[]>([]);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
@@ -78,6 +89,45 @@ export default function AdminReportsPage() {
 
       setOrders(valid);
       setQtyByOrder(qtyMap);
+
+      // Taqdim qilingan bonuslar hisoboti - shu sana oralig'ida admin
+      // tomonidan qo'lda berilgan bonuslar ro'yxati. "bonus_grants" jadvali
+      // hali yaratilmagan bo'lsa (migratsiya ishga tushirilmagan), xatoni
+      // e'tiborsiz qoldiramiz - shu bo'lim shunchaki bo'sh ko'rinadi.
+      try {
+        const { data: grantsData, error: grantsError } = await supabase
+          .from("bonus_grants")
+          .select("id, user_id, amount, comment, created_at")
+          .gte("created_at", fromISO)
+          .lt("created_at", toISO)
+          .order("created_at", { ascending: false });
+
+        if (grantsError || !grantsData) {
+          setBonusGrants([]);
+        } else {
+          const userIds = Array.from(new Set(grantsData.map((g) => g.user_id).filter(Boolean))) as string[];
+          let profilesById: Record<string, { name?: string; phone?: string }> = {};
+          if (userIds.length > 0) {
+            const { data: profilesData } = await supabase
+              .from("profiles")
+              .select("id, name, phone")
+              .in("id", userIds);
+            (profilesData || []).forEach((p: any) => {
+              profilesById[p.id] = { name: p.name, phone: p.phone };
+            });
+          }
+          setBonusGrants(
+            grantsData.map((g) => ({
+              ...g,
+              customerName: (g.user_id && profilesById[g.user_id]?.name) || "Noma'lum mijoz",
+              customerPhone: (g.user_id && profilesById[g.user_id]?.phone) || "",
+            }))
+          );
+        }
+      } catch (e) {
+        console.error(e);
+        setBonusGrants([]);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -220,6 +270,35 @@ export default function AdminReportsPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-10">
+          <h2 className="text-xl font-bold mb-1">🎁 Taqdim qilingan bonuslar hisoboti</h2>
+          <p className="text-gray-500 text-sm mb-4">Tanlangan sana oralig'ida admin tomonidan mijozlarga qo'lda berilgan bonuslar</p>
+
+          <div className="rounded-2xl p-4 mb-4 inline-block" style={{ backgroundColor: "#fdf4ff", border: "1px solid #f0abfc" }}>
+            <p className="text-xs font-bold" style={{ color: "#86198f" }}>💎 Jami berilgan bonus</p>
+            <p className="text-xl font-extrabold mt-1 text-black">
+              {bonusGrants.reduce((s, g) => s + (g.amount || 0), 0).toLocaleString()}₩
+            </p>
+          </div>
+
+          {!loading && bonusGrants.length === 0 && (
+            <p className="text-gray-400 text-sm">Shu sana oralig'ida bonus berilmagan.</p>
+          )}
+
+          <div className="space-y-2">
+            {bonusGrants.map((g) => (
+              <div key={g.id} className="bg-white border border-gray-200 rounded-2xl p-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold text-black truncate">{g.customerName}{g.customerPhone ? ` · ${g.customerPhone}` : ""}</p>
+                  {g.comment && <p className="text-sm text-gray-500 truncate">{g.comment}</p>}
+                  <p className="text-xs text-gray-400 mt-0.5">{formatSeoulDate(g.created_at)}</p>
+                </div>
+                <p className="font-bold text-fuchsia-700 whitespace-nowrap">+{g.amount.toLocaleString()}₩</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </main>

@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/imageCompress";
-import { fetchAddresses, addAddress, type Address } from "@/lib/addresses";
+import { fetchAddresses, addAddress, updateAddress, type Address } from "@/lib/addresses";
 import { DELIVERY_FEE, getDeliveryFee, getFreeShippingRemaining } from "@/lib/delivery";
 import AddressSearchModal from "@/components/AddressSearchModal";
 import PageHeader from "@/components/PageHeader";
@@ -57,6 +57,18 @@ export default function CheckoutPage() {
   const [addressImagePreview, setAddressImagePreview] = useState("");
   const [saveNewAddress, setSaveNewAddress] = useState(true);
   const [showAddressSearch, setShowAddressSearch] = useState(false);
+  const [addressSearchTarget, setAddressSearchTarget] = useState<"new" | "edit">("new");
+
+  // Mavjud (saqlangan) manzillardan birini - shu jumladan asosiy (default)
+  // manzilni ham - to'g'ridan-to'g'ri shu checkout sahifasida tahrirlash
+  // imkoniyati uchun.
+  const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
+  const [editAddressMode, setEditAddressMode] = useState<"form" | "photo">("form");
+  const [editAddress, setEditAddress] = useState("");
+  const [editAddressDetail, setEditAddressDetail] = useState("");
+  const [editAddressImageFile, setEditAddressImageFile] = useState<File | null>(null);
+  const [editAddressImagePreview, setEditAddressImagePreview] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   const [note, setNote] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -77,6 +89,58 @@ export default function CheckoutPage() {
       else setSelectedId("new");
     });
   }, [user]);
+
+  const startEditAddress = (a: Address) => {
+    setEditingAddressId(a.id);
+    setEditAddressMode(a.address_image ? "photo" : "form");
+    setEditAddress(a.address || "");
+    setEditAddressDetail(a.address_detail || "");
+    setEditAddressImageFile(null);
+    setEditAddressImagePreview(a.address_image || "");
+  };
+
+  const cancelEditAddress = () => {
+    setEditingAddressId(null);
+  };
+
+  const handleSaveEditAddress = async (a: Address) => {
+    if (editAddressMode === "form" && !editAddress.trim()) { alert(t("alert_enter_address")); return; }
+    if (editAddressMode === "photo" && !editAddressImageFile && !a.address_image) { alert(t("alert_enter_address_photo")); return; }
+
+    setEditSaving(true);
+    try {
+      let imageUrl: string | null = a.address_image || null;
+      if (editAddressMode === "photo" && editAddressImageFile) {
+        const fileName = `address-edit-${a.id}-${Date.now()}.jpg`;
+        const compressedFile = await compressImage(editAddressImageFile);
+        const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, compressedFile);
+        if (uploadError) {
+          alert(t("alert_generic_error") + ": " + uploadError.message);
+          setEditSaving(false);
+          return;
+        }
+        const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
+      }
+
+      const fields = {
+        address: editAddressMode === "form" ? editAddress : null,
+        address_detail: editAddressMode === "form" ? editAddressDetail : null,
+        address_image: editAddressMode === "photo" ? imageUrl : null,
+      };
+      const error = await updateAddress(a.id, fields);
+      if (error) {
+        alert(t("alert_generic_error") + ": " + error.message);
+      } else {
+        setSavedAddresses((prev) => prev.map((x) => (x.id === a.id ? { ...x, ...fields } : x)));
+        setEditingAddressId(null);
+      }
+    } catch (e) {
+      console.error(e);
+      alert(t("alert_generic_error"));
+    }
+    setEditSaving(false);
+  };
 
   const validateStock = async (): Promise<string | null> => {
     const ids = items.map((i) => i.id);
@@ -433,20 +497,78 @@ export default function CheckoutPage() {
 
           <div className="space-y-2 mb-3">
             {savedAddresses.map((a) => (
-              <label key={a.id} className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === a.id ? "border-green-600 bg-green-50" : "border-gray-200 bg-white"}`}>
-                <input type="radio" checked={selectedId === a.id} onChange={() => setSelectedId(a.id)} className="mt-1" />
-                <div className="flex-1">
-                  {a.is_default && <span className="inline-block bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">{t("checkout_default_badge")}</span>}
-                  {a.address_image ? (
-                    <>
-                      <p className="text-sm text-black mb-1">📷 {t("checkout_upload_photo")}</p>
-                      <img src={a.address_image} alt="manzil" className="w-full max-w-[220px] rounded-lg border" />
-                    </>
-                  ) : (
-                    <p className="text-sm text-black">{a.address}{a.address_detail ? `, ${a.address_detail}` : ""}</p>
-                  )}
+              <div key={a.id} className={`border rounded-xl p-3 ${selectedId === a.id ? "border-green-600 bg-green-50" : "border-gray-200 bg-white"}`}>
+                <div className="flex items-start gap-3">
+                  <label className="flex items-start gap-3 cursor-pointer flex-1 min-w-0">
+                    <input type="radio" checked={selectedId === a.id} onChange={() => setSelectedId(a.id)} className="mt-1" />
+                    <div className="flex-1 min-w-0">
+                      {a.is_default && <span className="inline-block bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">{t("checkout_default_badge")}</span>}
+                      {a.address_image ? (
+                        <>
+                          <p className="text-sm text-black mb-1">📷 {t("checkout_upload_photo")}</p>
+                          <img src={a.address_image} alt="manzil" className="w-full max-w-[220px] rounded-lg border" />
+                        </>
+                      ) : (
+                        <p className="text-sm text-black">{a.address}{a.address_detail ? `, ${a.address_detail}` : ""}</p>
+                      )}
+                    </div>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => (editingAddressId === a.id ? cancelEditAddress() : startEditAddress(a))}
+                    className="text-xs font-bold text-blue-600 underline flex-shrink-0 mt-1"
+                  >
+                    {editingAddressId === a.id ? t("address_cancel") : t("address_edit")}
+                  </button>
                 </div>
-              </label>
+
+                {editingAddressId === a.id && (
+                  <div className="border-t mt-3 pt-3">
+                    <div className="flex gap-2 mb-3">
+                      <button type="button" onClick={() => setEditAddressMode("form")} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${editAddressMode === "form" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-500"}`}>
+                        {t("checkout_type_address")}
+                      </button>
+                      <button type="button" onClick={() => setEditAddressMode("photo")} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${editAddressMode === "photo" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-500"}`}>
+                        {t("checkout_upload_photo")}
+                      </button>
+                    </div>
+
+                    {editAddressMode === "form" ? (
+                      <>
+                        <div className="flex gap-2 mb-2">
+                          <input type="text" placeholder={t("checkout_address_placeholder")} value={editAddress} readOnly className="flex-1 border rounded-xl p-3 bg-white text-black" />
+                          <button type="button" onClick={() => { setAddressSearchTarget("edit"); setShowAddressSearch(true); }} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
+                        </div>
+                        <input type="text" placeholder={t("checkout_detail_placeholder")} value={editAddressDetail} onChange={(e) => setEditAddressDetail(e.target.value)} className="w-full border rounded-xl p-3 bg-white text-black mb-2" />
+                      </>
+                    ) : (
+                      <div className="border-2 border-dashed rounded-xl p-4 text-center bg-green-50 mb-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setEditAddressImageFile(file);
+                            setEditAddressImagePreview(URL.createObjectURL(file));
+                          }}
+                          className="w-full bg-white text-black"
+                        />
+                        {editAddressImagePreview && <img src={editAddressImagePreview} alt="manzil" className="mt-3 w-full rounded-xl border" />}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => handleSaveEditAddress(a)} disabled={editSaving} className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white py-2 rounded-xl font-bold text-sm">
+                        {editSaving ? t("address_saving") : t("address_save")}
+                      </button>
+                      <button type="button" onClick={cancelEditAddress} className="px-4 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">
+                        {t("address_cancel")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
 
             <label className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === "new" ? "border-green-600 bg-green-50" : "border-gray-200 bg-white"}`}>
@@ -470,7 +592,7 @@ export default function CheckoutPage() {
                 <>
                   <div className="flex gap-2 mb-2">
                     <input type="text" placeholder={t("checkout_address_placeholder")} value={address} readOnly className="flex-1 border rounded-xl p-3 bg-white text-black" />
-                    <button type="button" onClick={() => setShowAddressSearch(true)} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
+                    <button type="button" onClick={() => { setAddressSearchTarget("new"); setShowAddressSearch(true); }} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
                   </div>
                   <input type="text" placeholder={t("checkout_detail_placeholder")} value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} className="w-full border rounded-xl p-3 bg-white text-black mb-2" />
                 </>
@@ -515,17 +637,40 @@ export default function CheckoutPage() {
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
           <p className="font-medium text-black mb-2">{t("checkout_receipt_title")}</p>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              setReceiptFile(file);
-              setReceiptPreview(URL.createObjectURL(file));
+          <div
+            tabIndex={0}
+            onClick={(e) => e.currentTarget.focus()}
+            onPaste={(e) => {
+              const items = e.clipboardData?.items;
+              if (!items) return;
+              for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.type.startsWith("image/")) {
+                  const file = item.getAsFile();
+                  if (file) {
+                    setReceiptFile(file);
+                    setReceiptPreview(URL.createObjectURL(file));
+                  }
+                  e.preventDefault();
+                  break;
+                }
+              }
             }}
-            className="w-full border rounded-xl p-2 bg-white text-black"
-          />
+            className="border-2 border-dashed border-gray-300 rounded-xl p-2 bg-white focus:outline-none focus:border-green-500"
+          >
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setReceiptFile(file);
+                setReceiptPreview(URL.createObjectURL(file));
+              }}
+              className="w-full p-1 bg-white text-black"
+            />
+            <p className="text-xs text-gray-400 mt-1">{t("checkout_receipt_paste_hint")}</p>
+          </div>
           {receiptPreview && (
             <div className="mt-3 relative">
               <img src={receiptPreview} alt="receipt" className="w-full rounded-xl border" />
@@ -541,7 +686,7 @@ export default function CheckoutPage() {
 
       {showAddressSearch && (
         <AddressSearchModal
-          onComplete={(addr) => setAddress(addr)}
+          onComplete={(addr) => { if (addressSearchTarget === "edit") setEditAddress(addr); else setAddress(addr); }}
           onClose={() => setShowAddressSearch(false)}
         />
       )}

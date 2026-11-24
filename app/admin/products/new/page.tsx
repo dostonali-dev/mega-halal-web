@@ -153,76 +153,117 @@ export default function NewProductPage() {
       <h1 className="text-3xl font-bold mt-3 mb-6">Yangi mahsulot qo'shish</h1>
 
       <div className="max-w-md space-y-4">
-        <input type="text" placeholder="Mahsulot nomi" value={name} onChange={(e) => setName(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
         <div>
-          <input type="text" placeholder="Ishlab chiqaruvchi (ixtiyoriy)" value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Mahsulot nomi</label>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Ishlab chiqaruvchi (ixtiyoriy)</label>
+          <input type="text" value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
           <p className="text-xs text-gray-400 mt-1 px-1">Mijozga mahsulot kartasida ko'rinadi. Bo'sh qoldirilsa, hech narsa ko'rsatilmaydi.</p>
         </div>
-        <div className="relative">
-          <input type="number" placeholder="Narxi" value={price} onChange={(e) => handlePriceChange(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-white text-black" />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
+
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Narxi</label>
+            <div className="relative">
+              <input type="number" value={price} onChange={(e) => handlePriceChange(e.target.value)} className="w-full border p-3 pr-8 rounded-xl bg-white text-black" />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none text-sm">₩</span>
+            </div>
+          </div>
+          <div style={{ width: "92px" }}>
+            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block truncate">Og'irligi</label>
+            <input type="number" step="0.01" value={gram} onChange={(e) => setGram(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+          </div>
+          <div style={{ width: "72px" }}>
+            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">gr/kg/L</label>
+            <input
+              type="text"
+              value={weightUnit}
+              onChange={(e) => setWeightUnit(e.target.value)}
+              maxLength={10}
+              className="w-full border p-3 rounded-xl bg-white text-black"
+            />
+          </div>
         </div>
+
         <div>
           <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input type="number" placeholder="Kelgan narxi (ixtiyoriy)" value={costPrice} onChange={(e) => handleCostPriceChange(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-yellow-50 text-black" />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
+            <div className="flex-1">
+              <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Kelgan narxi (ixtiyoriy)</label>
+              <div className="relative">
+                <input type="number" value={costPrice} onChange={(e) => handleCostPriceChange(e.target.value)} className="w-full border p-3 pr-10 rounded-xl bg-yellow-50 text-black" />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₩</span>
+              </div>
             </div>
-            <div className="relative" style={{ width: "88px" }}>
-              <input type="number" placeholder="Foiz" value={marginPercent} onChange={(e) => handleMarginChange(e.target.value)} className="w-full border p-3 pr-6 rounded-xl bg-yellow-50 text-black" />
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">%</span>
+            <div style={{ width: "88px" }}>
+              <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Foiz</label>
+              <div className="relative">
+                <input type="number" value={marginPercent} onChange={(e) => handleMarginChange(e.target.value)} className="w-full border p-3 pr-6 rounded-xl bg-yellow-50 text-black" />
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">%</span>
+              </div>
             </div>
           </div>
           <p className="text-xs text-gray-400 mt-1 px-1">Faqat siz ko'rasiz. Foizni kiritsangiz - narxi avtomatik hisoblanadi; narxni o'zgartirsangiz - foiz o'zi yangilanadi.</p>
         </div>
-        <div className="flex gap-2">
-          <input type="number" step="0.01" placeholder="Og'irligi / hajmi (ixtiyoriy)" value={gram} onChange={(e) => setGram(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black" />
-          <input
-            type="text"
-            placeholder="gr"
-            value={weightUnit}
-            onChange={(e) => setWeightUnit(e.target.value)}
-            maxLength={10}
-            style={{ width: "88px" }}
-            className="border p-3 rounded-xl bg-white text-black"
-          />
-        </div>
-        <input type="text" placeholder="Mahsulot kodi / barkod (faqat siz ko'rasiz, mijozga ko'rinmaydi)" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
-        <input type="number" placeholder="Soni (ombordagi miqdor)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
 
         <div>
-          <label className="text-xs font-bold text-gray-500 px-1">Muddati (yaroqlilik sanasi, ixtiyoriy)</label>
-          <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black mt-1" />
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Mahsulot kodi / barkod (faqat siz ko'rasiz, mijozga ko'rinmaydi)</label>
+          <input type="text" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         </div>
-
-        <div className="flex gap-2">
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black">
-            <option value="">Kategoriyani tanlang</option>
-            {categoriesList.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-          </select>
-          <Link href="/admin/categories" className="bg-gray-200 text-black px-4 rounded-xl text-sm font-bold whitespace-nowrap flex items-center">
-            + Yangi
-          </Link>
-        </div>
-
-        <textarea placeholder="Mahsulot tavsifi (ixtiyoriy)" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" rows={3} />
         <div>
-          <input type="text" placeholder="Kalit so'zlar (vergul bilan, masalan: rolton, lapsha)" value={keywords} onChange={(e) => setKeywords(e.target.value)} className="w-full border p-3 rounded-xl bg-green-50 text-black" />
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Soni (ombordagi miqdor)</label>
+          <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+        </div>
+
+        <div>
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Muddati (yaroqlilik sanasi, ixtiyoriy)</label>
+          <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+        </div>
+
+        <div>
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Kategoriya</label>
+          <div className="flex gap-2">
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black">
+              <option value="">Kategoriyani tanlang</option>
+              {categoriesList.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+            <Link href="/admin/categories" className="bg-gray-200 text-black px-4 rounded-xl text-sm font-bold whitespace-nowrap flex items-center">
+              + Yangi
+            </Link>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Mahsulot tavsifi (ixtiyoriy)</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" rows={3} />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Kalit so'zlar (vergul bilan, masalan: rolton, lapsha)</label>
+          <input type="text" value={keywords} onChange={(e) => setKeywords(e.target.value)} className="w-full border p-3 rounded-xl bg-green-50 text-black" />
           <p className="text-xs text-gray-400 mt-1 px-1">Mijoz qidirganda mahsulot nomi topilmasa ham, shu so'zlar orqali topiladi.</p>
         </div>
-        <input type="text" placeholder="Firma / yetkazib beruvchi (faqat siz ko'rasiz)" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
-        <input type="number" placeholder="Chegirma narxi (ixtiyoriy)" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-orange-50 text-black" />
+        <div>
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Firma / yetkazib beruvchi (faqat siz ko'rasiz)</label>
+          <input type="text" value={supplier} onChange={(e) => setSupplier(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Chegirma narxi (ixtiyoriy)</label>
+          <input type="number" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} className="w-full border p-3 rounded-xl bg-orange-50 text-black" />
+        </div>
 
         <div className="p-3 rounded-xl space-y-2" style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0" }}>
           <p className="text-sm font-bold" style={{ color: "#166534" }}>🍹 Variant (agar bu mahsulotning lazzat/turi bo'lsa)</p>
           <ParentProductPicker options={productOptions} value={parentProductId} onChange={setParentProductId} />
-          <input
-            type="text"
-            placeholder="Qisqa nomi (masalan: Lime, Qulupnay) - lazzat tanlash tugmasida shu ko'rinadi"
-            value={variantName}
-            onChange={(e) => setVariantName(e.target.value)}
-            className="w-full border p-3 rounded-xl bg-white text-black"
-          />
+          <div>
+            <label className="text-xs font-bold px-1 mb-1 block" style={{ color: "#166534" }}>Qisqa nomi (masalan: Lime, Qulupnay) - lazzat tanlash tugmasida shu ko'rinadi</label>
+            <input
+              type="text"
+              value={variantName}
+              onChange={(e) => setVariantName(e.target.value)}
+              className="w-full border p-3 rounded-xl bg-white text-black"
+            />
+          </div>
           <p className="text-xs" style={{ color: "#166534" }}>
             "Bosh mahsulot" tanlansa - bu mahsulot ro'yxatlarda alohida ko'rinmaydi, faqat tanlangan mahsulot sahifasida "lazzat tanlash" tugmasi sifatida chiqadi.
           </p>
