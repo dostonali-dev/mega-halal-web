@@ -278,7 +278,7 @@ export default function AdminReportsPage() {
 
           <div className="rounded-2xl p-4 mb-4 inline-block" style={{ backgroundColor: "#fdf4ff", border: "1px solid #f0abfc" }}>
             <p className="text-xs font-bold" style={{ color: "#86198f" }}>💎 Jami berilgan bonus</p>
-            <p className="text-xl font-extrabold mt-1 text-black">
+            <p className="text-xl font-extrabold mt-1" style={{ color: "#000000" }}>
               {bonusGrants.reduce((s, g) => s + (g.amount || 0), 0).toLocaleString()}₩
             </p>
           </div>
