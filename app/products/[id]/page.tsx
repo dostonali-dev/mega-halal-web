@@ -151,10 +151,10 @@ export default function ProductDetailPage() {
             </span>
           )}
           <h1 className="text-2xl font-bold text-black">{product.name}</h1>
-          {(product.gram != null || product.manufacturer) && (
+          {(product.weight_unit || product.manufacturer) && (
             <p className="text-gray-400 text-sm font-semibold mt-1">
-              {product.gram != null ? `${product.gram.toLocaleString()} ${product.weight_unit || "gr"}` : ""}
-              {product.gram != null && product.manufacturer ? " · " : ""}
+              {product.weight_unit || ""}
+              {product.weight_unit && product.manufacturer ? " · " : ""}
               {product.manufacturer || ""}
             </p>
           )}

@@ -84,10 +84,10 @@ export default function CategoryDetailPage() {
                   <Link href={`/products/${item.id}`}>
                     <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                   </Link>
-                  {(item.gram != null || item.manufacturer) && (
+                  {(item.weight_unit || item.manufacturer) && (
                     <p className="text-gray-400 text-xs mb-1 truncate">
-                      {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
-                      {item.gram != null && item.manufacturer ? " · " : ""}
+                      {item.weight_unit || ""}
+                      {item.weight_unit && item.manufacturer ? " · " : ""}
                       {item.manufacturer || ""}
                     </p>
                   )}

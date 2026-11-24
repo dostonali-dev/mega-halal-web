@@ -61,7 +61,6 @@ export default function AdminEditProductPage() {
   const [price, setPrice] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [marginPercent, setMarginPercent] = useState("");
-  const [gram, setGram] = useState("");
   const [weightUnit, setWeightUnit] = useState("");
   const [manufacturer, setManufacturer] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -109,8 +108,7 @@ export default function AdminEditProductPage() {
       setPrice(String(p.price));
       setCostPrice(p.cost_price != null ? String(p.cost_price) : "");
       setMarginPercent(calcMarginPercent(p.cost_price != null ? String(p.cost_price) : "", String(p.price)));
-      setGram(p.gram != null ? String(p.gram) : "");
-      setWeightUnit(p.weight_unit || "gr");
+      setWeightUnit([p.gram != null ? String(p.gram) : null, p.weight_unit || null].filter(Boolean).join(" "));
       setManufacturer(p.manufacturer || "");
       setExpiryDate(p.expiry_date || "");
       setCategory(p.category);
@@ -164,7 +162,7 @@ export default function AdminEditProductPage() {
         imageUrl = urlData.publicUrl;
       }
       const payload = {
-        name, price: Number(price), cost_price: costPrice ? Number(costPrice) : null, gram: gram ? Number(gram) : null, weight_unit: gram ? weightUnit : null, manufacturer: manufacturer.trim() || null, expiry_date: expiryDate || null, category, image: imageUrl || null,
+        name, price: Number(price), cost_price: costPrice ? Number(costPrice) : null, gram: null, weight_unit: weightUnit.trim() || null, manufacturer: manufacturer.trim() || null, expiry_date: expiryDate || null, category, image: imageUrl || null,
         description: description || null, keywords: keywords.trim() || null, supplier: supplier || null,
         // Bo'sh qoldirilsa -> null (soni kuzatilmayapti, cheklovsiz sotiladi).
         // Aniq son (0 ham) kiritilsa -> shu son qat'iy chegara bo'ladi.
@@ -250,17 +248,14 @@ export default function AdminEditProductPage() {
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none text-sm">₩</span>
             </div>
           </div>
-          <div style={{ width: "92px" }}>
-            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block truncate">Og'irligi</label>
-            <input type="number" step="0.01" value={gram} onChange={(e) => setGram(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
-          </div>
-          <div style={{ width: "72px" }}>
-            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">gr/kg/L</label>
+          <div style={{ width: "140px" }}>
+            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block truncate">Hajmi</label>
             <input
               type="text"
               value={weightUnit}
               onChange={(e) => setWeightUnit(e.target.value)}
-              maxLength={10}
+              placeholder="masalan: 1 kg"
+              maxLength={20}
               className="w-full border p-3 rounded-xl bg-white text-black"
             />
           </div>

@@ -32,7 +32,6 @@ export default function NewProductPage() {
   const [price, setPrice] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [marginPercent, setMarginPercent] = useState("");
-  const [gram, setGram] = useState("");
   const [weightUnit, setWeightUnit] = useState("");
   const [productCode, setProductCode] = useState("");
   const [manufacturer, setManufacturer] = useState("");
@@ -70,7 +69,7 @@ export default function NewProductPage() {
   }, [checkedLogin]);
 
   const resetForm = () => {
-    setName(""); setPrice(""); setCostPrice(""); setMarginPercent(""); setGram(""); setWeightUnit("gr"); setProductCode(""); setManufacturer(""); setExpiryDate(""); setCategory(""); setDescription("");
+    setName(""); setPrice(""); setCostPrice(""); setMarginPercent(""); setWeightUnit(""); setProductCode(""); setManufacturer(""); setExpiryDate(""); setCategory(""); setDescription("");
     setKeywords("");
     setSupplier(""); setStock(""); setDiscountPrice(""); setIsHot(false);
     setParentProductId(""); setVariantName("");
@@ -113,7 +112,7 @@ export default function NewProductPage() {
         imageUrl = urlData.publicUrl;
       }
       const { error } = await supabase.from("products").insert([{
-        name, price: Number(price), cost_price: costPrice ? Number(costPrice) : null, gram: gram ? Number(gram) : null, weight_unit: gram ? weightUnit : null, product_code: productCode.trim() || null, manufacturer: manufacturer.trim() || null, expiry_date: expiryDate || null, category, image: imageUrl || null,
+        name, price: Number(price), cost_price: costPrice ? Number(costPrice) : null, gram: null, weight_unit: weightUnit.trim() || null, product_code: productCode.trim() || null, manufacturer: manufacturer.trim() || null, expiry_date: expiryDate || null, category, image: imageUrl || null,
         description: description || null, keywords: keywords.trim() || null, supplier: supplier || null,
         stock: stock ? Number(stock) : 0,
         discount_price: discountPrice ? Number(discountPrice) : null,
@@ -171,17 +170,14 @@ export default function NewProductPage() {
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none text-sm">₩</span>
             </div>
           </div>
-          <div style={{ width: "92px" }}>
-            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block truncate">Og'irligi</label>
-            <input type="number" step="0.01" value={gram} onChange={(e) => setGram(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
-          </div>
-          <div style={{ width: "72px" }}>
-            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">gr/kg/L</label>
+          <div style={{ width: "140px" }}>
+            <label className="text-xs font-bold text-gray-500 px-1 mb-1 block truncate">Hajmi</label>
             <input
               type="text"
               value={weightUnit}
               onChange={(e) => setWeightUnit(e.target.value)}
-              maxLength={10}
+              placeholder="masalan: 1 kg"
+              maxLength={20}
               className="w-full border p-3 rounded-xl bg-white text-black"
             />
           </div>

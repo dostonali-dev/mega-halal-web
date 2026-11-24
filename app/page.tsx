@@ -90,11 +90,11 @@ function ProductStrip({
                 <Link href={`/products/${item.id}`}>
                   <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                 </Link>
-                {(item.gram != null || item.manufacturer) && (
+                {(item.weight_unit || item.manufacturer) && (
                   <p className="text-gray-400 text-xs mb-1 truncate">
                     {item.manufacturer || ""}
-                    {item.gram != null && item.manufacturer ? " · " : ""}
-                    {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
+                    {item.weight_unit && item.manufacturer ? " · " : ""}
+                    {item.weight_unit || ""}
                   </p>
                 )}
                 <div className="mb-1.5 flex items-baseline gap-1.5 flex-wrap">
@@ -519,11 +519,11 @@ export default function Home() {
                         <Link href={`/products/${item.id}`}>
                           <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                         </Link>
-                        {(item.gram != null || item.manufacturer) && (
+                        {(item.weight_unit || item.manufacturer) && (
                           <p className="text-gray-400 text-xs mb-1 truncate">
                             {item.manufacturer || ""}
-                            {item.gram != null && item.manufacturer ? " · " : ""}
-                            {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
+                            {item.weight_unit && item.manufacturer ? " · " : ""}
+                            {item.weight_unit || ""}
                           </p>
                         )}
                         <div className="mb-1.5 flex items-baseline gap-1.5 flex-wrap">
