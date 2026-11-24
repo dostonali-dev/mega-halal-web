@@ -24,6 +24,12 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Toʻlov cheki va mahsulot rasmini olish uchun kameraga ruxsat kerak.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Toʻlov cheki yoki mahsulot rasmini tanlash uchun galereyaga ruxsat kerak.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Rasmlarni saqlash uchun galereyaga ruxsat kerak.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

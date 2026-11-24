@@ -33,7 +33,7 @@ export default function NewProductPage() {
   const [costPrice, setCostPrice] = useState("");
   const [marginPercent, setMarginPercent] = useState("");
   const [gram, setGram] = useState("");
-  const [weightUnit, setWeightUnit] = useState("gr");
+  const [weightUnit, setWeightUnit] = useState("");
   const [productCode, setProductCode] = useState("");
   const [manufacturer, setManufacturer] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -177,11 +177,15 @@ export default function NewProductPage() {
         </div>
         <div className="flex gap-2">
           <input type="number" step="0.01" placeholder="Og'irligi / hajmi (ixtiyoriy)" value={gram} onChange={(e) => setGram(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black" />
-          <select value={weightUnit} onChange={(e) => setWeightUnit(e.target.value)} className="border p-3 rounded-xl bg-white text-black">
-            <option value="gr">gr</option>
-            <option value="kg">kg</option>
-            <option value="L">L</option>
-          </select>
+          <input
+            type="text"
+            placeholder="gr"
+            value={weightUnit}
+            onChange={(e) => setWeightUnit(e.target.value)}
+            maxLength={10}
+            style={{ width: "88px" }}
+            className="border p-3 rounded-xl bg-white text-black"
+          />
         </div>
         <input type="text" placeholder="Mahsulot kodi / barkod (faqat siz ko'rasiz, mijozga ko'rinmaydi)" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full border p-3 rounded-xl bg-yellow-50 text-black" />
         <input type="number" placeholder="Soni (ombordagi miqdor)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />

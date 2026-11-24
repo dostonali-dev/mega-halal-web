@@ -60,17 +60,21 @@ export default function ProductRow({
                 <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{p.name}</p>
                 {(p.gram != null || p.manufacturer) && (
                   <p className="text-gray-400 text-xs mb-1 truncate">
-                    {p.gram != null ? `${p.gram.toLocaleString()} ${p.weight_unit || "gr"}` : ""}
-                    {p.gram != null && p.manufacturer ? " · " : ""}
                     {p.manufacturer || ""}
+                    {p.gram != null && p.manufacturer ? " · " : ""}
+                    {p.gram != null ? `${p.gram.toLocaleString()} ${p.weight_unit || "gr"}` : ""}
                   </p>
                 )}
-                <p className={`text-gray-400 text-sm line-through ${hasDiscount ? "" : "invisible"}`}>
-                  {p.price.toLocaleString()}₩
-                </p>
-                <p className={hasDiscount ? "text-red-500 font-extrabold text-lg mb-2" : "text-green-400 font-extrabold text-lg mb-2"}>
-                  {(hasDiscount ? p.discount_price! : p.price).toLocaleString()}₩
-                </p>
+                <div className="flex items-baseline gap-1.5 mb-2 flex-wrap">
+                  <p className={hasDiscount ? "text-red-500 font-extrabold text-lg" : "text-green-400 font-extrabold text-lg"}>
+                    {(hasDiscount ? p.discount_price! : p.price).toLocaleString()}₩
+                  </p>
+                  {hasDiscount && (
+                    <p className="text-gray-400 text-xs line-through">
+                      {p.price.toLocaleString()}₩
+                    </p>
+                  )}
+                </div>
 
                 <div className="mt-auto">
                   {outOfStock ? (

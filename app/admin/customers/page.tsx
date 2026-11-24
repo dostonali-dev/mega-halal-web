@@ -26,8 +26,17 @@ type Order = {
   created_at: string;
 };
 
+type BonusGrant = {
+  id: number;
+  user_id: string | null;
+  amount: number;
+  comment: string | null;
+  created_at: string;
+};
+
 type Customer = Profile & {
   orders: Order[];
+  bonusGrants: BonusGrant[];
 };
 
 const statusColors: Record<string, string> = {
@@ -48,6 +57,7 @@ export default function CustomersPage() {
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [newPasswords, setNewPasswords] = useState<Record<string, string>>({});
   const [bonusInputs, setBonusInputs] = useState<Record<string, string>>({});
+  const [bonusComments, setBonusComments] = useState<Record<string, string>>({});
   const [grantingId, setGrantingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,9 +73,10 @@ export default function CustomersPage() {
     if (!checkedLogin) return;
     const load = async () => {
       setLoading(true);
-      const [{ data: profiles }, { data: orders }] = await Promise.all([
+      const [{ data: profiles }, { data: orders }, { data: bonusGrants }] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("orders").select("id, user_id, total, order_text, status, created_at"),
+        supabase.from("bonus_grants").select("id, user_id, amount, comment, created_at"),
       ]);
 
       const ordersByUser = new Map<string, Order[]>();
@@ -76,9 +87,20 @@ export default function CustomersPage() {
         ordersByUser.set(o.user_id, list);
       });
 
+      const bonusGrantsByUser = new Map<string, BonusGrant[]>();
+      (bonusGrants || []).forEach((g) => {
+        if (!g.user_id) return;
+        const list = bonusGrantsByUser.get(g.user_id) || [];
+        list.push(g);
+        bonusGrantsByUser.set(g.user_id, list);
+      });
+
       const merged: Customer[] = (profiles || []).map((p) => ({
         ...p,
         orders: (ordersByUser.get(p.id) || []).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ),
+        bonusGrants: (bonusGrantsByUser.get(p.id) || []).sort(
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         ),
       }));
@@ -125,11 +147,15 @@ export default function CustomersPage() {
   const handleGrantBonus = async (c: Customer) => {
     const raw = bonusInputs[c.id];
     const amount = Number(raw);
+    const comment = (bonusComments[c.id] || "").trim();
     if (!raw || !amount || amount <= 0) {
       alert("Bonus miqdorini to'g'ri kiriting.");
       return;
     }
-    if (!confirm(`${c.name} (${c.phone})ga ${amount.toLocaleString()}₩ bonus berilsinmi?`)) return;
+    const confirmText = comment
+      ? `${c.name} (${c.phone})ga ${amount.toLocaleString()}₩ bonus berilsinmi?\n\nIzoh: ${comment}`
+      : `${c.name} (${c.phone})ga ${amount.toLocaleString()}₩ bonus berilsinmi?`;
+    if (!confirm(confirmText)) return;
     setGrantingId(c.id);
     try {
       // Atomik RPC orqali qo'shamiz (joriy balansni o'qib, ustiga qo'shib,
@@ -142,12 +168,36 @@ export default function CustomersPage() {
       });
       if (error) {
         alert("Xatolik: " + error.message);
-      } else {
-        setCustomers((prev) =>
-          prev.map((x) => (x.id === c.id ? { ...x, bonus_balance: newBalance ?? (x.bonus_balance || 0) + amount } : x))
-        );
-        setBonusInputs((prev) => ({ ...prev, [c.id]: "" }));
+        return;
       }
+
+      // Har bir berilgan bonusni tarix sifatida saqlaymiz (sana, miqdor,
+      // izoh) - "Berilgan bonuslar tarixi" shu yozuvlar asosida chiqadi.
+      const { data: grantRow, error: grantError } = await supabase
+        .from("bonus_grants")
+        .insert({ user_id: c.id, amount, comment: comment || null })
+        .select()
+        .single();
+      if (grantError) {
+        console.error(grantError);
+        // Balans allaqachon yangilandi - faqat tarixga yozib bo'lmadi,
+        // shuning uchun bu xatoni alohida ko'rsatamiz.
+        alert("Bonus berildi, lekin tarixga yozishda xatolik: " + grantError.message);
+      }
+
+      setCustomers((prev) =>
+        prev.map((x) =>
+          x.id === c.id
+            ? {
+                ...x,
+                bonus_balance: newBalance ?? (x.bonus_balance || 0) + amount,
+                bonusGrants: grantRow ? [grantRow as BonusGrant, ...x.bonusGrants] : x.bonusGrants,
+              }
+            : x
+        )
+      );
+      setBonusInputs((prev) => ({ ...prev, [c.id]: "" }));
+      setBonusComments((prev) => ({ ...prev, [c.id]: "" }));
     } catch (e) {
       console.error(e);
       alert("Xatolik yuz berdi.");
@@ -190,7 +240,7 @@ export default function CustomersPage() {
           placeholder="🔎 Ism bo'yicha qidirish..."
           value={nameQuery}
           onChange={(e) => setNameQuery(e.target.value)}
-          className="w-full border rounded-xl p-3 text-black"
+          className="w-full border rounded-xl p-3 text-black bg-white"
         />
         <div className="flex gap-2">
           <button
@@ -307,15 +357,18 @@ export default function CustomersPage() {
                       🎁 Mijozga bonus taqdim qilish. Mavjud bonus:{" "}
                       <span className="font-bold text-green-700">{(c.bonus_balance || 0).toLocaleString()}₩</span>
                     </p>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={1}
-                        placeholder="Masalan: 10000"
-                        value={bonusInputs[c.id] || ""}
-                        onChange={(e) => setBonusInputs((prev) => ({ ...prev, [c.id]: e.target.value }))}
-                        className="flex-1 border rounded-xl p-2 text-black"
-                      />
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="number"
+                          min={1}
+                          placeholder="Masalan: 10000"
+                          value={bonusInputs[c.id] || ""}
+                          onChange={(e) => setBonusInputs((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                          className="w-full border rounded-xl p-2 pr-7 text-black bg-white"
+                        />
+                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₩</span>
+                      </div>
                       <button
                         onClick={() => handleGrantBonus(c)}
                         disabled={grantingId === c.id}
@@ -324,6 +377,30 @@ export default function CustomersPage() {
                         {grantingId === c.id ? "..." : "🎁 Bonus berish"}
                       </button>
                     </div>
+                    <input
+                      type="text"
+                      placeholder="Izoh (ixtiyoriy) — masalan: telefon orqali murojaat"
+                      value={bonusComments[c.id] || ""}
+                      onChange={(e) => setBonusComments((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                      className="w-full border rounded-xl p-2 text-black bg-white text-sm"
+                    />
+
+                    {c.bonusGrants.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs font-bold text-gray-500 mb-1">📜 Berilgan bonuslar tarixi:</p>
+                        <div className="space-y-1">
+                          {c.bonusGrants.map((g) => (
+                            <div key={g.id} className="flex justify-between items-start gap-2 bg-white border border-green-100 rounded-lg px-2 py-1.5 text-xs">
+                              <div className="min-w-0">
+                                <span className="font-bold text-green-700">+{g.amount.toLocaleString()}₩</span>
+                                {g.comment && <span className="text-gray-500"> — {g.comment}</span>}
+                              </div>
+                              <span className="text-gray-400 whitespace-nowrap flex-shrink-0">{formatSeoulDateTime(g.created_at)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-3">

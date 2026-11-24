@@ -44,6 +44,14 @@ export async function setDefaultAddress(userId: string, addressId: number) {
   return error;
 }
 
+export async function updateAddress(
+  addressId: number,
+  fields: { address?: string | null; address_detail?: string | null; address_image?: string | null }
+) {
+  const { error } = await supabase.from("addresses").update(fields).eq("id", addressId);
+  return error;
+}
+
 export async function deleteAddress(addressId: number) {
   const { error } = await supabase.from("addresses").delete().eq("id", addressId);
   return error;

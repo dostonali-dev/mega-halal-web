@@ -333,24 +333,22 @@ export default function CheckoutPage() {
             </p>
           )}
 
-          <div className="flex justify-between items-center font-bold text-green-700 mt-2 pt-2 border-t text-lg">
-            <span>{t("cart_total")}</span>
-            <span>
-              {bonusAmount > 0 ? (
-                <>
-                  <span className="line-through text-gray-300 text-sm mr-1">{grandTotal.toLocaleString()}₩</span>
-                  {payableTotal.toLocaleString()}₩
-                </>
-              ) : (
-                `${grandTotal.toLocaleString()}₩`
-              )}
-            </span>
+          <div className="mt-2 pt-2 border-t space-y-1">
+            <div className="flex justify-between items-center font-bold text-black">
+              <span>{t("cart_total")}</span>
+              <span>{grandTotal.toLocaleString()}₩</span>
+            </div>
+            {bonusAmount > 0 && (
+              <div className="flex justify-between items-center text-sm font-semibold" style={{ color: "#15803d" }}>
+                <span>🎁 {t("checkout_bonus_used_label")}</span>
+                <span>-{bonusAmount.toLocaleString()}₩</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center font-bold text-green-700 text-lg">
+              <span>{t("checkout_payable_label")}</span>
+              <span>{payableTotal.toLocaleString()}₩</span>
+            </div>
           </div>
-          {bonusAmount > 0 && (
-            <p className="text-xs text-green-700 font-semibold text-right mt-1">
-              🎁 {bonusAmount.toLocaleString()}₩ bonus ishlatildi
-            </p>
-          )}
         </div>
 
         {user && availableBonus > 0 && (
@@ -371,8 +369,13 @@ export default function CheckoutPage() {
                 <p className="text-xs mt-0.5" style={{ color: "#166534" }}>
                   Mavjud bonus:{" "}
                   <span className="font-bold" style={{ color: "#15803d" }}>
-                    {availableBonus.toLocaleString()}₩
+                    {Math.max(0, availableBonus - bonusAmount).toLocaleString()}₩
                   </span>
+                  {useBonus && bonusAmount > 0 && (
+                    <span className="ml-1" style={{ color: "#86efac" }}>
+                      ({availableBonus.toLocaleString()}₩ dan)
+                    </span>
+                  )}
                 </p>
               </div>
               <input
@@ -421,8 +424,8 @@ export default function CheckoutPage() {
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4 space-y-3">
           <h2 className="font-bold text-black">{t("checkout_recipient")}</h2>
-          <input type="text" placeholder={t("checkout_name_placeholder")} value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full border rounded-xl p-3 text-black" />
-          <input type="text" placeholder={t("checkout_phone_placeholder")} value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border rounded-xl p-3 text-black" />
+          <input type="text" placeholder={t("checkout_name_placeholder")} value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full border rounded-xl p-3 bg-white text-black" />
+          <input type="text" placeholder={t("checkout_phone_placeholder")} value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border rounded-xl p-3 bg-white text-black" />
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">
@@ -430,12 +433,15 @@ export default function CheckoutPage() {
 
           <div className="space-y-2 mb-3">
             {savedAddresses.map((a) => (
-              <label key={a.id} className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === a.id ? "border-green-600 bg-green-50" : "border-gray-200"}`}>
+              <label key={a.id} className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === a.id ? "border-green-600 bg-green-50" : "border-gray-200 bg-white"}`}>
                 <input type="radio" checked={selectedId === a.id} onChange={() => setSelectedId(a.id)} className="mt-1" />
                 <div className="flex-1">
                   {a.is_default && <span className="inline-block bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">{t("checkout_default_badge")}</span>}
                   {a.address_image ? (
-                    <p className="text-sm text-black">📷 {t("checkout_upload_photo")}</p>
+                    <>
+                      <p className="text-sm text-black mb-1">📷 {t("checkout_upload_photo")}</p>
+                      <img src={a.address_image} alt="manzil" className="w-full max-w-[220px] rounded-lg border" />
+                    </>
                   ) : (
                     <p className="text-sm text-black">{a.address}{a.address_detail ? `, ${a.address_detail}` : ""}</p>
                   )}
@@ -443,7 +449,7 @@ export default function CheckoutPage() {
               </label>
             ))}
 
-            <label className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === "new" ? "border-green-600 bg-green-50" : "border-gray-200"}`}>
+            <label className={`flex items-start gap-3 border rounded-xl p-3 cursor-pointer ${selectedId === "new" ? "border-green-600 bg-green-50" : "border-gray-200 bg-white"}`}>
               <input type="radio" checked={selectedId === "new"} onChange={() => setSelectedId("new")} className="mt-1" />
               <span className="text-sm font-bold text-black">{t("checkout_new_address")}</span>
             </label>
@@ -463,10 +469,10 @@ export default function CheckoutPage() {
               {addressMode === "form" ? (
                 <>
                   <div className="flex gap-2 mb-2">
-                    <input type="text" placeholder={t("checkout_address_placeholder")} value={address} readOnly className="flex-1 border rounded-xl p-3 text-black" />
+                    <input type="text" placeholder={t("checkout_address_placeholder")} value={address} readOnly className="flex-1 border rounded-xl p-3 bg-white text-black" />
                     <button type="button" onClick={() => setShowAddressSearch(true)} className="bg-blue-600 text-white px-4 rounded-xl">{t("checkout_search_button")}</button>
                   </div>
-                  <input type="text" placeholder={t("checkout_detail_placeholder")} value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} className="w-full border rounded-xl p-3 text-black mb-2" />
+                  <input type="text" placeholder={t("checkout_detail_placeholder")} value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} className="w-full border rounded-xl p-3 bg-white text-black mb-2" />
                 </>
               ) : (
                 <div className="border-2 border-dashed rounded-xl p-4 text-center bg-green-50 mb-2">
@@ -479,7 +485,7 @@ export default function CheckoutPage() {
                       setAddressImageFile(file);
                       setAddressImagePreview(URL.createObjectURL(file));
                     }}
-                    className="w-full text-black"
+                    className="w-full bg-white text-black"
                   />
                   {addressImagePreview && <img src={addressImagePreview} alt="manzil" className="mt-3 w-full rounded-xl border" />}
                 </div>
@@ -492,7 +498,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <textarea placeholder={t("checkout_note_placeholder")} value={note} onChange={(e) => setNote(e.target.value)} className="w-full border rounded-xl p-3 text-black mt-3" />
+          <textarea placeholder={t("checkout_note_placeholder")} value={note} onChange={(e) => setNote(e.target.value)} className="w-full border rounded-xl p-3 bg-white text-black mt-3" />
         </div>
 
         <div className="bg-white border border-green-100 rounded-2xl p-4 mb-4">

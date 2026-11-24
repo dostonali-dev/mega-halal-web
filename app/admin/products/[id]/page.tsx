@@ -62,7 +62,7 @@ export default function AdminEditProductPage() {
   const [costPrice, setCostPrice] = useState("");
   const [marginPercent, setMarginPercent] = useState("");
   const [gram, setGram] = useState("");
-  const [weightUnit, setWeightUnit] = useState("gr");
+  const [weightUnit, setWeightUnit] = useState("");
   const [manufacturer, setManufacturer] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [category, setCategory] = useState("");
@@ -256,11 +256,15 @@ export default function AdminEditProductPage() {
         </div>
         <div className="flex gap-2">
           <input type="number" step="0.01" placeholder="Og'irligi / hajmi (ixtiyoriy)" value={gram} onChange={(e) => setGram(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black" />
-          <select value={weightUnit} onChange={(e) => setWeightUnit(e.target.value)} className="border p-3 rounded-xl bg-white text-black">
-            <option value="gr">gr</option>
-            <option value="kg">kg</option>
-            <option value="L">L</option>
-          </select>
+          <input
+            type="text"
+            placeholder="gr"
+            value={weightUnit}
+            onChange={(e) => setWeightUnit(e.target.value)}
+            maxLength={10}
+            style={{ width: "88px" }}
+            className="border p-3 rounded-xl bg-white text-black"
+          />
         </div>
         <input type="number" placeholder="Soni (bo'sh = cheklovsiz, 0 = sotuvda yo'q)" value={stock} onChange={(e) => setStock(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
 

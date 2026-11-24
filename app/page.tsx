@@ -92,18 +92,20 @@ function ProductStrip({
                 </Link>
                 {(item.gram != null || item.manufacturer) && (
                   <p className="text-gray-400 text-xs mb-1 truncate">
-                    {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
-                    {item.gram != null && item.manufacturer ? " · " : ""}
                     {item.manufacturer || ""}
+                    {item.gram != null && item.manufacturer ? " · " : ""}
+                    {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
                   </p>
                 )}
-                <div className="mb-1.5">
+                <div className="mb-1.5 flex items-baseline gap-1.5 flex-wrap">
                   <p className="text-green-400 font-extrabold text-base">
                     {(hasDiscount ? item.discount_price! : item.price).toLocaleString()}₩
                   </p>
-                  <p className={`text-gray-400 text-xs line-through ${hasDiscount ? "" : "invisible"}`}>
-                    {item.price.toLocaleString()}₩
-                  </p>
+                  {hasDiscount && (
+                    <p className="text-gray-400 text-xs line-through">
+                      {item.price.toLocaleString()}₩
+                    </p>
+                  )}
                 </div>
 
                 {/* "mt-auto" - yuqoridagi matn qatorlari soni turlicha bo'lsa ham
@@ -519,18 +521,20 @@ export default function Home() {
                         </Link>
                         {(item.gram != null || item.manufacturer) && (
                           <p className="text-gray-400 text-xs mb-1 truncate">
-                            {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
-                            {item.gram != null && item.manufacturer ? " · " : ""}
                             {item.manufacturer || ""}
+                            {item.gram != null && item.manufacturer ? " · " : ""}
+                            {item.gram != null ? `${item.gram.toLocaleString()} ${item.weight_unit || "gr"}` : ""}
                           </p>
                         )}
-                        <div className="mb-1.5">
+                        <div className="mb-1.5 flex items-baseline gap-1.5 flex-wrap">
                           <p className="text-green-400 font-extrabold text-base">
                             {(hasDiscount ? item.discount_price! : item.price).toLocaleString()}₩
                           </p>
-                          <p className={`text-gray-400 text-xs line-through ${hasDiscount ? "" : "invisible"}`}>
-                            {item.price.toLocaleString()}₩
-                          </p>
+                          {hasDiscount && (
+                            <p className="text-gray-400 text-xs line-through">
+                              {item.price.toLocaleString()}₩
+                            </p>
+                          )}
                         </div>
 
                         <div className="mt-auto">

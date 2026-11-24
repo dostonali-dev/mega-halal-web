@@ -12,7 +12,7 @@ export default function UzbekistanProductsPage() {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
 
-  const items = products.filter((p) => (p as any).is_hot === true && !p.parent_product_id);
+  const items = products.filter((p) => p.discount_price != null && p.discount_price < p.price && !p.parent_product_id);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-24">
@@ -35,7 +35,10 @@ export default function UzbekistanProductsPage() {
                   <ProductImage image={item.image} alt={item.name} className="w-full h-32 object-cover" />
                   <div className="p-3">
                     <p className="font-semibold text-black text-sm leading-tight line-clamp-2 min-h-[2.5em]">{item.name}</p>
-                    <p className="text-green-700 font-bold mt-1">{item.price.toLocaleString()}₩</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-green-700 font-bold">{item.discount_price!.toLocaleString()}₩</p>
+                      <p className="text-gray-400 text-xs line-through">{item.price.toLocaleString()}₩</p>
+                    </div>
                     {outOfStock && <p className="text-red-500 text-xs font-bold mt-1">{t("out_of_stock_label")}</p>}
                   </div>
                 </Link>

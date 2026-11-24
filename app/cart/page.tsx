@@ -120,7 +120,10 @@ export default function CartPage() {
                   +
                 </button>
                 <button
-                  onClick={() => setQty(p.id, 0)}
+                  onClick={() => {
+                    if (!confirm(`"${p.name}" mahsulotini savatdan o'chirmoqchimisiz?`)) return;
+                    setQty(p.id, 0);
+                  }}
                   aria-label="Olib tashlash"
                   className="w-9 h-10 rounded-lg flex items-center justify-center font-bold"
                   style={{ backgroundColor: "#fee2e2", color: "#dc2626" }}
