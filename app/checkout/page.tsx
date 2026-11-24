@@ -670,6 +670,38 @@ export default function CheckoutPage() {
               className="w-full p-1 bg-white text-black"
             />
             <p className="text-xs text-gray-400 mt-1">{t("checkout_receipt_paste_hint")}</p>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  if (!navigator.clipboard || !(navigator.clipboard as any).read) {
+                    alert("Bu qurilmada avtomatik joylashtirish ishlamaydi. Yuqoridagi \"rasm tanlash\" orqali yuklang.");
+                    return;
+                  }
+                  const items = await (navigator.clipboard as any).read();
+                  let found = false;
+                  for (const item of items) {
+                    for (const type of item.types) {
+                      if (type.startsWith("image/")) {
+                        const blob = await item.getType(type);
+                        const file = new File([blob], "receipt.jpg", { type });
+                        setReceiptFile(file);
+                        setReceiptPreview(URL.createObjectURL(file));
+                        found = true;
+                        break;
+                      }
+                    }
+                    if (found) break;
+                  }
+                  if (!found) alert("Buferda rasm topilmadi. Avval chek rasmini nusxalab (copy) oling.");
+                } catch (err) {
+                  alert("Buferdan o'qib bo'lmadi. Ruxsat berilmagan bo'lishi mumkin, yoki yuqoridagi \"rasm tanlash\" orqali yuklang.");
+                }
+              }}
+              className="mt-2 w-full bg-gray-100 text-black text-sm font-bold py-2.5 rounded-xl"
+            >
+              {t("checkout_receipt_paste_button")}
+            </button>
           </div>
           {receiptPreview && (
             <div className="mt-3 relative">
