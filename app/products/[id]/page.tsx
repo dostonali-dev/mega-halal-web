@@ -10,6 +10,7 @@ import { useRecentlyViewed } from "@/lib/RecentlyViewedContext";
 import { useBackButtonClose } from "@/lib/useBackButtonClose";
 import ProductImage from "@/components/ProductImage";
 import ProductRow from "@/components/ProductRow";
+import { formatHajmi } from "@/lib/productDisplay";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -151,10 +152,10 @@ export default function ProductDetailPage() {
             </span>
           )}
           <h1 className="text-2xl font-bold text-black">{product.name}</h1>
-          {(product.weight_unit || product.manufacturer) && (
+          {(product.gram != null || product.weight_unit || product.manufacturer) && (
             <p className="text-gray-400 text-sm font-semibold mt-1">
-              {product.weight_unit || ""}
-              {product.weight_unit && product.manufacturer ? " · " : ""}
+              {formatHajmi(product.gram, product.weight_unit)}
+              {(product.gram != null || product.weight_unit) && product.manufacturer ? " · " : ""}
               {product.manufacturer || ""}
             </p>
           )}

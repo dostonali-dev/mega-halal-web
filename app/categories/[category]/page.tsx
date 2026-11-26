@@ -7,6 +7,7 @@ import { useFavorites } from "@/lib/FavoritesContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import PageHeader from "@/components/PageHeader";
 import ProductImage from "@/components/ProductImage";
+import { formatHajmi } from "@/lib/productDisplay";
 
 export default function CategoryDetailPage() {
   const params = useParams();
@@ -84,10 +85,10 @@ export default function CategoryDetailPage() {
                   <Link href={`/products/${item.id}`}>
                     <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                   </Link>
-                  {(item.weight_unit || item.manufacturer) && (
+                  {(item.gram != null || item.weight_unit || item.manufacturer) && (
                     <p className="text-gray-400 text-xs mb-1 truncate">
-                      {item.weight_unit || ""}
-                      {item.weight_unit && item.manufacturer ? " · " : ""}
+                      {formatHajmi(item.gram, item.weight_unit)}
+                      {(item.gram != null || item.weight_unit) && item.manufacturer ? " · " : ""}
                       {item.manufacturer || ""}
                     </p>
                   )}

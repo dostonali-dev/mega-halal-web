@@ -11,6 +11,7 @@ import ProductImage from "@/components/ProductImage";
 import { recordSearchQuery } from "@/lib/searchHistory";
 import { useFavorites } from "@/lib/FavoritesContext";
 import { fetchProductSalesCounts, buildBestSellingList } from "@/lib/salesStats";
+import { formatHajmi } from "@/lib/productDisplay";
 
 type Banner = { id: number; image: string; link: string | null };
 
@@ -90,11 +91,11 @@ function ProductStrip({
                 <Link href={`/products/${item.id}`}>
                   <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                 </Link>
-                {(item.weight_unit || item.manufacturer) && (
+                {(item.gram != null || item.weight_unit || item.manufacturer) && (
                   <p className="text-gray-400 text-xs mb-1 truncate">
                     {item.manufacturer || ""}
-                    {item.weight_unit && item.manufacturer ? " · " : ""}
-                    {item.weight_unit || ""}
+                    {(item.gram != null || item.weight_unit) && item.manufacturer ? " · " : ""}
+                    {formatHajmi(item.gram, item.weight_unit)}
                   </p>
                 )}
                 <div className="mb-1.5 flex items-baseline gap-1.5 flex-wrap">
@@ -578,11 +579,11 @@ export default function Home() {
                         <Link href={`/products/${item.id}`}>
                           <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                         </Link>
-                        {(item.weight_unit || item.manufacturer) && (
+                        {(item.gram != null || item.weight_unit || item.manufacturer) && (
                           <p className="text-gray-400 text-xs mb-1 truncate">
                             {item.manufacturer || ""}
-                            {item.weight_unit && item.manufacturer ? " · " : ""}
-                            {item.weight_unit || ""}
+                            {(item.gram != null || item.weight_unit) && item.manufacturer ? " · " : ""}
+                            {formatHajmi(item.gram, item.weight_unit)}
                           </p>
                         )}
                         <div className="mb-1.5 flex items-baseline gap-1.5 flex-wrap">
@@ -681,10 +682,10 @@ export default function Home() {
                         <Link href={`/products/${item.id}`}>
                           <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
                         </Link>
-                        {(item.weight_unit || item.manufacturer) && (
+                        {(item.gram != null || item.weight_unit || item.manufacturer) && (
                           <p className="text-gray-400 text-xs mb-1 truncate">
-                            {item.weight_unit || ""}
-                            {item.weight_unit && item.manufacturer ? " · " : ""}
+                            {formatHajmi(item.gram, item.weight_unit)}
+                            {(item.gram != null || item.weight_unit) && item.manufacturer ? " · " : ""}
                             {item.manufacturer || ""}
                           </p>
                         )}
