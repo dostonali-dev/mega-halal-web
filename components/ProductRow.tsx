@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import ProductImage from "@/components/ProductImage";
+import { formatHajmi } from "@/lib/productDisplay";
 
 type Product = {
   id: number;
@@ -58,11 +59,11 @@ export default function ProductRow({
               </Link>
               <div className="p-2 flex flex-col flex-1">
                 <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{p.name}</p>
-                {(p.gram != null || p.manufacturer) && (
+                {(p.gram != null || p.weight_unit || p.manufacturer) && (
                   <p className="text-gray-400 text-xs mb-1 truncate">
                     {p.manufacturer || ""}
-                    {p.gram != null && p.manufacturer ? " · " : ""}
-                    {p.gram != null ? `${p.gram.toLocaleString()} ${p.weight_unit || "gr"}` : ""}
+                    {(p.gram != null || p.weight_unit) && p.manufacturer ? " · " : ""}
+                    {formatHajmi(p.gram, p.weight_unit)}
                   </p>
                 )}
                 <div className="flex items-baseline gap-1.5 mb-2 flex-wrap">
