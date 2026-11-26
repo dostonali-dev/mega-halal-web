@@ -279,6 +279,44 @@ export default function Home() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [salesCounts, setSalesCounts] = useState<Record<number, number>>({});
 
+  // "Umumiy mahsulotlar" - cheksiz pastga skroll qilib boradigan, tasodifiy
+  // (random) tartibda aralashtirilgan mahsulotlar lentasi. Barcha mahsulotlar
+  // tugagach, pul yana aralashtirilib davom etadi - shu bilan haqiqatdan ham
+  // "aylanib" tugamay davom etadi.
+  const GENERAL_BATCH_SIZE = 12;
+  const generalPoolRef = useRef<typeof products>([]);
+  const generalCursorRef = useRef(0);
+  const generalInitRef = useRef(false);
+  const generalLoadingRef = useRef(false);
+  const [generalFeed, setGeneralFeed] = useState<{ item: (typeof products)[number]; feedKey: string }[]>([]);
+
+  const shuffleArray = <T,>(arr: T[]): T[] => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  const appendGeneralBatch = () => {
+    if (generalLoadingRef.current) return;
+    if (generalPoolRef.current.length === 0) return;
+    generalLoadingRef.current = true;
+    const batch: { item: (typeof products)[number]; feedKey: string }[] = [];
+    for (let i = 0; i < GENERAL_BATCH_SIZE; i++) {
+      if (generalCursorRef.current >= generalPoolRef.current.length) {
+        generalPoolRef.current = shuffleArray(generalPoolRef.current);
+        generalCursorRef.current = 0;
+      }
+      const item = generalPoolRef.current[generalCursorRef.current];
+      batch.push({ item, feedKey: `${item.id}-${generalCursorRef.current}-${Date.now()}-${i}` });
+      generalCursorRef.current += 1;
+    }
+    setGeneralFeed((prev) => [...prev, ...batch]);
+    setTimeout(() => { generalLoadingRef.current = false; }, 300);
+  };
+
   useEffect(() => {
     const loadBanners = async () => {
       const { data } = await supabase.from("banners").select("*").order("sort_order");
@@ -289,6 +327,27 @@ export default function Home() {
 
   useEffect(() => {
     fetchProductSalesCounts().then(setSalesCounts);
+  }, []);
+
+  useEffect(() => {
+    if (!generalInitRef.current && products.length > 0) {
+      generalInitRef.current = true;
+      generalPoolRef.current = shuffleArray(products);
+      generalCursorRef.current = 0;
+      appendGeneralBatch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products.length]);
+
+  useEffect(() => {
+    const onGeneralScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 800) {
+        appendGeneralBatch();
+      }
+    };
+    window.addEventListener("scroll", onGeneralScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onGeneralScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Panel instrumentov'dagi "Bosh sahifa" tugmasi allaqachon shu sahifada
@@ -587,6 +646,97 @@ export default function Home() {
               removeFromCart={removeFromCart}
               t={t}
             />
+
+            <div className="mt-2 mb-8">
+              <h2 className="text-xl font-bold mb-3">{t("general_products_title")}</h2>
+              <div className="grid grid-cols-3 gap-2 md:gap-3">
+                {generalFeed.map(({ item, feedKey }) => {
+                  const qty = cart[item.id] || 0;
+                  const outOfStock = item.in_stock === false;
+                  const hasDiscount = item.discount_price != null && item.discount_price < item.price;
+                  const discountPct = hasDiscount
+                    ? Math.round((1 - (item.discount_price as number) / item.price) * 100)
+                    : 0;
+                  return (
+                    <div
+                      key={feedKey}
+                      className={`relative bg-white border border-green-100 rounded-xl overflow-hidden flex flex-col ${outOfStock ? "opacity-60" : ""}`}
+                    >
+                      {hasDiscount && (
+                        <span className="absolute top-1.5 left-1.5 z-10 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                          -{discountPct}%
+                        </span>
+                      )}
+                      <button
+                        onClick={() => toggleFavorite(item.id)}
+                        aria-label={t("favorites_title")}
+                        className="absolute top-1.5 right-1.5 z-10 bg-white/90 rounded-full w-7 h-7 flex items-center justify-center text-xs shadow"
+                      >
+                        {favoriteIds.has(item.id) ? "❤️" : "🤍"}
+                      </button>
+                      <Link href={`/products/${item.id}`}>
+                        <ProductImage image={item.image} alt={item.name} className="w-full aspect-square object-cover" />
+                      </Link>
+                      <div className="p-2 flex flex-col flex-1">
+                        <Link href={`/products/${item.id}`}>
+                          <p className="font-bold text-base leading-tight line-clamp-2 mb-1 min-h-[2.4em]">{item.name}</p>
+                        </Link>
+                        {(item.weight_unit || item.manufacturer) && (
+                          <p className="text-gray-400 text-xs mb-1 truncate">
+                            {item.weight_unit || ""}
+                            {item.weight_unit && item.manufacturer ? " · " : ""}
+                            {item.manufacturer || ""}
+                          </p>
+                        )}
+                        <div className="mb-1.5">
+                          <p className="text-green-400 font-extrabold text-base">
+                            {(hasDiscount ? item.discount_price! : item.price).toLocaleString()}₩
+                          </p>
+                          <p className={`text-gray-400 text-xs line-through ${hasDiscount ? "" : "invisible"}`}>
+                            {item.price.toLocaleString()}₩
+                          </p>
+                        </div>
+
+                        <div className="mt-auto">
+                          {outOfStock ? (
+                            <span className="text-[10px] text-red-400 font-bold">{t("out_of_stock_label")}</span>
+                          ) : qty === 0 ? (
+                            <button
+                              onClick={() => addToCart(item.id)}
+                              aria-label="Savatchaga qo'shish"
+                              className="w-full rounded-lg py-2.5 flex items-center justify-center"
+                              style={{ backgroundColor: "#16a34a" }}
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M6 6h15l-1.5 9.5a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L4.6 4.6A1 1 0 0 0 3.6 3.8H2" />
+                                <circle cx="9" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
+                                <circle cx="18" cy="20.5" r="1.4" fill="#ffffff" stroke="none" />
+                              </svg>
+                            </button>
+                          ) : (
+                            <div className="flex items-center justify-between bg-green-600 rounded-lg px-2 py-1.5">
+                              <button onClick={() => removeFromCart(item.id)} aria-label={qty === 1 ? "O'chirish" : "Kamaytirish"} className="text-white font-bold w-6 h-6 flex items-center justify-center">
+                                {qty === 1 ? (
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M4 7h16" />
+                                    <path d="M6 7l1 13a2 2 0 0 0 2 1.9h6a2 2 0 0 0 2-1.9L18 7" />
+                                    <path d="M9.5 7V4.8A1 1 0 0 1 10.5 3.8h3a1 1 0 0 1 1 1V7" />
+                                  </svg>
+                                ) : "−"}
+                              </button>
+                              <span className="text-white font-bold text-sm">{qty}</span>
+                              <button onClick={() => addToCart(item.id)} className="text-white font-bold w-6 h-6 flex items-center justify-center">
+                                +
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </>
         )}
       </div>

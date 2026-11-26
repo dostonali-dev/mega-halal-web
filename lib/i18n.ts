@@ -29,6 +29,7 @@ export const translations = {
     home_subtitle: "Koreya bo'ylab Halal mahsulotlar yetkazib berish",
     discounted_products: "🔥 Chegirmadagi mahsulotlar",
     new_products: "🆕 Yangi mahsulotlar",
+    general_products_title: "🛒 Umumiy mahsulotlar",
 
     categories_title: "Kategoriyalar",
     category_empty: "Bu kategoriyada mahsulot yo'q",
@@ -244,6 +245,7 @@ export const translations = {
     home_subtitle: "Halal products delivered across Korea",
     discounted_products: "🔥 Discounted products",
     new_products: "🆕 New arrivals",
+    general_products_title: "🛒 All products",
 
     categories_title: "Categories",
     category_empty: "No products in this category",
@@ -459,6 +461,7 @@ export const translations = {
     home_subtitle: "Доставка халяльных продуктов по всей Корее",
     discounted_products: "🔥 Товары со скидкой",
     new_products: "🆕 Новинки",
+    general_products_title: "🛒 Все товары",
 
     categories_title: "Категории",
     category_empty: "В этой категории нет товаров",
@@ -674,6 +677,7 @@ export const translations = {
     home_subtitle: "한국 전역 할랄 식품 배송",
     discounted_products: "🔥 할인 상품",
     new_products: "🆕 신상품",
+    general_products_title: "🛒 전체 상품",
 
     categories_title: "카테고리",
     category_empty: "이 카테고리에는 상품이 없습니다",
