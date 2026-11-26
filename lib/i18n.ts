@@ -34,9 +34,9 @@ export const translations = {
     categories_title: "Kategoriyalar",
     category_empty: "Bu kategoriyada mahsulot yo'q",
     out_of_stock_label: "Sotuvda yo'q",
-    uzbekistan_tile: "Chegirma tovar",
+    uzbekistan_tile: "Chegirma tovarlar",
     discounts_tile: "Bugungi chegirmalar",
-    uzbekistan_page_title: "🏷️ Chegirma tovar",
+    uzbekistan_page_title: "🏷️ Chegirma tovarlar",
     discounts_page_title: "🔥 Bugungi chegirmalar",
     all_products_title: "Jami mahsulotlar",
 
@@ -195,7 +195,7 @@ export const translations = {
     delete_account_button: "Akkauntni butunlay o'chirish",
     delete_account_cancel: "Bekor qilish",
 
-    best_selling_title: "🔥 Eng ko'p sotiladigan",
+    best_selling_title: "🔥 Eng ko'p sotilgan",
     search_most_bought_title: "🛒 Eng ko'p sotib olingan",
     cart_recent_purchases_title: "🕓 Oxirgi sotib olingan",
     cart_most_purchased_title: "🛒 Eng ko'p sotib olingan",
