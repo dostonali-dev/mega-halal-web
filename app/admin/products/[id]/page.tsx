@@ -288,7 +288,19 @@ export default function AdminEditProductPage() {
 
         <div>
           <label className="text-xs font-bold text-gray-500 px-1 mb-1 block">Muddati (yaroqlilik sanasi, ixtiyoriy)</label>
-          <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="w-full border p-3 rounded-xl bg-white text-black" />
+          <div className="flex gap-2">
+            <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="flex-1 border p-3 rounded-xl bg-white text-black" />
+            {expiryDate && (
+              <button
+                type="button"
+                onClick={() => setExpiryDate("")}
+                aria-label="Muddatni tozalash"
+                className="px-4 bg-gray-100 text-black rounded-xl font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
         <div>

@@ -62,9 +62,19 @@ export async function POST(req: NextRequest) {
         digits,
         `[Mega Halal Supermarket] Yangi parolingiz: ${newPassword}. Tizimga shu parol bilan kiring va xohlasangiz profilingizdan o'zgartiring.`
       );
-    } catch (smsError) {
+    } catch (smsError: any) {
       console.error("SMS yuborishda xatolik:", smsError);
-      return NextResponse.json({ error: "SMS yuborishda xatolik yuz berdi." }, { status: 500 });
+      // send-code yo'lidagi kabi, asl sababni ham qaytaramiz - aks holda
+      // Vercel loglarisiz nima noto'g'ri ekanini bilib bo'lmaydi.
+      const detail =
+        smsError?.response?.data?.errorMessage ||
+        smsError?.errorMessage ||
+        smsError?.message ||
+        (typeof smsError === "string" ? smsError : "");
+      return NextResponse.json(
+        { error: "SMS yuborishda xatolik yuz berdi." + (detail ? ` Sabab: ${detail}` : "") },
+        { status: 500 }
+      );
     }
 
     await supabaseAdmin.from("otp_codes").delete().eq("id", otpRow.id);

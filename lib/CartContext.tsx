@@ -74,14 +74,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const loadProducts = async () => {
+    // Ilova fonga o'tib (masalan ekran o'chib yoki boshqa ilovaga
+    // o'tilib) qaytganda, ba'zida tarmoq hali to'liq tiklanmagan bo'ladi
+    // va shu lahzadagi so'rov vaqtincha bo'sh natija bilan qaytishi mumkin.
+    // Avval muvaffaqiyatli yuklangan ro'yxatni shunday vaqtinchalik bo'sh
+    // natija bilan ustidan yozib yubormaslik uchun - va bo'sh/xato bo'lsa
+    // bir necha soniyadan keyin avtomatik qayta urinish uchun - shu yordamchi
+    // funksiyani ishlatamiz. Aks holda foydalanuvchi ilovadan chiqib qayta
+    // kirishga majbur bo'lar edi.
+    let cancelled = false;
+    const loadProducts = async (attempt = 0) => {
       try {
         const data = await fetchAllRows<any>("products", "id", false);
+        if (cancelled) return;
         // "hidden" ustuni bazada bo'lmasa ham xatolik chiqmasligi uchun
         // client tomonda filtrlaymiz (mijozlarga yashirilgan mahsulotlar ko'rinmasin).
-        setProducts(data.filter((p: any) => p.hidden !== true));
+        const filtered = data.filter((p: any) => p.hidden !== true);
+        if (filtered.length === 0 && attempt < 3) {
+          setTimeout(() => loadProducts(attempt + 1), 1500);
+          return;
+        }
+        setProducts((prev) => {
+          if (filtered.length === 0 && prev.length > 0) return prev;
+          return filtered;
+        });
       } catch (error) {
         console.error(error);
+        if (!cancelled && attempt < 3) {
+          setTimeout(() => loadProducts(attempt + 1), 1500);
+        }
       }
     };
     loadProducts();
@@ -93,24 +114,50 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("focus", handleVisibility);
+
+    // Capacitor'dagi tabiiy ilova (Android/iOS) ba'zida fondan qaytganda
+    // brauzerdagi "visibilitychange"/"focus" hodisalarini chiqarmaydi -
+    // shuning uchun ilova resume bo'lganda ham qayta yuklaymiz.
+    let removeResumeListener: (() => void) | null = null;
+    (async () => {
+      try {
+        const { App } = await import("@capacitor/app");
+        const handle = await App.addListener("resume", () => loadProducts());
+        removeResumeListener = () => handle.remove();
+      } catch {}
+    })();
+
     return () => {
+      cancelled = true;
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("focus", handleVisibility);
+      removeResumeListener?.();
     };
   }, []);
 
   useEffect(() => {
-    const loadCategories = async () => {
+    let cancelled = false;
+    const loadCategories = async (attempt = 0) => {
       const { data, error } = await supabase
         .from("categories")
         .select("*")
         .order("sort_order", { ascending: true, nullsFirst: false })
         .order("name", { ascending: true });
+      if (cancelled) return;
       if (error) {
         console.error(error);
+        if (attempt < 3) setTimeout(() => loadCategories(attempt + 1), 1500);
         return;
       }
-      setCategories(data || []);
+      const rows = data || [];
+      if (rows.length === 0 && attempt < 3) {
+        setTimeout(() => loadCategories(attempt + 1), 1500);
+        return;
+      }
+      setCategories((prev) => {
+        if (rows.length === 0 && prev.length > 0) return prev;
+        return rows;
+      });
     };
     loadCategories();
 
@@ -120,7 +167,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+
+    let removeResumeListener: (() => void) | null = null;
+    (async () => {
+      try {
+        const { App } = await import("@capacitor/app");
+        const handle = await App.addListener("resume", () => loadCategories());
+        removeResumeListener = () => handle.remove();
+      } catch {}
+    })();
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", handleVisibility);
+      removeResumeListener?.();
+    };
   }, []);
 
   const getMaxQty = (id: number) => {

@@ -197,6 +197,24 @@ export default function AdminProductsPage() {
     }
   }, [checkedLogin]);
 
+  // Mahsulot tahrirlash sahifasidan "router.back()" orqali shu ro'yxatga
+  // qaytilganda - filtrlar/skroll saqlanib qolishi uchun ataylab
+  // router.push() emas, router.back() ishlatiladi (yuqoridagi izohga
+  // qarang). Lekin shu sababli komponent qayta "mount" bo'lmaydi va
+  // yuqoridagi [checkedLogin] effekti qayta ishlamaydi - shuning uchun
+  // tahrirlangan o'zgarishlar ro'yxatda darhol ko'rinmay, faqat boshqa bir
+  // amal (masalan HOT belgisini bosish) orqali qayta yuklanganda ko'rinardi.
+  // "popstate" - router.back() chaqirganda brauzer tomonidan chiqariladigan
+  // hodisa - shu orqali har safar orqaga qaytilganda ro'yxatni qayta
+  // yuklaymiz.
+  useEffect(() => {
+    const handlePopState = () => {
+      if (checkedLogin) loadProducts();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [checkedLogin]);
+
   // Mahsulotlar yuklanib, ochiq kategoriya kengaygandan keyin, tahrirlashga
   // ketishdan oldingi skroll pozitsiyasini tiklaymiz.
   useEffect(() => {
